@@ -4,6 +4,7 @@
 
 - MCP: keep an explicit GPT-6 Pro model request above saved browser effort defaults while preserving per-call overrides and current/ignore strategies; thanks @AgentSMLA.
 - Browser: recognize separator-joined warning codes such as `cloudflare_challenge` and `rate_limit_exceeded` in timeout diagnostics; thanks @etafund.
+- Browser: recognize ChatGPT image-only replies in combined `data-turn-key` exchanges even when the generated-image message has no assistant-role marker, save their blob previews through the existing browser-context downloader, and prefer the visible editor when stale duplicate composers remain mounted during follow-ups.
 - Dependencies: update Undici to 7.30.1 for upstream security fixes and refresh OpenAI, Google GenAI, MCP, Puppeteer, and DevTools types after the two-day cooldown; retain Node >=24.
 - Browser: retry a failed ChatGPT page load once, distinguish unloaded pages from signed-out sessions, and print sanitized login diagnostics; thanks @postoso.
 - Dependencies: update fast-uri to 4.2.3 and body-parser to 2.4.0 for upstream URI handling and compressed-request security fixes.

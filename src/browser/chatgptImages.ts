@@ -7,7 +7,7 @@ import type {
   ChromeClient,
   SavedBrowserImage,
 } from "./types.js";
-import { ASSISTANT_ROLE_SELECTOR } from "./constants.js";
+import { ASSISTANT_ROLE_SELECTOR, GENERATED_IMAGE_MARKER_SELECTOR } from "./constants.js";
 import {
   buildConversationTurnListExpression,
   buildLastAssistantMessageExpression,
@@ -95,6 +95,7 @@ function buildAssistantImageExpression(
     const expectedConversationId = ${JSON.stringify(expectedConversationId ?? null)};
     if (expectedConversationId && !String(location.pathname || '').endsWith('/c/' + expectedConversationId)) return [];
     const ASSISTANT_SELECTOR = ${assistantLiteral};
+    const GENERATED_IMAGE_MARKER = ${JSON.stringify(GENERATED_IMAGE_MARKER_SELECTOR)};
     const isGeneratedImage = (img) => {
       const url = new URL(img?.src || '', location.origin || 'https://chatgpt.com');
       const host = url.hostname.toLowerCase();
@@ -139,6 +140,7 @@ function buildAssistantImageExpression(
       if (role === 'assistant') return true;
       const testId = (node.getAttribute('data-testid') || '').toLowerCase();
       if (testId.includes('assistant')) return true;
+      if (node.querySelector(GENERATED_IMAGE_MARKER)) return true;
       return Boolean(node.querySelector(ASSISTANT_SELECTOR) || node.querySelector('[data-testid*="assistant"]'));
     };
     const turns = ${buildConversationTurnListExpression()};

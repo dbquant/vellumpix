@@ -46,6 +46,8 @@ describe("browser automation expressions", () => {
   test("assistant extractor treats image-only ChatGPT turns as responses", () => {
     const expression = buildAssistantExtractorForTest("capture");
     expect(expression).toContain("/backend-api/estuary/content?id=file_");
+    expect(expression).toContain('data-testid=\\"generated-image-preview\\"');
+    expect(expression).toContain("img.closest(GENERATED_IMAGE_MARKER)");
     expect(expression).toContain("Generated image.");
     expect(expression).toContain("stopped thinking edit");
     expect(expression).toContain("thought for");

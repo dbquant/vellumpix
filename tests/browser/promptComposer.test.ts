@@ -35,6 +35,27 @@ const evaluateAttachmentReady = (expectedName: string, visibleName: string): boo
 };
 
 describe("promptComposer", () => {
+  test("collects every matching composer before choosing the visible editor", () => {
+    const hiddenComposer = { name: "hidden" };
+    const visibleComposer = { name: "visible" };
+    const document = {
+      querySelectorAll: (selector: string) =>
+        selector === ".ProseMirror"
+          ? [hiddenComposer, visibleComposer]
+          : selector === '[contenteditable="true"]'
+            ? [visibleComposer]
+            : [],
+    };
+    const expression = promptComposer.buildInputCandidatesExpression("selectors");
+    const result = Function(
+      "document",
+      "selectors",
+      `return ${expression};`,
+    )(document, [".ProseMirror", '[contenteditable="true"]']);
+
+    expect(result).toEqual([hiddenComposer, visibleComposer]);
+  });
+
   test("warns without blocking when ChatGPT's conversation list is loading after HTTP 429", async () => {
     const runtime = {
       evaluate: vi.fn().mockResolvedValue({ result: { value: true } }),

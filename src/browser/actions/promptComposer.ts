@@ -45,6 +45,13 @@ const ESCAPE_KEY_EVENT = {
   nativeVirtualKeyCode: 27,
 } as const;
 
+// ChatGPT can keep a zero-sized stale/mobile composer mounted beside the visible desktop
+// composer. querySelector() returns only the first match for each selector, so collect every
+// match before choosing the visible editor.
+function buildInputCandidatesExpression(selectorsExpression: string): string {
+  return `Array.from(new Set((${selectorsExpression}).flatMap((selector) => Array.from(document.querySelectorAll(selector)))))`;
+}
+
 export interface AttachmentReadyExpectation {
   name: string;
   generatedBundle?: boolean;
@@ -126,13 +133,7 @@ export async function submitPrompt(
         return true;
       };
 
-      const candidates = [];
-      for (const selector of SELECTORS) {
-        const node = document.querySelector(selector);
-        if (node) {
-          candidates.push(node);
-        }
-      }
+      const candidates = ${buildInputCandidatesExpression("SELECTORS")};
       const preferred = candidates.find((node) => isVisible(node)) || candidates[0];
       if (preferred && focusNode(preferred)) {
         return { focused: true };
@@ -154,7 +155,7 @@ export async function submitPrompt(
         expression: `(() => {
         const selectors = ${JSON.stringify(INPUT_SELECTORS)};
         const visible = (node) => { const r = node?.getBoundingClientRect?.(); return Boolean(r && r.width > 0 && r.height > 0); };
-        const editor = selectors.map((s) => document.querySelector(s)).find((n) => n && visible(n));
+        const editor = ${buildInputCandidatesExpression("selectors")}.find((n) => visible(n));
         if (editor instanceof HTMLTextAreaElement) return { used: false };
         if (!editor?.isContentEditable) return { used: true, complete: false };
         const text = ${encodedPrompt};
@@ -235,7 +236,11 @@ export async function submitPrompt(
     const fallbackSelectorLiteral = JSON.stringify(PROMPT_FALLBACK_SELECTOR);
     const verification = await runtime.evaluate({
       expression: `(() => {
-      const editor = document.querySelector(${primarySelectorLiteral});
+      const primaryCandidates = Array.from(document.querySelectorAll(${primarySelectorLiteral}));
+      const editor = primaryCandidates.find((node) => {
+        const rect = node?.getBoundingClientRect?.();
+        return Boolean(rect && rect.width > 0 && rect.height > 0);
+      }) || primaryCandidates[0] || null;
       const fallback = document.querySelector(${fallbackSelectorLiteral});
       const inputSelectors = ${JSON.stringify(INPUT_SELECTORS)};
       const readValue = (node) => {
@@ -248,9 +253,7 @@ export async function submitPrompt(
         const rect = node.getBoundingClientRect();
         return rect.width > 0 && rect.height > 0;
       };
-      const candidates = inputSelectors
-        .map((selector) => document.querySelector(selector))
-        .filter((node) => Boolean(node));
+      const candidates = ${buildInputCandidatesExpression("inputSelectors")};
       const active = candidates.find((node) => isVisible(node)) || candidates[0] || null;
       return {
         editorText: editor?.innerText ?? '',
@@ -271,14 +274,18 @@ export async function submitPrompt(
       // Learned: occasionally Input.insertText doesn't land in the editor; force textContent/value + input events.
       await runtime.evaluate({
         expression: `(() => {
-        const fallback = document.querySelector(${fallbackSelectorLiteral});
-        if (fallback) {
-          fallback.value = ${encodedPrompt};
-          fallback.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
-          fallback.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        const editor = document.querySelector(${primarySelectorLiteral});
-        if (editor) {
+        const inputSelectors = ${JSON.stringify(INPUT_SELECTORS)};
+        const candidates = ${buildInputCandidatesExpression("inputSelectors")};
+        const visible = (node) => {
+          const rect = node?.getBoundingClientRect?.();
+          return Boolean(rect && rect.width > 0 && rect.height > 0);
+        };
+        const editor = candidates.find(visible) || candidates[0] || null;
+        if (editor instanceof HTMLTextAreaElement || editor instanceof HTMLInputElement) {
+          editor.value = ${encodedPrompt};
+          editor.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
+          editor.dispatchEvent(new Event('change', { bubbles: true }));
+        } else if (editor) {
           editor.textContent = ${encodedPrompt};
           // Nudge ProseMirror to register the textContent write so its state/send-button updates
           editor.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
@@ -289,7 +296,11 @@ export async function submitPrompt(
 
     const postVerification = await runtime.evaluate({
       expression: `(() => {
-      const editor = document.querySelector(${primarySelectorLiteral});
+      const primaryCandidates = Array.from(document.querySelectorAll(${primarySelectorLiteral}));
+      const editor = primaryCandidates.find((node) => {
+        const rect = node?.getBoundingClientRect?.();
+        return Boolean(rect && rect.width > 0 && rect.height > 0);
+      }) || primaryCandidates[0] || null;
       const fallback = document.querySelector(${fallbackSelectorLiteral});
       const inputSelectors = ${JSON.stringify(INPUT_SELECTORS)};
       const readValue = (node) => {
@@ -302,9 +313,7 @@ export async function submitPrompt(
         const rect = node.getBoundingClientRect();
         return rect.width > 0 && rect.height > 0;
       };
-      const candidates = inputSelectors
-        .map((selector) => document.querySelector(selector))
-        .filter((node) => Boolean(node));
+      const candidates = ${buildInputCandidatesExpression("inputSelectors")};
       const active = candidates.find((node) => isVisible(node)) || candidates[0] || null;
       return {
         editorText: editor?.innerText ?? '',
@@ -443,9 +452,7 @@ export async function clearPromptComposer(Runtime: ChromeClient["Runtime"], logg
         return false;
       };
       let cleared = false;
-      const nodes = SELECTORS
-        .map((selector) => document.querySelector(selector))
-        .filter((node) => Boolean(node));
+      const nodes = ${buildInputCandidatesExpression("SELECTORS")};
       for (const node of Array.from(new Set([fallback, editor, ...nodes])).filter(Boolean)) {
         cleared = clearEditable(node) || cleared;
       }
@@ -1205,9 +1212,7 @@ async function verifyPromptCommitted(
 	      const rect = node.getBoundingClientRect();
 	      return rect.width > 0 && rect.height > 0;
 	    };
-	    const inputs = inputSelectors
-	      .map((selector) => document.querySelector(selector))
-	      .filter((node) => Boolean(node));
+	    const inputs = ${buildInputCandidatesExpression("inputSelectors")};
 	    const visibleInputs = inputs.filter((node) => isVisible(node));
 	    const activeInputs = visibleInputs.length > 0 ? visibleInputs : inputs;
 	    const userMatched =
@@ -1341,4 +1346,5 @@ export const __test__ = {
   dismissOpenComposerPlusMenu,
   sendButtonTimeoutMs,
   verifyPromptCommitted,
+  buildInputCandidatesExpression,
 };

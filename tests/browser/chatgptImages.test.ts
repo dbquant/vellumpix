@@ -87,6 +87,17 @@ describe("readAssistantGeneratedImages", () => {
 
   function matchesSelector(element: FakeElement, selector: string): boolean {
     if (selector === "img") return element.tagName === "IMG";
+    if (
+      selector.includes('data-testid="generated-image-preview"') ||
+      selector.includes('data-testid="generated-image-gallery"')
+    ) {
+      return ["generated-image-preview", "generated-image-gallery"].includes(
+        element.getAttribute("data-testid") ?? "",
+      );
+    }
+    if (selector.includes("[data-turn-key]") && element.getAttribute("data-turn-key")) {
+      return true;
+    }
     if (selector.includes('data-testid^="conversation-turn"')) {
       return String(element.getAttribute("data-testid") ?? "").startsWith("conversation-turn");
     }
@@ -182,6 +193,51 @@ describe("readAssistantGeneratedImages", () => {
     } as unknown as ChromeClient["Runtime"];
     expect(await readAssistantGeneratedImages(runtime, 0)).toEqual([]);
     expect(await readAssistantGeneratedImages(runtime, 0, "another-conversation")).toEqual([]);
+  });
+
+  test("finds image-only replies in combined turn-key exchanges without assistant role attributes", async () => {
+    const image = new FakeElement(
+      "img",
+      {
+        src: "blob:https://chatgpt.com/00000000-0000-4000-8000-000000000001",
+        alt: "已生成图像 1",
+        width: "1254",
+        height: "1254",
+      },
+      5,
+    );
+    const preview = new FakeElement("button", { "data-testid": "generated-image-preview" }, 4, [
+      image,
+    ]);
+    const assistantMessage = new FakeElement(
+      "div",
+      { "data-chatgpt-search-message-ids": "assistant-message-id" },
+      3,
+      [preview],
+    );
+    const userMessage = new FakeElement(
+      "div",
+      { "data-content-search-unit-key": "fallback-turn-0:0:user" },
+      2,
+    );
+    const exchange = new FakeElement("div", { "data-turn-key": "turn-id" }, 1, [
+      userMessage,
+      assistantMessage,
+    ]);
+    const runtime = {
+      evaluate: vi.fn(async ({ expression }: { expression: string }) => ({
+        result: { value: evaluateImageExpression(expression, [exchange]) },
+      })),
+    } as unknown as ChromeClient["Runtime"];
+
+    const images = await readAssistantGeneratedImages(runtime, 0);
+
+    expect(images).toHaveLength(1);
+    expect(images[0]).toMatchObject({
+      alt: "已生成图像 1",
+      width: 1254,
+      height: 1254,
+    });
   });
 
   test("dedupes duplicate image urls by file id and keeps the largest candidate", async () => {

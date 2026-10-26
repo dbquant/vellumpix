@@ -2,6 +2,7 @@ import { describe, expect, test, vi } from "vitest";
 import {
   buildConversationTurnCountExpression,
   buildConversationTurnListExpression,
+  buildLastAssistantMessageExpression,
 } from "../../src/browser/conversationTurns.js";
 import {
   CONVERSATION_TURN_CONTAINER_SELECTOR,
@@ -36,5 +37,13 @@ describe("conversation turn expressions", () => {
     ]);
 
     expect(evaluate(buildConversationTurnListExpression(), responses)).toEqual(legacyTurns);
+  });
+
+  test("recognizes untyped image reply message ids without selecting the user message", () => {
+    const expression = buildLastAssistantMessageExpression("turn");
+
+    expect(expression).toContain("[data-chatgpt-search-message-ids]");
+    expect(expression).toContain("!key.endsWith(':user')");
+    expect(expression).toContain("untypedMessages.at(-1)");
   });
 });

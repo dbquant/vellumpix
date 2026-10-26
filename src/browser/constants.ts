@@ -44,6 +44,10 @@ export const CONVERSATION_TURN_CONTAINER_SELECTOR =
   '[data-turn-key], [data-testid^="conversation-turn"], [data-content-search-unit-key], [data-chatgpt-search-unit-key]';
 export const ASSISTANT_ROLE_SELECTOR =
   ':is([data-message-author-role="assistant"], [data-content-search-unit-key$=":assistant"], [data-chatgpt-search-unit-key$=":assistant"]), [data-turn="assistant"]';
+// Current ChatGPT image-only replies can omit every assistant-role attribute. The stable
+// generated-image controls are then the only assistant evidence inside a data-turn-key exchange.
+export const GENERATED_IMAGE_MARKER_SELECTOR =
+  '[data-testid="generated-image-preview"], [data-testid="generated-image-gallery"]';
 export const CONVERSATION_UNIT_SELECTOR =
   "[data-content-search-unit-key], [data-chatgpt-search-unit-key]";
 export const CONVERSATION_EXCHANGE_SELECTOR = "[data-content-search-turn-key], [data-turn-key]";

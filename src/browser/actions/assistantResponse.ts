@@ -8,6 +8,7 @@ import {
   CONVERSATION_UNIT_SELECTOR,
   COPY_BUTTON_SELECTOR,
   FINISHED_ACTIONS_SELECTOR,
+  GENERATED_IMAGE_MARKER_SELECTOR,
   RESPONSE_COMPLETE_ANNOUNCEMENTS,
   STOP_BUTTON_SELECTORS,
 } from "../constants.js";
@@ -895,6 +896,7 @@ function buildCompletionVisibilityExpression(
     // Find the LAST assistant turn to check completion status. Must match the same logic as
     // buildAssistantExtractor, then correlate the controls to the sampled response.
     const ASSISTANT_SELECTOR = '${ASSISTANT_ROLE_SELECTOR}';
+    const GENERATED_IMAGE_MARKER = ${JSON.stringify(GENERATED_IMAGE_MARKER_SELECTOR)};
     const isAssistantTurn = (node) => {
       if (!(node instanceof HTMLElement)) return false;
       const searchKey = (node.getAttribute('data-content-search-unit-key') || node.getAttribute('data-chatgpt-search-unit-key') || '').toLowerCase();
@@ -906,6 +908,7 @@ function buildCompletionVisibilityExpression(
       if (role === 'assistant') return true;
       const testId = (node.getAttribute('data-testid') || '').toLowerCase();
       if (testId.includes('assistant')) return true;
+      if (node.querySelector(GENERATED_IMAGE_MARKER)) return true;
       return Boolean(node.querySelector(ASSISTANT_SELECTOR) || node.querySelector('[data-testid*="assistant"]'));
     };
     ${buildTurnActionLocatorJs("findTurnAction")}
@@ -1151,6 +1154,7 @@ function buildResponseObserverExpression(
     const FINISHED_SELECTOR = '${FINISHED_ACTIONS_SELECTOR}';
     ${buildTurnActionLocatorJs("findTurnAction")}
     const ASSISTANT_SELECTOR = ${assistantLiteral};
+    const GENERATED_IMAGE_MARKER = ${JSON.stringify(GENERATED_IMAGE_MARKER_SELECTOR)};
     const EXPECTED_CONVERSATION_ID = ${expectedConversationLiteral};
     // Learned: settling avoids capturing mid-stream HTML; keep short.
     const settleDelayMs = 800;
@@ -1179,6 +1183,7 @@ function buildResponseObserverExpression(
       if (role === 'assistant') return true;
       const testId = (node.getAttribute('data-testid') || '').toLowerCase();
       if (testId.includes('assistant')) return true;
+      if (node.querySelector(GENERATED_IMAGE_MARKER)) return true;
       return Boolean(node.querySelector(ASSISTANT_SELECTOR) || node.querySelector('[data-testid*="assistant"]'));
     };
 
@@ -1388,6 +1393,7 @@ function buildAssistantExtractor(functionName: string): string {
     ${buildThinkingActivityDetailsPredicateJs("readRetryThinkingActivity")}
     const isAssistantTurnUiError = ${isAssistantTurnUiErrorText.toString()};
     const ASSISTANT_SELECTOR = ${assistantLiteral};
+    const GENERATED_IMAGE_MARKER = ${JSON.stringify(GENERATED_IMAGE_MARKER_SELECTOR)};
     const isAssistantTurn = (node) => {
       if (!(node instanceof HTMLElement)) return false;
       const searchKey = (node.getAttribute('data-content-search-unit-key') || node.getAttribute('data-chatgpt-search-unit-key') || '').toLowerCase();
@@ -1403,6 +1409,9 @@ function buildAssistantExtractor(functionName: string): string {
       }
       const testId = (node.getAttribute('data-testid') || '').toLowerCase();
       if (testId.includes('assistant')) {
+        return true;
+      }
+      if (node.querySelector(GENERATED_IMAGE_MARKER)) {
         return true;
       }
       return Boolean(node.querySelector(ASSISTANT_SELECTOR) || node.querySelector('[data-testid*="assistant"]'));
@@ -1457,7 +1466,8 @@ function buildAssistantExtractor(functionName: string): string {
       const messageId = messageRoot.getAttribute('data-message-id') || messageRoot.getAttribute?.('data-chatgpt-selection-message-id') || messageRoot.getAttribute('data-chatgpt-search-message-ids')?.split(' ')[0] || messageRoot.getAttribute('data-content-search-unit-key') || messageRoot.getAttribute('data-chatgpt-search-unit-key');
       const turnId = turn.getAttribute('data-turn-key') || messageRoot.getAttribute('data-testid');
       const generatedImages = Array.from(messageRoot.querySelectorAll('img')).filter((img) =>
-        String(img?.src || '').includes('/backend-api/estuary/content?id=file_')
+        String(img?.src || '').includes('/backend-api/estuary/content?id=file_') ||
+        Boolean(img.closest(GENERATED_IMAGE_MARKER))
       );
       const normalizedText = String(text || '').toLowerCase().replace(/\\s+/g, ' ').trim();
       const retryVisible = Array.from(turn.querySelectorAll('button, [role="button"]')).some((button) => {
@@ -1680,6 +1690,7 @@ function buildCopyExpression(meta: { messageId?: string | null; turnId?: string 
       }
       const CONVERSATION_SELECTOR = ${JSON.stringify(CONVERSATION_TURN_SELECTOR)};
       const ASSISTANT_SELECTOR = '${ASSISTANT_ROLE_SELECTOR}';
+      const GENERATED_IMAGE_MARKER = ${JSON.stringify(GENERATED_IMAGE_MARKER_SELECTOR)};
       const isAssistantTurn = (node) => {
         if (!(node instanceof HTMLElement)) return false;
         const searchKey = (node.getAttribute('data-content-search-unit-key') || node.getAttribute('data-chatgpt-search-unit-key') || '').toLowerCase();
@@ -1691,6 +1702,7 @@ function buildCopyExpression(meta: { messageId?: string | null; turnId?: string 
         if (role === 'assistant') return true;
         const testId = (node.getAttribute('data-testid') || '').toLowerCase();
         if (testId.includes('assistant')) return true;
+        if (node.querySelector(GENERATED_IMAGE_MARKER)) return true;
         return Boolean(node.querySelector(ASSISTANT_SELECTOR) || node.querySelector('[data-testid*="assistant"]'));
       };
       ${buildTurnActionLocatorJs("findTurnAction")}

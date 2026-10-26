@@ -14,7 +14,15 @@ export function buildLastAssistantMessageExpression(turnExpression = "turn"): st
       const owner = node.parentElement?.closest(selector);
       return !owner || owner === root;
     });
-    return messages.at(-1) ?? root.querySelector(selector) ?? (root.matches?.(selector) ? root : null);
+    // Image-only replies in the current ChatGPT layout have a message id but no
+    // assistant role/search-unit attribute. Exclude the user message-id node and
+    // use the last remaining message node as the assistant payload root.
+    const untypedMessages = Array.from(root.querySelectorAll('[data-chatgpt-search-message-ids]'))
+      .filter(node => {
+        const key = (node.getAttribute('data-content-search-unit-key') || node.getAttribute('data-chatgpt-search-unit-key') || '').toLowerCase();
+        return !key.endsWith(':user') && !node.closest('[data-user-message-bubble], [data-message-author-role="user"]');
+      });
+    return messages.at(-1) ?? root.querySelector(selector) ?? untypedMessages.at(-1) ?? (root.matches?.(selector) ? root : null);
   })()`;
 }
 
