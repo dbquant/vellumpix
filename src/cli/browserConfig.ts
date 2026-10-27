@@ -41,7 +41,6 @@ const BROWSER_MODEL_LABELS: [ModelName, string][] = [
   ["gpt-6-astra", "GPT-6"],
   ["gpt-5.6-sol", "GPT-5.6 Sol"],
   ["gpt-5.6", "GPT-5.6 Sol"],
-  ["gpt-5.5-pro", "GPT-5.5"],
   ["gpt-5.5-instant", "GPT-5.5 Instant"],
   ["gpt-5.5", "Thinking 5.5"],
   ["gpt-5.4-pro", "Pro"],
@@ -131,12 +130,18 @@ export function normalizeChatGptModelForBrowser(model: ModelName): ModelName {
   if (
     normalized === "gpt-5.6-sol" ||
     normalized === "gpt-5.6" ||
-    normalized === "gpt-5.5-pro" ||
     normalized === "gpt-5.5-instant" ||
     normalized === "gpt-5.5" ||
     normalized === "gpt-5.4"
   ) {
     return normalized;
+  }
+
+  // ChatGPT no longer exposes GPT-5.5 in the browser picker. Keep the API
+  // model id intact outside browser mode, but route the former browser default
+  // to the current Sol target without requesting an unavailable Pro effort.
+  if (normalized === "gpt-5.5-pro") {
+    return "gpt-5.6-sol";
   }
 
   // Pro variants: resolve to the latest Pro model in ChatGPT.
@@ -190,8 +195,7 @@ export function resolveDefaultBrowserThinkingTime({
   const normalizedModel = normalizeChatGptModelForBrowser(model as ModelName);
   return isCurrentChatGptProAlias(requestedModel ?? model) ||
     isGpt6ProAlias(requestedModel ?? model) ||
-    normalizedModel === "gpt-6-pro" ||
-    normalizedModel === "gpt-5.5-pro"
+    normalizedModel === "gpt-6-pro"
     ? "pro"
     : undefined;
 }

@@ -147,10 +147,28 @@ function buildAssistantImageExpression(
     for (let index = turns.length - 1; index >= 0; index -= 1) {
       const turn = turns[index];
       if (!isAssistantTurn(turn)) continue;
-      if (MIN_TURN_INDEX >= 0 && index < MIN_TURN_INDEX) continue;
       const messageRoot = ${buildLastAssistantMessageExpression("turn")} || turn;
-      const images = serializeImages(messageRoot);
-      if (images.length > 0) return images;
+      // Some current layouts place the generated-image gallery beside the typed
+      // assistant text unit, while both remain inside the same data-turn-key
+      // exchange. Prefer the message root, then widen only to that exchange.
+      const messageImages = serializeImages(messageRoot);
+      const images = messageImages.length > 0 ? messageImages : serializeImages(turn);
+      if (images.length === 0) continue;
+      if (MIN_TURN_INDEX < 0 || index >= MIN_TURN_INDEX) return images;
+      // ChatGPT can render an empty exchange before submission, include it in the
+      // baseline turn count, and then reuse that same exchange for the user prompt
+      // and image-only assistant reply. In that layout the new image lives at
+      // baseline - 1 even though it is after the current user message.
+      if (MIN_TURN_INDEX === turns.length && index === turns.length - 1) {
+        const userMessages = Array.from(turn.querySelectorAll(
+          '[data-message-author-role="user"], [data-turn="user"], [data-content-search-unit-key$=":user"], [data-chatgpt-search-unit-key$=":user"], [data-user-message-bubble]',
+        ));
+        const generatedImageNodes = Array.from(turn.querySelectorAll('img')).filter(isGeneratedImage);
+        const belongsToReusedExchange = userMessages.some((user) =>
+          generatedImageNodes.some((img) => Boolean(user.compareDocumentPosition(img) & Node.DOCUMENT_POSITION_FOLLOWING)),
+        );
+        if (belongsToReusedExchange) return images;
+      }
     }
     const boundary =
       MIN_TURN_INDEX > 0 && turns.length > 0

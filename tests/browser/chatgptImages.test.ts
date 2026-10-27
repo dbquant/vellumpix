@@ -76,6 +76,16 @@ describe("readAssistantGeneratedImages", () => {
       return flattenElements(this.children).filter((element) => matchesSelector(element, selector));
     }
 
+    closest(selector: string): FakeElement | null {
+      if (matchesSelector(this, selector)) return this;
+      let ancestor = this.parentElement;
+      while (ancestor) {
+        if (matchesSelector(ancestor, selector)) return ancestor;
+        ancestor = ancestor.parentElement;
+      }
+      return null;
+    }
+
     compareDocumentPosition(other: FakeElement): number {
       return other.order > this.order ? 4 : 0;
     }
@@ -101,8 +111,23 @@ describe("readAssistantGeneratedImages", () => {
     if (selector.includes('data-testid^="conversation-turn"')) {
       return String(element.getAttribute("data-testid") ?? "").startsWith("conversation-turn");
     }
-    if (selector.includes('data-message-author-role="assistant"')) {
-      return element.getAttribute("data-message-author-role") === "assistant";
+    if (
+      selector.includes('data-message-author-role="assistant"') ||
+      selector.includes('data-content-search-unit-key$=":assistant"')
+    ) {
+      return (
+        element.getAttribute("data-message-author-role") === "assistant" ||
+        String(element.getAttribute("data-content-search-unit-key") ?? "").endsWith(":assistant")
+      );
+    }
+    if (
+      selector.includes('data-message-author-role="user"') ||
+      selector.includes('data-content-search-unit-key$=":user"')
+    ) {
+      return (
+        element.getAttribute("data-message-author-role") === "user" ||
+        String(element.getAttribute("data-content-search-unit-key") ?? "").endsWith(":user")
+      );
     }
     return false;
   }
@@ -238,6 +263,47 @@ describe("readAssistantGeneratedImages", () => {
       width: 1254,
       height: 1254,
     });
+  });
+
+  test("accepts an image when ChatGPT reuses the baseline exchange for the submitted prompt", async () => {
+    const image = new FakeElement(
+      "img",
+      {
+        src: "blob:https://chatgpt.com/00000000-0000-4000-8000-000000000002",
+        alt: "Generated image 1",
+        width: "1086",
+        height: "1448",
+      },
+      5,
+    );
+    const preview = new FakeElement("button", { "data-testid": "generated-image-preview" }, 4, [
+      image,
+    ]);
+    const assistantMessage = new FakeElement(
+      "div",
+      { "data-content-search-unit-key": "fallback-turn-0:3:assistant" },
+      6,
+    );
+    const userMessage = new FakeElement(
+      "div",
+      { "data-content-search-unit-key": "fallback-turn-0:0:user" },
+      2,
+    );
+    const exchange = new FakeElement("div", { "data-turn-key": "reused-turn-id" }, 1, [
+      userMessage,
+      preview,
+      assistantMessage,
+    ]);
+    const runtime = {
+      evaluate: vi.fn(async ({ expression }: { expression: string }) => ({
+        result: { value: evaluateImageExpression(expression, [exchange]) },
+      })),
+    } as unknown as ChromeClient["Runtime"];
+
+    const images = await readAssistantGeneratedImages(runtime, 1);
+
+    expect(images).toHaveLength(1);
+    expect(images[0]).toMatchObject({ width: 1086, height: 1448 });
   });
 
   test("dedupes duplicate image urls by file id and keeps the largest candidate", async () => {

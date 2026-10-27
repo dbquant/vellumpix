@@ -1465,10 +1465,16 @@ function buildAssistantExtractor(functionName: string): string {
       const html = fileNames.length > 0 ? messageRoot.innerHTML : contentRoot?.innerHTML ?? '';
       const messageId = messageRoot.getAttribute('data-message-id') || messageRoot.getAttribute?.('data-chatgpt-selection-message-id') || messageRoot.getAttribute('data-chatgpt-search-message-ids')?.split(' ')[0] || messageRoot.getAttribute('data-content-search-unit-key') || messageRoot.getAttribute('data-chatgpt-search-unit-key');
       const turnId = turn.getAttribute('data-turn-key') || messageRoot.getAttribute('data-testid');
-      const generatedImages = Array.from(messageRoot.querySelectorAll('img')).filter((img) =>
+      const messageGeneratedImages = Array.from(messageRoot.querySelectorAll('img')).filter((img) =>
         String(img?.src || '').includes('/backend-api/estuary/content?id=file_') ||
         Boolean(img.closest(GENERATED_IMAGE_MARKER))
       );
+      const generatedImages = messageGeneratedImages.length > 0
+        ? messageGeneratedImages
+        : Array.from(turn.querySelectorAll('img')).filter((img) =>
+            String(img?.src || '').includes('/backend-api/estuary/content?id=file_') ||
+            Boolean(img.closest(GENERATED_IMAGE_MARKER))
+          );
       const normalizedText = String(text || '').toLowerCase().replace(/\\s+/g, ' ').trim();
       const retryVisible = Array.from(turn.querySelectorAll('button, [role="button"]')).some((button) => {
         const label = String(button.innerText || button.textContent || button.getAttribute?.('aria-label') || '')
@@ -1492,7 +1498,7 @@ function buildAssistantExtractor(functionName: string): string {
         /^(?:reasoning\\s+|pro thinking\\s+)?thought for \\d+(?:\\.\\d+)?\\s*(?:s|sec|secs|second|seconds|m|min|mins|minute|minutes|h|hr|hrs|hour|hours)\\s+edit$/.test(normalizedText);
       if (generatedImages.length > 0 && imageOnlyChrome) {
         const label = generatedImages.length === 1 ? 'Generated image.' : \`Generated \${generatedImages.length} images.\`;
-        return { text: label, html: messageRoot?.innerHTML ?? html, messageId, turnId, turnIndex: index };
+        return { text: label, html: turn?.innerHTML ?? messageRoot?.innerHTML ?? html, messageId, turnId, turnIndex: index };
       }
       if (text.trim()) {
         return { text, html, messageId, turnId, turnIndex: index };

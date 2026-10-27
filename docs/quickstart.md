@@ -7,11 +7,11 @@ This walks through the minimum to get a useful answer back. If you haven't insta
 
 ## 1. Pick a mode
 
-| Mode    | When to use it                                                     | What you need                             |
-| ------- | ------------------------------------------------------------------ | ----------------------------------------- |
-| API     | You have an API key and want reliability + multi-model.            | `OPENAI_API_KEY` (or Gemini / Anthropic). |
-| Browser | You have a ChatGPT Plus/Pro account and want GPT-5.5 Pro for free. | Chrome on macOS / Linux / Windows.        |
-| Render  | Air-gapped review, paste into the model of your choice.            | Just VellumPix.                           |
+| Mode    | When to use it                                                   | What you need                              |
+| ------- | ---------------------------------------------------------------- | ------------------------------------------ |
+| API     | You have an API key and want reliability + multi-model.          | `OPENAI_API_KEY` (or Gemini / Anthropic).  |
+| Browser | You have a ChatGPT Plus/Pro account and want to use ChatGPT web. | Chrome or Edge on macOS / Linux / Windows. |
+| Render  | Air-gapped review, paste into the model of your choice.          | Just VellumPix.                            |
 
 If both are available VellumPix picks API by default (cheaper to short-circuit). Override per-run with `--engine browser`.
 

@@ -9,7 +9,7 @@ description: "VellumPix bundles your prompt and files so a mythical pro agent �
 After installing (`npm i -g @dbquant/vellumpix`), every consult is a one-liner.
 
 ```bash
-# Browser path — no API key, drives ChatGPT directly (default: GPT-5.5 Pro).
+# Browser path — no API key, drives ChatGPT directly (current default target: GPT-5.6 Sol).
 vellumpix --engine browser --browser-manual-login -p "Review the storage layer for schema drift" --file "src/**/*.ts"
 
 # API path — multi-model cross-check in one run.

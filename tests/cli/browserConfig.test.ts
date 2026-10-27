@@ -25,8 +25,8 @@ describe("buildBrowserConfig", () => {
       hideWindow: undefined,
       // The session records the setting the run used: the default, off.
       noFocus: false,
-      desiredModel: "GPT-5.5",
-      thinkingTime: "pro",
+      desiredModel: "GPT-5.6 Sol",
+      thinkingTime: undefined,
       debug: undefined,
       allowCookieErrors: true,
       researchMode: "off",
@@ -130,10 +130,10 @@ describe("buildBrowserConfig", () => {
     },
   );
 
-  test("keeps the explicit GPT-5.5 Pro alias on GPT-5.5", async () => {
+  test("maps the retired GPT-5.5 Pro browser alias to GPT-5.6 Sol at available effort", async () => {
     await expect(buildBrowserConfig({ model: "gpt-5.5-pro" })).resolves.toMatchObject({
-      desiredModel: "GPT-5.5",
-      thinkingTime: "pro",
+      desiredModel: "GPT-5.6 Sol",
+      thinkingTime: undefined,
     });
   });
 
@@ -547,7 +547,7 @@ describe("buildBrowserConfig", () => {
       chatgptUrl: "https://chatgpt.com/?temporary-chat=true",
     });
     expect(config.url).toBe("https://chatgpt.com/?temporary-chat=true");
-    expect(config.desiredModel).toBe("GPT-5.5");
+    expect(config.desiredModel).toBe("GPT-5.6 Sol");
     expect(config.modelStrategy).toBe("select");
   });
 
@@ -608,7 +608,7 @@ describe("buildBrowserConfig", () => {
 
 describe("resolveBrowserModelLabel", () => {
   test("returns canonical ChatGPT label when CLI value matches API model", () => {
-    expect(resolveBrowserModelLabel("gpt-5.5-pro", "gpt-5.5-pro")).toBe("GPT-5.5");
+    expect(resolveBrowserModelLabel("gpt-5.5-pro", "gpt-5.5-pro")).toBe("GPT-5.6 Sol");
     expect(resolveBrowserModelLabel("gpt-5.5-instant", "gpt-5.5-instant")).toBe("GPT-5.5 Instant");
     expect(resolveBrowserModelLabel("gpt-5.5", "gpt-5.5")).toBe("Thinking 5.5");
     expect(resolveBrowserModelLabel("gpt-5.4-pro", "gpt-5.4-pro")).toBe("GPT-5.6 Sol");
@@ -677,6 +677,7 @@ describe("GPT-6 aliases", () => {
     expect(normalizeChatGptModelForBrowser("gpt-6-astra")).toBe("gpt-6-astra");
     expect(normalizeChatGptModelForBrowser("latest" as never)).toBe("gpt-6-astra");
     expect(normalizeChatGptModelForBrowser("gpt-6-pro" as never)).toBe("gpt-6-pro");
+    expect(normalizeChatGptModelForBrowser("gpt-5.5-pro")).toBe("gpt-5.6-sol");
     expect(mapModelToBrowserLabel("gpt-6-astra")).toBe("GPT-6");
     expect(mapModelToBrowserLabel("gpt-6-pro" as never)).toBe("GPT-6");
   });
