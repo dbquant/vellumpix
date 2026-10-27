@@ -8,7 +8,7 @@ import {
 } from "../constants.js";
 import { delay } from "../utils.js";
 import { logDomFailure } from "../domDebug.js";
-import { BrowserAutomationError } from "../../oracle/errors.js";
+import { BrowserAutomationError } from "../../vellumpix/errors.js";
 
 export function installJavaScriptDialogAutoDismissal(
   Page: ChromeClient["Page"],
@@ -113,7 +113,7 @@ function isWebUrl(value: string | null | undefined): boolean {
 
 // Printed URLs keep scheme, host and path only: auth URLs carry account hints and state values
 // in their query and fragment, and these lines and error details reach normal output (the
-// always-printed lines, Project Sources logs, `oracle session` error metadata).
+// always-printed lines, Project Sources logs, `vellumpix session` error metadata).
 function formatDiagnosticUrl(value: string | null | undefined): string {
   if (typeof value !== "string" || !value) return "n/a";
   if (isWebUrl(value)) {
@@ -376,7 +376,7 @@ export async function ensureChatMode(
         continue;
       }
       throw new BrowserAutomationError(
-        "Oracle could not verify whether the selected ChatGPT conversation uses Chat or Work mode, so it cannot safely resume that conversation.",
+        "VellumPix could not verify whether the selected ChatGPT conversation uses Chat or Work mode, so it cannot safely resume that conversation.",
         { stage: "chat-mode-selection", details: { mode: "conversation-unresolved" } },
       );
     }
@@ -436,8 +436,8 @@ export async function ensureChatMode(
   await logDomFailure(Runtime, logger, "chat-mode-selection");
   throw new BrowserAutomationError(
     changedFromWork
-      ? "Oracle could not verify Chat mode after leaving Work."
-      : "ChatGPT exposed Chat/Work controls but Oracle could not verify the active mode.",
+      ? "VellumPix could not verify Chat mode after leaving Work."
+      : "ChatGPT exposed Chat/Work controls but VellumPix could not verify the active mode.",
     { stage: "chat-mode-selection", details: { changedFromWork, clickedChat } },
   );
 }
@@ -460,14 +460,14 @@ export async function ensureNotBlocked(
   }
   if (await isChatGptAccountSecurityBlock(Runtime)) {
     const message =
-      "ChatGPT account security block detected. Open chatgpt.com in Chrome, secure the account, then rerun Oracle.";
+      "ChatGPT account security block detected. Open chatgpt.com in Chrome, secure the account, then rerun VellumPix.";
     logger("ChatGPT account security block detected");
     throw new BrowserAutomationError(message, { stage: "chatgpt-account-blocked" });
   }
 }
 
 const LOGIN_CHECK_TIMEOUT_MS = 5_000;
-const CHATGPT_ACCOUNT_EMAIL_ENV = "ORACLE_CHATGPT_ACCOUNT_EMAIL";
+const CHATGPT_ACCOUNT_EMAIL_ENV = "VELLUMPIX_CHATGPT_ACCOUNT_EMAIL";
 
 function preferredChatGptAccountEmail(): string | null {
   const email = process.env[CHATGPT_ACCOUNT_EMAIL_ENV]?.trim().toLowerCase();
@@ -529,8 +529,8 @@ export async function ensureLoggedIn(
   const cookieHint = options.remoteSession
     ? "The remote Chrome session is not signed into ChatGPT. Sign in there, then rerun."
     : (options.appliedCookies ?? 0) === 0
-      ? "No ChatGPT cookies were applied; sign in to chatgpt.com in Chrome or pass inline cookies (--browser-inline-cookies[(-file)] / ORACLE_BROWSER_COOKIES_JSON)."
-      : "ChatGPT login appears missing; open chatgpt.com in Chrome to refresh the session or provide inline cookies (--browser-inline-cookies[(-file)] / ORACLE_BROWSER_COOKIES_JSON).";
+      ? "No ChatGPT cookies were applied; sign in to chatgpt.com in Chrome or pass inline cookies (--browser-inline-cookies[(-file)] / VELLUMPIX_BROWSER_COOKIES_JSON)."
+      : "ChatGPT login appears missing; open chatgpt.com in Chrome to refresh the session or provide inline cookies (--browser-inline-cookies[(-file)] / VELLUMPIX_BROWSER_COOKIES_JSON).";
 
   const accountHint = welcomeBack.hint ? ` ${welcomeBack.hint}` : "";
   throw new Error(`ChatGPT session not detected.${domLabel}${accountHint} ${cookieHint}`);
@@ -1332,7 +1332,7 @@ function isPageNotLoadedProbe(probe: LoginProbeResult): boolean {
 function throwPageNotLoaded(probe: LoginProbeResult, logger: BrowserLogger, when = ""): never {
   logger(`[browser] Login probe failed${when} ${formatLoginProbeDetail(probe)}`);
   throw new BrowserAutomationError(
-    `ChatGPT page did not load${when} (url=${formatDiagnosticUrl(probe.pageUrl)}, error=${probe.error ?? "none"}), so Oracle could not check the login; rerun the command.`,
+    `ChatGPT page did not load${when} (url=${formatDiagnosticUrl(probe.pageUrl)}, error=${probe.error ?? "none"}), so VellumPix could not check the login; rerun the command.`,
     { stage: "chatgpt-page-not-loaded", details: { pageUrl: formatDiagnosticUrl(probe.pageUrl) } },
   );
 }

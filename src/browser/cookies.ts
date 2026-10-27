@@ -174,7 +174,7 @@ async function readChromeCookies(
 ): Promise<CookieParam[]> {
   const origins = Array.from(new Set([stripQuery(url), ...COOKIE_URLS]));
   const chromeProfile = cookiePath ?? profile ?? undefined;
-  const timeoutMs = readDuration("ORACLE_COOKIE_LOAD_TIMEOUT_MS", 5_000);
+  const timeoutMs = readDuration("VELLUMPIX_COOKIE_LOAD_TIMEOUT_MS", 5_000);
 
   // Learned: read from multiple origins to capture auth cookies that land on chat.openai.com + atlas.
   const { cookies, warnings } = await getCookies({
@@ -192,7 +192,7 @@ async function readChromeCookies(
       `[cookies] Cookie reader reported ${warnings.length} warning(s); copied cookies may be incomplete. Use --browser-manual-login if authentication fails.`,
     );
   }
-  if (process.env.ORACLE_DEBUG_COOKIES === "1" && warnings.length) {
+  if (process.env.VELLUMPIX_DEBUG_COOKIES === "1" && warnings.length) {
     // eslint-disable-next-line no-console
     console.log(`[cookies] sweet-cookie warnings:\n- ${warnings.join("\n- ")}`);
   }

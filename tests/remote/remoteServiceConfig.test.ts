@@ -5,9 +5,9 @@ describe("resolveRemoteServiceConfig", () => {
   it("prefers CLI values over config and env", () => {
     const env = {} as NodeJS.ProcessEnv;
     // biome-ignore lint/complexity/useLiteralKeys: env var names are uppercase with underscores
-    env["ORACLE_REMOTE_HOST"] = "env:4";
+    env["VELLUMPIX_REMOTE_HOST"] = "env:4";
     // biome-ignore lint/complexity/useLiteralKeys: env var names are uppercase with underscores
-    env["ORACLE_REMOTE_TOKEN"] = "env-token";
+    env["VELLUMPIX_REMOTE_TOKEN"] = "env-token";
 
     const resolved = resolveRemoteServiceConfig({
       cliHost: "cli:1",
@@ -41,7 +41,7 @@ describe("resolveRemoteServiceConfig", () => {
   it("falls back to env token when browser.remoteToken is missing", () => {
     const env = {} as NodeJS.ProcessEnv;
     // biome-ignore lint/complexity/useLiteralKeys: env var names are uppercase with underscores
-    env["ORACLE_REMOTE_TOKEN"] = "env-token";
+    env["VELLUMPIX_REMOTE_TOKEN"] = "env-token";
     const resolved = resolveRemoteServiceConfig({
       userConfig: {
         browser: { remoteHost: "cfg:9473" },
@@ -58,9 +58,9 @@ describe("resolveRemoteServiceConfig", () => {
   it("uses env when config is empty", () => {
     const env = {} as NodeJS.ProcessEnv;
     // biome-ignore lint/complexity/useLiteralKeys: env var names are uppercase with underscores
-    env["ORACLE_REMOTE_HOST"] = "env:9473";
+    env["VELLUMPIX_REMOTE_HOST"] = "env:9473";
     // biome-ignore lint/complexity/useLiteralKeys: env var names are uppercase with underscores
-    env["ORACLE_REMOTE_TOKEN"] = "env-token";
+    env["VELLUMPIX_REMOTE_TOKEN"] = "env-token";
 
     const resolved = resolveRemoteServiceConfig({
       userConfig: {},

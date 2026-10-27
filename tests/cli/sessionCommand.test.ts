@@ -100,19 +100,19 @@ describe("handleSessionCommand", () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
     const deps = createDeps();
     deps.getSessionPaths.mockResolvedValue({
-      dir: "/tmp/.oracle/sessions/abc",
-      metadata: "/tmp/.oracle/sessions/abc/meta.json",
-      request: "/tmp/.oracle/sessions/abc/request.json",
-      log: "/tmp/.oracle/sessions/abc/output.log",
+      dir: "/tmp/.vellumpix/sessions/abc",
+      metadata: "/tmp/.vellumpix/sessions/abc/meta.json",
+      request: "/tmp/.vellumpix/sessions/abc/request.json",
+      log: "/tmp/.vellumpix/sessions/abc/output.log",
     });
 
     await handleSessionCommand("abc", command, deps);
 
     expect(deps.getSessionPaths).toHaveBeenCalledWith("abc");
-    expect(logSpy).toHaveBeenCalledWith("Session dir: /tmp/.oracle/sessions/abc");
-    expect(logSpy).toHaveBeenCalledWith("Metadata: /tmp/.oracle/sessions/abc/meta.json");
-    expect(logSpy).toHaveBeenCalledWith("Request: /tmp/.oracle/sessions/abc/request.json");
-    expect(logSpy).toHaveBeenCalledWith("Log: /tmp/.oracle/sessions/abc/output.log");
+    expect(logSpy).toHaveBeenCalledWith("Session dir: /tmp/.vellumpix/sessions/abc");
+    expect(logSpy).toHaveBeenCalledWith("Metadata: /tmp/.vellumpix/sessions/abc/meta.json");
+    expect(logSpy).toHaveBeenCalledWith("Request: /tmp/.vellumpix/sessions/abc/request.json");
+    expect(logSpy).toHaveBeenCalledWith("Log: /tmp/.vellumpix/sessions/abc/output.log");
     expect(process.exitCode).toBeUndefined();
   });
 
@@ -182,7 +182,7 @@ describe("handleSessionCommand", () => {
     await handleSessionCommand(undefined, command, deps);
     expect(deps.deleteSessionsOlderThan).toHaveBeenCalledWith({ hours: 6, includeAll: false });
     expect(logSpy).toHaveBeenCalledWith(
-      'Deleted 3 sessions (sessions older than 6h). 2 sessions remain.\nRun "oracle session --clear --all" to delete everything.',
+      'Deleted 3 sessions (sessions older than 6h). 2 sessions remain.\nRun "vellumpix session --clear --all" to delete everything.',
     );
   });
 
@@ -191,7 +191,7 @@ describe("handleSessionCommand", () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     await handleSessionCommand("clear", command, createDeps());
     expect(errorSpy).toHaveBeenCalledWith(
-      'Session cleanup now uses --clear. Run "oracle session --clear --hours <n>" instead.',
+      'Session cleanup now uses --clear. Run "vellumpix session --clear --hours <n>" instead.',
     );
     expect(process.exitCode).toBe(1);
   });

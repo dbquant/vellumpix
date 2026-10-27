@@ -27,7 +27,7 @@ describe("gemini-web saveFirstGeminiImageFromOutput", () => {
       });
     });
 
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "oracle-gemini-"));
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-gemini-"));
     const outputPath = path.join(tempDir, "out.jpg");
 
     const output = {

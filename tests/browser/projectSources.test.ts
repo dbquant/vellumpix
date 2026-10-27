@@ -30,10 +30,10 @@ describe("Project Sources browser expressions", () => {
 
   test("marks only file inputs scoped through the Sources dialog/panel search", () => {
     const expression = buildMarkProjectSourcesUploadInputExpression(
-      "data-oracle-project-sources-input",
+      "data-vellumpix-project-sources-input",
     );
     expect(expression).toContain('input[type="file"]');
-    expect(expression).toContain("data-oracle-project-sources-input");
+    expect(expression).toContain("data-vellumpix-project-sources-input");
     expect(expression).toContain("dialog");
     expect(expression).not.toContain("document.body");
   });

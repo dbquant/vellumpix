@@ -10,9 +10,9 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { finalizeProviderNativeCapture } from "../dist/src/browser/chatgptConversation.js";
 
-const root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-provider-proof-"));
-const previousHome = process.env.ORACLE_HOME_DIR;
-process.env.ORACLE_HOME_DIR = root;
+const root = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-provider-proof-"));
+const previousHome = process.env.VELLUMPIX_HOME_DIR;
+process.env.VELLUMPIX_HOME_DIR = root;
 const math = String.raw`\(\mathcal{F}_s = \sum_{n=0}^\infty \tfrac{1}{2}\,\Gamma(n)\)`;
 const document = JSON.parse(
   await fs.readFile(
@@ -94,7 +94,7 @@ try {
   );
   const cli = spawnSync(
     process.execPath,
-    [fileURLToPath(new URL("../dist/bin/oracle-cli.js", import.meta.url)), "--help"],
+    [fileURLToPath(new URL("../dist/bin/vellumpix-cli.js", import.meta.url)), "--help"],
     { encoding: "utf8" },
   );
   assert.equal(cli.status, 0, cli.stderr);
@@ -105,7 +105,7 @@ try {
   );
 } finally {
   for (const timer of timers) clearTimeout(timer);
-  if (previousHome === undefined) delete process.env.ORACLE_HOME_DIR;
-  else process.env.ORACLE_HOME_DIR = previousHome;
+  if (previousHome === undefined) delete process.env.VELLUMPIX_HOME_DIR;
+  else process.env.VELLUMPIX_HOME_DIR = previousHome;
   await fs.rm(root, { recursive: true, force: true });
 }

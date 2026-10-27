@@ -5,7 +5,7 @@ import { stat } from "node:fs/promises";
 import path from "node:path";
 
 const execFileAsync = promisify(execFile);
-const LIVE = process.env.ORACLE_LIVE_TEST === "1";
+const LIVE = process.env.VELLUMPIX_LIVE_TEST === "1";
 const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
 const baseUrl = process.env.OPENAI_BASE_URL ?? "";
 const isOpenRouterBase = baseUrl.includes("openrouter");
@@ -26,26 +26,26 @@ const OPENAI_ENV = {
   AZURE_OPENAI_API_VERSION: "",
 };
 const MCP_CONFIG = path.join(process.cwd(), "config", "mcporter.json");
-const ORACLE_MCP_BIN = path.join(process.cwd(), "dist", "bin", "oracle-mcp.js");
+const VELLUMPIX_MCP_BIN = path.join(process.cwd(), "dist", "bin", "vellumpix-mcp.js");
 
 async function assertBuiltArtifacts(): Promise<void> {
-  await stat(ORACLE_MCP_BIN);
+  await stat(VELLUMPIX_MCP_BIN);
 }
 
 (LIVE && hasOpenAI && !isOpenRouterBase ? describe : describe.skip)(
-  "mcporter live (stdio oracle-mcp)",
+  "mcporter live (stdio vellumpix-mcp)",
   () => {
-    it("lists oracle-local schema", async () => {
+    it("lists vellumpix-local schema", async () => {
       await assertBuiltArtifacts();
       const { stdout } = await execFileAsync(
         "pnpm",
-        ["exec", "mcporter", "list", "oracle-local", "--schema", "--config", MCP_CONFIG],
+        ["exec", "mcporter", "list", "vellumpix-local", "--schema", "--config", MCP_CONFIG],
         {
           env: { ...process.env, ...OPENAI_ENV },
           timeout: 60_000,
         },
       );
-      expect(stdout).toContain("oracle-local");
+      expect(stdout).toContain("vellumpix-local");
     }, 90_000);
 
     it("invokes consult via mcporter", async () => {
@@ -56,7 +56,7 @@ async function assertBuiltArtifacts(): Promise<void> {
           "exec",
           "mcporter",
           "call",
-          "oracle-local.consult",
+          "vellumpix-local.consult",
           "prompt:Say hello from mcporter live",
           "model:gpt-4.1",
           "engine:api",

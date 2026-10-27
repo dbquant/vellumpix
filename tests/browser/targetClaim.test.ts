@@ -65,7 +65,7 @@ test("borrower ownership survives document replacement and blocks original retir
 test("missing, malformed, and inaccessible storage never authorizes retirement", () => {
   const { run, storage, sessionStorage } = renderer();
   expect(run(buildTargetRetirementExpression("original", "owned", "reservation-a"))).toBe(false);
-  storage.set("oracle:target-claim", "{invalid");
+  storage.set("vellumpix:target-claim", "{invalid");
   expect(run(buildTargetRetirementExpression("original", "owned", "reservation-a"))).toBe(false);
   sessionStorage.getItem = () => {
     throw new Error("storage unavailable");

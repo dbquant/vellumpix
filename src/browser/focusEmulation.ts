@@ -42,7 +42,7 @@ export function shouldActivateBeforeTrustedInput(
 }
 
 const FOCUS_EMULATION_FALLBACK_LINE =
-  "[browser] Focus emulation is unavailable; no-focus fallback: Oracle will bring Chrome to the front before trusted clicks.";
+  "[browser] Focus emulation is unavailable; no-focus fallback: VellumPix will bring Chrome to the front before trusted clicks.";
 
 /**
  * Attachment uploads and mode switches click with trusted input before the send, so without focus

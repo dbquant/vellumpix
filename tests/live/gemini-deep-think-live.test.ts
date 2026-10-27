@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { createGeminiWebExecutor } from "../../src/gemini-web/executor.js";
 import { acquireLiveTestLock, releaseLiveTestLock } from "./liveLock.js";
 
-const LIVE = process.env.ORACLE_LIVE_TEST === "1";
-const MANUAL = process.env.ORACLE_LIVE_TEST_MANUAL_LOGIN === "1";
+const LIVE = process.env.VELLUMPIX_LIVE_TEST === "1";
+const MANUAL = process.env.VELLUMPIX_LIVE_TEST_MANUAL_LOGIN === "1";
 
 (LIVE && MANUAL ? describe : describe.skip)("Gemini Deep Think DOM automation live", () => {
   it(

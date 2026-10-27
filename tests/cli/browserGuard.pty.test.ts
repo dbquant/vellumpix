@@ -5,7 +5,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
 const TSX_BIN = path.join(process.cwd(), "node_modules", "tsx", "dist", "cli.mjs");
-const CLI_ENTRY = path.join(process.cwd(), "bin", "oracle-cli.ts");
+const CLI_ENTRY = path.join(process.cwd(), "bin", "vellumpix-cli.ts");
 
 let ptyAvailable = process.platform !== "linux";
 // biome-ignore lint/suspicious/noExplicitAny: third-party module without types
@@ -36,17 +36,17 @@ async function runCliPty(
     throw new Error("PTY not available in this environment");
   }
 
-  const oracleHome = await mkdtemp(path.join(os.tmpdir(), "oracle-pty-cli-"));
+  const vellumpixHome = await mkdtemp(path.join(os.tmpdir(), "vellumpix-pty-cli-"));
   const env = {
     ...process.env,
     // biome-ignore lint/style/useNamingConvention: env keys intentionally uppercase
     OPENAI_API_KEY: "sk-pty",
     // biome-ignore lint/style/useNamingConvention: env keys intentionally uppercase
-    ORACLE_HOME_DIR: oracleHome,
+    VELLUMPIX_HOME_DIR: vellumpixHome,
     // biome-ignore lint/style/useNamingConvention: env keys intentionally uppercase
-    ORACLE_NO_DETACH: "1",
+    VELLUMPIX_NO_DETACH: "1",
     // biome-ignore lint/style/useNamingConvention: env keys intentionally uppercase
-    ORACLE_DISABLE_KEYTAR: "1",
+    VELLUMPIX_DISABLE_KEYTAR: "1",
     // Force color so we cover rich-TTY output path.
     // biome-ignore lint/style/useNamingConvention: env keys intentionally uppercase
     FORCE_COLOR: "1",
@@ -68,12 +68,12 @@ async function runCliPty(
   const [code, signal] = await exitPromise;
   clearTimeout(timeout);
 
-  await rm(oracleHome, { recursive: true, force: true });
+  await rm(vellumpixHome, { recursive: true, force: true });
 
   return { output, code, signal: signal == null ? null : signal.toString() };
 }
 
-ptyDescribe("oracle CLI browser guard (PTY)", () => {
+ptyDescribe("vellumpix CLI browser guard (PTY)", () => {
   it("fails fast when grok is paired with --engine browser", async () => {
     const { output, code } = await runCliPty([
       "--engine",

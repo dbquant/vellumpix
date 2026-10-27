@@ -11,8 +11,8 @@ import {
 } from "../../src/browser/prompt.js";
 import { findAttachmentBasenameCollisions } from "../../src/browser/attachmentValidation.js";
 import { createStoredZip } from "../../src/browser/zipBundle.js";
-import { DEFAULT_SYSTEM_PROMPT, type MODEL_CONFIGS } from "../../src/oracle.js";
-import type { RunOracleOptions } from "../../src/oracle.js";
+import { DEFAULT_SYSTEM_PROMPT, type MODEL_CONFIGS } from "../../src/vellumpix.js";
+import type { RunVellumPixOptions } from "../../src/vellumpix.js";
 
 const fastTokenizer: (typeof MODEL_CONFIGS)["gpt-5.1"]["tokenizer"] = (messages) => {
   const typed = messages as Array<{ content: string }>;
@@ -22,7 +22,7 @@ const fastTokenizer: (typeof MODEL_CONFIGS)["gpt-5.1"]["tokenizer"] = (messages)
   );
 };
 
-function buildOptions(overrides: Partial<RunOracleOptions> = {}): RunOracleOptions {
+function buildOptions(overrides: Partial<RunVellumPixOptions> = {}): RunVellumPixOptions {
   return {
     prompt: overrides.prompt ?? "Explain the bug",
     model: overrides.model ?? "gpt-5.2-pro",
@@ -33,7 +33,7 @@ function buildOptions(overrides: Partial<RunOracleOptions> = {}): RunOracleOptio
     maxFileSizeBytes: overrides.maxFileSizeBytes,
     browserBundleFiles: overrides.browserBundleFiles,
     browserBundleFormat: overrides.browserBundleFormat,
-  } as RunOracleOptions;
+  } as RunVellumPixOptions;
 }
 
 const CENTRAL_DIRECTORY_HEADER = 0x02014b50;
@@ -179,7 +179,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("auto inline fallback defers text-bundle creation until materialize", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-inline-fallback-text-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-inline-fallback-text-"));
     let result: Awaited<ReturnType<typeof assembleBrowserPrompt>> | undefined;
     try {
       await fs.writeFile(path.join(tempDir, "one.txt"), "one", "utf8");
@@ -250,7 +250,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("always mode rejects native uploads with the same basename", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-duplicate-basename-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-duplicate-basename-"));
     const firstPath = path.join(tempDir, "first", "photo.png");
     const secondPath = path.join(tempDir, "second", "photo.png");
     try {
@@ -280,7 +280,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("auto mode bundles large duplicate-basename text files as flattened text", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-auto-upload-collision-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-auto-upload-collision-"));
     const firstPath = path.join(tempDir, "first", "SKILL.md");
     const secondPath = path.join(tempDir, "second", "SKILL.md");
     const largeContent = "x".repeat(31_000);
@@ -318,7 +318,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("auto mode keeps tiny duplicate-basename text files inline", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-auto-inline-collision-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-auto-inline-collision-"));
     const firstPath = path.join(tempDir, "first", "SKILL.md");
     const secondPath = path.join(tempDir, "second", "SKILL.md");
     try {
@@ -348,7 +348,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("never mode keeps duplicate-basename text files inline", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-never-inline-collision-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-never-inline-collision-"));
     const firstPath = path.join(tempDir, "first", "SKILL.md");
     const secondPath = path.join(tempDir, "second", "SKILL.md");
     try {
@@ -377,7 +377,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("bundling resolves duplicate attachment basenames", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-bundled-collision-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-bundled-collision-"));
     const firstPath = path.join(tempDir, "first", "SKILL.md");
     const secondPath = path.join(tempDir, "second", "SKILL.md");
     let result: Awaited<ReturnType<typeof assembleBrowserPrompt>> | undefined;
@@ -472,8 +472,8 @@ describe("assembleBrowserPrompt", () => {
     const options = buildOptions({
       file: ["a.txt"],
       browserInlineFiles: true,
-    } as Partial<RunOracleOptions>);
-    const result = await assembleBrowserPrompt(options as RunOracleOptions, {
+    } as Partial<RunVellumPixOptions>);
+    const result = await assembleBrowserPrompt(options as RunVellumPixOptions, {
       cwd: "/repo",
       readFilesImpl: async () => [{ path: "/repo/a.txt", content: "inline test" }],
     });
@@ -486,7 +486,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("rejects raw files when browser attachments are disabled", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-disabled-raw-upload-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-disabled-raw-upload-"));
     try {
       await fs.writeFile(path.join(tempDir, "archive.zip"), Buffer.from("PK"));
       await expect(
@@ -504,7 +504,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("explicit text format skips empty bundles for raw-only inputs", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-raw-text-bundle-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-raw-text-bundle-"));
     try {
       const archivePath = path.join(tempDir, "archive.zip");
       await fs.writeFile(archivePath, Buffer.from("PK"));
@@ -529,7 +529,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("explicit text format keeps the legacy multi-file text bundle", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-explicit-text-bundle-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-explicit-text-bundle-"));
     try {
       await fs.writeFile(path.join(tempDir, "one.txt"), "one", "utf8");
       await fs.writeFile(path.join(tempDir, "two.txt"), "two", "utf8");
@@ -557,7 +557,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("explicit text format bundles text files to keep mixed uploads within the limit", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-mixed-text-bundle-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-mixed-text-bundle-"));
     try {
       const textFiles = ["one.txt", "two.txt"];
       const rawFiles = Array.from({ length: 9 }, (_, index) => `archive-${index}.zip`);
@@ -583,7 +583,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("keeps ordinary raw uploads uncapped when no explicit file-size limit is set", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-raw-upload-default-size-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-raw-upload-default-size-"));
     try {
       const archivePath = path.join(tempDir, "archive.zip");
       await fs.writeFile(archivePath, Buffer.alloc(2 * 1024 * 1024));
@@ -604,7 +604,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("rejects oversized in-memory ZIP bundles before reading source bytes", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-zip-memory-limit-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-zip-memory-limit-"));
     try {
       const archivePath = path.join(tempDir, "archive.zip");
       await fs.writeFile(archivePath, "");
@@ -625,7 +625,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("rejects raw files that exceed the configured file-size limit before bundling", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-large-raw-upload-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-large-raw-upload-"));
     try {
       await fs.writeFile(path.join(tempDir, "archive.zip"), Buffer.alloc(5));
       await expect(
@@ -645,7 +645,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("rejects too many raw uploads when explicit text format cannot bundle them", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-many-raw-uploads-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-many-raw-uploads-"));
     try {
       const files = Array.from({ length: 11 }, (_, index) => `archive-${index}.zip`);
       await Promise.all(
@@ -693,7 +693,7 @@ describe("assembleBrowserPrompt", () => {
       readFilesImpl,
     });
     const inline = await assembleBrowserPrompt(
-      { ...buildOptions({ file: ["doc.md"] }), browserInlineFiles: true } as RunOracleOptions,
+      { ...buildOptions({ file: ["doc.md"] }), browserInlineFiles: true } as RunVellumPixOptions,
       { cwd: "/repo", readFilesImpl },
     );
     expect(inline.estimatedInputTokens).toBeGreaterThan(promptOnly.estimatedInputTokens / 2);
@@ -701,7 +701,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("auto bundles more than 10 text uploads as flattened text", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-many-text-zip-bundle-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-many-text-zip-bundle-"));
     try {
       const fileNames = Array.from({ length: 11 }, (_, i) => `file${i + 1}.txt`);
       await Promise.all(
@@ -744,7 +744,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("auto bundles two text uploads as flattened text", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-text-auto-bundle-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-text-auto-bundle-"));
     try {
       await fs.mkdir(path.join(tempDir, "src"), { recursive: true });
       await fs.writeFile(path.join(tempDir, "src", "a.ts"), "content for src/a.ts", "utf8");
@@ -786,7 +786,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("keeps native attachments alongside an automatic source ZIP", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-mixed-native-source-zip-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-mixed-native-source-zip-"));
     try {
       await fs.writeFile(path.join(tempDir, "one.ts"), "export const one = 1;\n", "utf8");
       await fs.writeFile(path.join(tempDir, "two.ts"), "export const two = 2;\n", "utf8");
@@ -820,7 +820,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("keeps native uploads direct when a source ZIP reduces the upload count to 10", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-source-zip-upload-cap-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-source-zip-upload-cap-"));
     try {
       const textFiles = ["one.ts", "two.ts"];
       const rawFiles = Array.from({ length: 9 }, (_, index) => `archive-${index}.zip`);
@@ -852,7 +852,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("automatically folds native uploads into the ZIP when the upload cap still overflows", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-all-files-upload-cap-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-all-files-upload-cap-"));
     try {
       const textFiles = ["one.ts", "two.ts"];
       const rawFiles = Array.from({ length: 10 }, (_, index) => `archive-${index}.zip`);
@@ -884,7 +884,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("keeps multiple native attachments separate by default", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-native-uploads-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-native-uploads-"));
     try {
       const firstPath = path.join(tempDir, "first.png");
       const secondPath = path.join(tempDir, "second.pdf");
@@ -912,7 +912,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("forced auto bundle uses ZIP and preserves archive bytes", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-auto-zip-bundle-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-auto-zip-bundle-"));
     try {
       const notePath = path.join(tempDir, "note.txt");
       const archivePath = path.join(tempDir, "inner.zip");
@@ -954,7 +954,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("forced auto bundle includes archives found by directory expansion", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-dir-zip-bundle-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-dir-zip-bundle-"));
     try {
       const sourceDir = path.join(tempDir, "source");
       const notePath = path.join(sourceDir, "note.txt");
@@ -998,7 +998,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("explicit ZIP bundle format preserves original bytes for all bundled files", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-explicit-zip-bundle-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-explicit-zip-bundle-"));
     try {
       const textPath = path.join(tempDir, "src", "a.ts");
       const gzipPath = path.join(tempDir, "artifact.gz");
@@ -1032,7 +1032,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("force-bundle with auto uploads a text bundle instead of inlining small files", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-force-bundle-auto-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-force-bundle-auto-"));
     let result: Awaited<ReturnType<typeof assembleBrowserPrompt>> | undefined;
     try {
       await fs.writeFile(path.join(tempDir, "one.txt"), "one", "utf8");
@@ -1072,7 +1072,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("explicit zip format packs text-only uploads into a ZIP", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-explicit-zip-text-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-explicit-zip-text-"));
     let result: Awaited<ReturnType<typeof assembleBrowserPrompt>> | undefined;
     try {
       await fs.writeFile(path.join(tempDir, "one.txt"), "one", "utf8");
@@ -1129,7 +1129,7 @@ describe("assembleBrowserPrompt", () => {
   });
 
   test("cleanup removes generated browser bundle directories", async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-cleanup-bundle-"));
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-cleanup-bundle-"));
     try {
       await fs.writeFile(path.join(tempDir, "one.ts"), "one", "utf8");
       await fs.writeFile(path.join(tempDir, "two.ts"), "two", "utf8");

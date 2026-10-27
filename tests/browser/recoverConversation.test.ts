@@ -176,10 +176,10 @@ describe("resolveRecoveryProfileDir", () => {
       resolveRecoveryProfileDir(
         metaWith({ tabUrl: "https://chatgpt.com/c/abc" }, undefined, {
           manualLogin: true,
-          manualLoginProfileDir: "/tmp/oracle-profile",
+          manualLoginProfileDir: "/tmp/vellumpix-profile",
         }),
       ),
-    ).toBe("/tmp/oracle-profile");
+    ).toBe("/tmp/vellumpix-profile");
   });
 
   test("prefers the recorded runtime profile dir for default manual-login sessions", () => {

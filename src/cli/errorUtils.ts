@@ -1,4 +1,4 @@
-const LOGGED_SYMBOL = Symbol("oracle.alreadyLogged");
+const LOGGED_SYMBOL = Symbol("vellumpix.alreadyLogged");
 
 export function formatCliError(error: unknown): string {
   const message = error instanceof Error ? error.message : typeof error === "string" ? error : "";

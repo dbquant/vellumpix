@@ -2,13 +2,13 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { describe, expect, test, vi } from "vitest";
-import type { RunOracleOptions } from "../../src/oracle.js";
+import type { RunVellumPixOptions } from "../../src/vellumpix.js";
 import type { BrowserSessionConfig } from "../../src/sessionStore.js";
 import {
   buildBrowserRunWarningsForTest,
   runBrowserSessionExecution,
 } from "../../src/browser/sessionRunner.js";
-import { BrowserRunCancelledError } from "../../src/oracle/errors.js";
+import { BrowserRunCancelledError } from "../../src/vellumpix/errors.js";
 import { ensureLoggedIn } from "../../src/browser/actions/navigation.js";
 import type { ChromeClient } from "../../src/browser/types.js";
 import {
@@ -17,7 +17,7 @@ import {
 } from "../../src/browser/focusEmulation.js";
 import type { BrowserPromptArtifacts } from "../../src/browser/prompt.js";
 
-const baseRunOptions: RunOracleOptions = {
+const baseRunOptions: RunVellumPixOptions = {
   prompt: "Hello world",
   model: "gpt-5.2-pro",
   file: [],
@@ -51,8 +51,8 @@ describe("runBrowserSessionExecution", () => {
   });
 
   test("cancellation wins during prompt preparation and cleans late bundles", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-cancel-preparation-"));
-    const bundleDir = path.join(root, "oracle-browser-bundle-test");
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-cancel-preparation-"));
+    const bundleDir = path.join(root, "vellumpix-browser-bundle-test");
     const bundlePath = path.join(bundleDir, "context.txt");
     const cancellation = new AbortController();
     let resolvePrompt!: (value: BrowserPromptArtifacts) => void;
@@ -823,7 +823,7 @@ describe("runBrowserSessionExecution", () => {
     );
     const printed = log.mock.calls.map((call) => String(call[0]));
     expect(printed).toContain(
-      "[browser] Focus emulation is unavailable; no-focus fallback: Oracle will bring Chrome to the front before trusted clicks.",
+      "[browser] Focus emulation is unavailable; no-focus fallback: VellumPix will bring Chrome to the front before trusted clicks.",
     );
     expect(printed.some((line) => line.includes("Focus emulation enabled"))).toBe(false);
   });
@@ -1225,7 +1225,7 @@ describe("runBrowserSessionExecution", () => {
   });
 
   test("removes generated browser bundles after execution even when the run fails", async () => {
-    const bundleDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-browser-bundle-"));
+    const bundleDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-browser-bundle-"));
     const bundlePath = path.join(bundleDir, "attachments-bundle.zip");
     await fs.writeFile(bundlePath, "zip");
     const executeBrowser = vi.fn(async () => {

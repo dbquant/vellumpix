@@ -47,7 +47,7 @@ async function stopWorker(pid) {
 
 for (const { name, Client, Transport, modern } of clients) {
   for (const alias of [false, true]) {
-    const home = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-mcp-lifecycle-"));
+    const home = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-mcp-lifecycle-"));
     let releaseResponse;
     const responseGate = new Promise((resolve) => {
       releaseResponse = resolve;
@@ -62,7 +62,7 @@ for (const { name, Client, Transport, modern } of clients) {
     let requests = 0;
     let workerPid;
     let proofResult;
-    const marker = "ORACLE_MCP_LIFECYCLE_OK";
+    const marker = "VELLUMPIX_MCP_LIFECYCLE_OK";
     const server = http.createServer(async (req, res) => {
       try {
         assert.equal(req.url, "/v1/chat/completions");
@@ -125,25 +125,25 @@ for (const { name, Client, Transport, modern } of clients) {
     const env = Object.fromEntries(
       Object.entries({
         ...process.env,
-        ORACLE_HOME_DIR: home,
+        VELLUMPIX_HOME_DIR: home,
         OPENAI_API_KEY: "synthetic-proof-key",
         OPENAI_BASE_URL: `http://127.0.0.1:${server.address().port}/v1`,
-        ORACLE_DISABLE_KEYTAR: "1",
-        ORACLE_NO_DETACH: undefined,
+        VELLUMPIX_DISABLE_KEYTAR: "1",
+        VELLUMPIX_NO_DETACH: undefined,
       }).filter(([, value]) => typeof value === "string"),
     );
     let client;
     let transport;
     const connect = async () => {
       client = new Client(
-        { name: "oracle-lifecycle-proof", version: "1.0.0" },
+        { name: "vellumpix-lifecycle-proof", version: "1.0.0" },
         modern ? { versionNegotiation: { mode: { pin: "2026-07-28" } } } : undefined,
       );
       transport = new Transport({
         command: process.execPath,
         args: alias
-          ? [path.join(root, "dist/bin/oracle-cli.js"), "oracle-mcp"]
-          : [path.join(root, "dist/bin/oracle-mcp.js")],
+          ? [path.join(root, "dist/bin/vellumpix-cli.js"), "vellumpix-mcp"]
+          : [path.join(root, "dist/bin/vellumpix-mcp.js")],
         cwd: home,
         env,
         stderr: "pipe",
@@ -229,7 +229,7 @@ for (const { name, Client, Transport, modern } of clients) {
       assert.equal(transport.pid, null);
       proofResult = {
         client: name,
-        entrypoint: alias ? "oracle oracle-mcp" : "oracle-mcp",
+        entrypoint: alias ? "vellumpix vellumpix-mcp" : "vellumpix-mcp",
         startMs,
         waitTimeout: true,
         cancellation: true,

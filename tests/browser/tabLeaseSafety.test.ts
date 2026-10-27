@@ -7,8 +7,8 @@ import { acquireBrowserTabLease } from "../../src/browser/tabLeaseRegistry.js";
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function heldLock(kind: "empty" | "live" | "malformed") {
-  const profile = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-lease-safety-"));
-  const lock = path.join(profile, "oracle-tab-leases.lock");
+  const profile = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-lease-safety-"));
+  const lock = path.join(profile, "vellumpix-tab-leases.lock");
   await fs.mkdir(lock);
   if (kind === "live")
     await fs.writeFile(
@@ -83,8 +83,8 @@ test("does not steal a live owner after two false native PID probes", async () =
 test.each([true, false])(
   "retains a stale lease when independent liveness evidence survives (identity=%s)",
   async (identityAvailable) => {
-    const profile = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-lease-safety-"));
-    const registry = path.join(profile, "oracle-tab-leases.json");
+    const profile = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-lease-safety-"));
+    const registry = path.join(profile, "vellumpix-tab-leases.json");
     const foreign = {
       id: "foreign",
       pid: 32145,
@@ -120,8 +120,8 @@ test.each([true, false])(
 test.each([0, -1, 1.5])(
   "rejects invalid lease PID %s without pruning the registry",
   async (pid) => {
-    const profile = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-lease-safety-"));
-    const registry = path.join(profile, "oracle-tab-leases.json");
+    const profile = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-lease-safety-"));
+    const registry = path.join(profile, "vellumpix-tab-leases.json");
     const original = JSON.stringify({
       version: 1,
       leases: [

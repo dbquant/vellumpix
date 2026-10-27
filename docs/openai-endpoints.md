@@ -1,6 +1,6 @@
 # OpenAI-Compatible Endpoints
 
-Oracle uses the official OpenAI Node.js SDK, which allows it to connect to any API that adheres to the OpenAI API specification. This includes:
+VellumPix uses the official OpenAI Node.js SDK, which allows it to connect to any API that adheres to the OpenAI API specification. This includes:
 
 - Official OpenAI API
 - Azure OpenAI Service
@@ -9,7 +9,7 @@ Oracle uses the official OpenAI Node.js SDK, which allows it to connect to any A
 
 ## Azure OpenAI
 
-Oracle uses Azure's v1 Responses endpoint when `--azure-endpoint` (or `azure.endpoint`) is set.
+VellumPix uses Azure's v1 Responses endpoint when `--azure-endpoint` (or `azure.endpoint`) is set.
 Pass your resource endpoint, Azure key, and deployment name:
 
 ```bash
@@ -23,14 +23,14 @@ Key lookup for GPT-family models when an Azure endpoint is set:
 - First looks for `AZURE_OPENAI_API_KEY`.
 - Falls back to `OPENAI_API_KEY` if the Azure key is missing.
 
-Without an Azure endpoint, Oracle keeps using `OPENAI_API_KEY` as before.
+Without an Azure endpoint, VellumPix keeps using `OPENAI_API_KEY` as before.
 If Azure env/config is present but you want first-party OpenAI for one run, pass `--provider openai` or `--no-azure`.
 
 Notes:
 
-- Oracle calls Azure at `https://<resource>.openai.azure.com/openai/v1`.
+- VellumPix calls Azure at `https://<resource>.openai.azure.com/openai/v1`.
 - When Azure is selected, `--base-url` and `OPENAI_BASE_URL` are ignored for both model metadata and requests; Azure keys are never used for OpenRouter catalog lookups.
-- For Responses API runs, Azure expects `model` to be your deployment name. Oracle fails early when an Azure endpoint is active without a deployment, except for `gpt-5.5-pro` where the CLI model id is used as the implicit deployment.
+- For Responses API runs, Azure expects `model` to be your deployment name. VellumPix fails early when an Azure endpoint is active without a deployment, except for `gpt-5.5-pro` where the CLI model id is used as the implicit deployment.
 - API runs print the selected route without secrets, for example `Provider: Azure OpenAI | endpoint: your-resource.openai.azure.com | deployment: my-deployment | key: AZURE_OPENAI_API_KEY|OPENAI_API_KEY`.
 - `AZURE_OPENAI_API_VERSION` is still accepted for back-compat, but Azure's v1 Responses endpoint does not require it.
 
@@ -39,9 +39,9 @@ Notes:
 Check provider readiness before an API run:
 
 ```bash
-oracle doctor --providers --models gpt-5.4,claude-4.6-sonnet,gemini-3-pro
-oracle --preflight --models gpt-5.4,gemini-3-pro
-oracle --route --model gpt-5.4
+vellumpix doctor --providers --models gpt-5.4,claude-4.6-sonnet,gemini-3-pro
+vellumpix --preflight --models gpt-5.4,gemini-3-pro
+vellumpix --route --model gpt-5.4
 ```
 
 The output is redacted and local: provider, base host, key source, Azure status, and missing-route errors. These commands exit before sending a prompt or creating a session.
@@ -49,8 +49,8 @@ The output is redacted and local: provider, base host, key source, Azure status,
 When Azure env/config is present, GPT-family API models route through Azure unless you force first-party OpenAI:
 
 ```bash
-oracle --provider openai --route --model gpt-5.4
-oracle --no-azure --route --model gpt-5.4
+vellumpix --provider openai --route --model gpt-5.4
+vellumpix --no-azure --route --model gpt-5.4
 ```
 
 ### CLI Configuration
@@ -58,14 +58,14 @@ oracle --no-azure --route --model gpt-5.4
 You can also pass the Azure settings via CLI flags (env for the key is still recommended):
 
 ```bash
-oracle --azure-endpoint https://... --azure-deployment my-deployment-name
+vellumpix --azure-endpoint https://... --azure-deployment my-deployment-name
 ```
 
 Force first-party OpenAI when Azure env vars are exported:
 
 ```bash
-oracle --provider openai --engine api --model gpt-5.5-pro -p "Review this"
-oracle --no-azure --engine api --model gpt-5.5-pro -p "Review this"
+vellumpix --provider openai --engine api --model gpt-5.5-pro -p "Review this"
+vellumpix --no-azure --engine api --model gpt-5.5-pro -p "Review this"
 ```
 
 ## GPT-5.6 Pro reasoning mode
@@ -74,7 +74,7 @@ GPT-5.6 Pro is a Responses API execution mode, not a separate model slug. Select
 the Sol model and enable Pro mode explicitly:
 
 ```bash
-oracle --engine api \
+vellumpix --engine api \
   --model gpt-5.6-sol \
   --reasoning-mode pro \
   --reasoning-effort max \
@@ -82,21 +82,21 @@ oracle --engine api \
   --file "src/**"
 ```
 
-Oracle sends `model: "gpt-5.6-sol"` with `reasoning.mode: "pro"` and
+VellumPix sends `model: "gpt-5.6-sol"` with `reasoning.mode: "pro"` and
 `reasoning.effort: "max"`. Mode and effort are independent. GPT-5.6 supports
 `none`, `low`, `medium`, `high`, `xhigh`, and `max`; without an explicit effort,
-Oracle retains the model's configured effort. Pro-mode runs use Oracle's
+VellumPix retains the model's configured effort. Pro-mode runs use VellumPix's
 long-running API defaults: they detach unless `--wait` is supplied, default to a
 60-minute timeout, and use Responses background mode when the selected route
 supports it.
 
 `--reasoning-mode` accepts `standard` or `pro`; `--reasoning-effort` accepts all
 six GPT-5.6 effort levels. Both are API-only and supported for GPT-5.6
-and GPT-6 Astra, with Astra's restrictions below. Oracle rejects reasoning mode for OpenRouter and custom `--base-url`
-routes because those routes currently use Oracle's Chat Completions adapter,
+and GPT-6 Astra, with Astra's restrictions below. VellumPix rejects reasoning mode for OpenRouter and custom `--base-url`
+routes because those routes currently use VellumPix's Chat Completions adapter,
 which cannot represent Responses API reasoning mode.
 
-Do not pass `--model gpt-5.6-pro` or `--model gpt-5.6-sol-pro`; Oracle rejects
+Do not pass `--model gpt-5.6-pro` or `--model gpt-5.6-sol-pro`; VellumPix rejects
 those fake slugs and points to `--reasoning-mode pro`.
 
 ## GPT-6 Astra API
@@ -104,10 +104,10 @@ those fake slugs and points to `--reasoning-mode pro`.
 Use the exact API model ID and choose reasoning mode separately:
 
 ```bash
-oracle --engine api --model gpt-6-astra --reasoning-mode pro --reasoning-effort max -p "Review this architecture"
+vellumpix --engine api --model gpt-6-astra --reasoning-mode pro --reasoning-effort max -p "Review this architecture"
 ```
 
-Oracle supports Astra's `low`, `medium`, `high`, `xhigh`, and `max` efforts and
+VellumPix supports Astra's `low`, `medium`, `high`, `xhigh`, and `max` efforts and
 rejects `none` before inference. The default effort is `xhigh`; Pro is enabled
 only with `--reasoning-mode pro` and retains the long-running behavior above.
 The default model is unchanged. Browser selection maps this model to ChatGPT's
@@ -122,7 +122,7 @@ The default input budget is a conservative 272,000 tokens at the base-rate
 boundary, not the model's maximum capacity. Standard text estimates use $10 per
 million input tokens and $50 per million output tokens. Cache writes, tool fees,
 Pro execution, and inputs above the base-rate boundary can change actual billing;
-Oracle's basic estimate does not model those adjustments.
+VellumPix's basic estimate does not model those adjustments.
 
 References: [Astra model](https://developers.openai.com/api/docs/models/gpt-6-astra),
 [migration guidance](https://developers.openai.com/api/docs/guides/latest-model),
@@ -133,7 +133,7 @@ and [API pricing](https://developers.openai.com/api/docs/pricing).
 For other compatible services that use the standard OpenAI protocol but a different URL:
 
 ```bash
-oracle --base-url http://localhost:4000
+vellumpix --base-url http://localhost:4000
 ```
 
 Or via `config.json`:
@@ -144,7 +144,7 @@ Or via `config.json`:
 }
 ```
 
-If a gateway exposes a different on-wire model id, add an API-only override to the user config at `~/.oracle/config.json`:
+If a gateway exposes a different on-wire model id, add an API-only override to the user config at `~/.vellumpix/config.json`:
 
 ```json5
 {
@@ -159,11 +159,11 @@ If a gateway exposes a different on-wire model id, add an API-only override to t
 }
 ```
 
-Overrides accept existing built-in model keys only and are ignored in project `.oracle/config.json` files. See [Local configuration](configuration.md) for the full field list and precedence.
+Overrides accept existing built-in model keys only and are ignored in project `.vellumpix/config.json` files. See [Local configuration](configuration.md) for the full field list and precedence.
 
 ## Model aliases
 
-Oracle keeps a stable CLI-facing model set, but some names are aliases for the concrete API model ids it sends:
+VellumPix keeps a stable CLI-facing model set, but some names are aliases for the concrete API model ids it sends:
 
 - `gpt-5.1-pro`, `gpt-5.2-pro` → `gpt-5.5-pro` (API)
 
@@ -184,20 +184,20 @@ Notes:
    ```bash
    litellm --model azure/gpt-4-turbo
    ```
-2. Connect Oracle:
+2. Connect VellumPix:
    ```bash
-   oracle --base-url http://localhost:4000
+   vellumpix --base-url http://localhost:4000
    ```
 
 ## OpenRouter
 
-Oracle can also talk to OpenRouter (Responses API compatible) with any model id:
+VellumPix can also talk to OpenRouter (Responses API compatible) with any model id:
 
 ```bash
 export OPENROUTER_API_KEY="sk-or-..."
-oracle --model minimax/minimax-m2 --prompt "Summarize the notes"
+vellumpix --model minimax/minimax-m2 --prompt "Summarize the notes"
 ```
 
-- If `OPENROUTER_API_KEY` is set and no provider-specific key is available for the chosen model, Oracle defaults the base URL to `https://openrouter.ai/api/v1`.
-- You can still set `--base-url` explicitly; if it points at OpenRouter (with or without a trailing `/responses`), Oracle will use `OPENROUTER_API_KEY` and forward optional attribution headers (`OPENROUTER_REFERER` / `OPENROUTER_TITLE`).
+- If `OPENROUTER_API_KEY` is set and no provider-specific key is available for the chosen model, VellumPix defaults the base URL to `https://openrouter.ai/api/v1`.
+- You can still set `--base-url` explicitly; if it points at OpenRouter (with or without a trailing `/responses`), VellumPix will use `OPENROUTER_API_KEY` and forward optional attribution headers (`OPENROUTER_REFERER` / `OPENROUTER_TITLE`).
 - Multi-model runs accept OpenRouter ids alongside built-in ones. See `docs/openrouter.md` for details.

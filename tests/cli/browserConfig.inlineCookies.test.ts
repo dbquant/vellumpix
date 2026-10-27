@@ -3,19 +3,19 @@ import os from "node:os";
 import path from "node:path";
 import { describe, expect, test, afterEach } from "vitest";
 import { buildBrowserConfig } from "../../src/cli/browserConfig.js";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 
 const model = "gpt-5.4" as const;
 
 describe("buildBrowserConfig inline cookies", () => {
   afterEach(() => {
-    setOracleHomeDirOverrideForTest(null);
-    delete process.env.ORACLE_BROWSER_COOKIES_JSON;
-    delete process.env.ORACLE_BROWSER_COOKIES_FILE;
+    setVellumPixHomeDirOverrideForTest(null);
+    delete process.env.VELLUMPIX_BROWSER_COOKIES_JSON;
+    delete process.env.VELLUMPIX_BROWSER_COOKIES_FILE;
   });
 
   test("loads inline cookies from explicit file flag", async () => {
-    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-inline-"));
+    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-inline-"));
     try {
       const file = path.join(tmp, "cookies.json");
       await fs.writeFile(
@@ -35,7 +35,7 @@ describe("buildBrowserConfig inline cookies", () => {
   });
 
   test("treats inline payload value as file path when it exists", async () => {
-    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-inline-arg-"));
+    const tmp = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-inline-arg-"));
     try {
       const file = path.join(tmp, "cookies.json");
       await fs.writeFile(
@@ -50,12 +50,12 @@ describe("buildBrowserConfig inline cookies", () => {
     }
   });
 
-  test("uses ~/.oracle/cookies.json when Chrome cookie copy is not enabled", async () => {
-    const fakeHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-home-"));
-    const oracleDir = path.join(fakeHome, ".oracle");
-    setOracleHomeDirOverrideForTest(oracleDir);
-    await fs.mkdir(oracleDir, { recursive: true });
-    const homeFile = path.join(oracleDir, "cookies.json");
+  test("uses ~/.vellumpix/cookies.json when Chrome cookie copy is not enabled", async () => {
+    const fakeHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-home-"));
+    const vellumpixDir = path.join(fakeHome, ".vellumpix");
+    setVellumPixHomeDirOverrideForTest(vellumpixDir);
+    await fs.mkdir(vellumpixDir, { recursive: true });
+    const homeFile = path.join(vellumpixDir, "cookies.json");
     await fs.writeFile(
       homeFile,
       JSON.stringify([{ name: "cf_clearance", value: "token", domain: "chatgpt.com" }]),
@@ -66,12 +66,12 @@ describe("buildBrowserConfig inline cookies", () => {
     expect(config.cookieSync).toBe(true);
   });
 
-  test("prefers explicit Chrome cookie copy over ~/.oracle/cookies.json", async () => {
-    const fakeHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-home-"));
-    const oracleDir = path.join(fakeHome, ".oracle");
-    setOracleHomeDirOverrideForTest(oracleDir);
-    await fs.mkdir(oracleDir, { recursive: true });
-    const homeFile = path.join(oracleDir, "cookies.json");
+  test("prefers explicit Chrome cookie copy over ~/.vellumpix/cookies.json", async () => {
+    const fakeHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-home-"));
+    const vellumpixDir = path.join(fakeHome, ".vellumpix");
+    setVellumPixHomeDirOverrideForTest(vellumpixDir);
+    await fs.mkdir(vellumpixDir, { recursive: true });
+    const homeFile = path.join(vellumpixDir, "cookies.json");
     await fs.writeFile(
       homeFile,
       JSON.stringify([{ name: "cf_clearance", value: "token", domain: "chatgpt.com" }]),
@@ -82,13 +82,13 @@ describe("buildBrowserConfig inline cookies", () => {
     expect(config.cookieSync).toBe(true);
   });
 
-  test("uses ~/.oracle/cookies.json with the legacy no-copy flag", async () => {
-    const fakeHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-home-"));
-    const oracleDir = path.join(fakeHome, ".oracle");
-    setOracleHomeDirOverrideForTest(oracleDir);
-    await fs.mkdir(oracleDir, { recursive: true });
+  test("uses ~/.vellumpix/cookies.json with the legacy no-copy flag", async () => {
+    const fakeHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-home-"));
+    const vellumpixDir = path.join(fakeHome, ".vellumpix");
+    setVellumPixHomeDirOverrideForTest(vellumpixDir);
+    await fs.mkdir(vellumpixDir, { recursive: true });
     await fs.writeFile(
-      path.join(oracleDir, "cookies.json"),
+      path.join(vellumpixDir, "cookies.json"),
       JSON.stringify([{ name: "cf_clearance", value: "token", domain: "chatgpt.com" }]),
     );
     const config = await buildBrowserConfig({ model, browserNoCookieSync: true });

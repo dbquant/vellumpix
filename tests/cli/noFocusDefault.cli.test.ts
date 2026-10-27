@@ -10,13 +10,13 @@ const BACKGROUND = "Browser control: launch visible Chrome; keeps Chrome in the 
 const FOREGROUND = "Browser control: launch visible Chrome; may focus/control the browser UI.";
 
 test("the CLI honors --browser-no-focus, --no-browser-no-focus and browser.noFocus", async () => {
-  const home = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-no-focus-cli-"));
+  const home = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-no-focus-cli-"));
   const env = {
     ...process.env,
-    ORACLE_HOME_DIR: home,
-    ORACLE_NO_DETACH: "1",
+    VELLUMPIX_HOME_DIR: home,
+    VELLUMPIX_NO_DETACH: "1",
     OPENAI_API_KEY: "",
-    ORACLE_ENGINE: "",
+    VELLUMPIX_ENGINE: "",
   };
   const dryRun = async (extra: string[]) =>
     (
@@ -25,7 +25,7 @@ test("the CLI honors --browser-no-focus, --no-browser-no-focus and browser.noFoc
         [
           "--import",
           "tsx",
-          "bin/oracle-cli.ts",
+          "bin/vellumpix-cli.ts",
           "--engine",
           "browser",
           "--model",

@@ -24,11 +24,11 @@ import type {
   ReasoningEffort,
   ReasoningMode,
   ThinkingTimeLevel,
-} from "./oracle.js";
-import { DEFAULT_MODEL } from "./oracle/config.js";
-import { formatElapsed } from "./oracle/format.js";
-import { safeModelSlug } from "./oracle/modelResolver.js";
-import { getOracleHomeDir } from "./oracleHome.js";
+} from "./vellumpix.js";
+import { DEFAULT_MODEL } from "./vellumpix/config.js";
+import { formatElapsed } from "./vellumpix/format.js";
+import { safeModelSlug } from "./vellumpix/modelResolver.js";
+import { getVellumPixHomeDir } from "./vellumpixHome.js";
 import type { BrowserProvider, ConcreteBrowserProvider } from "./browser/browserProvider.js";
 
 export type SessionMode = "api" | "browser";
@@ -77,7 +77,7 @@ export interface BrowserSessionConfig {
   hideWindow?: boolean;
   noFocus?: boolean;
   desiredModel?: string | null;
-  /** The caller omitted a model and inherited Oracle's browser default. */
+  /** The caller omitted a model and inherited VellumPix's browser default. */
   modelIsImplicitDefault?: boolean;
   modelStrategy?: BrowserModelStrategy;
   debug?: boolean;
@@ -117,11 +117,11 @@ export interface BrowserRuntimeMetadata {
   chromeProfileRoot?: string;
   userDataDir?: string;
   chromeTargetId?: string;
-  /** Explicitly created by Oracle and eligible for retirement after persisted recovery. */
+  /** Explicitly created by VellumPix and eligible for retirement after persisted recovery. */
   ownedRecoveryTarget?: BrowserRecoveryTarget;
   tabUrl?: string;
   conversationId?: string;
-  /** True after Oracle has submitted the prompt to ChatGPT. */
+  /** True after VellumPix has submitted the prompt to ChatGPT. */
   promptSubmitted?: boolean;
   /** Fingerprint of committed user text and stable message ID; null until commitment is confirmed. */
   submittedPromptHash?: string | null;
@@ -404,7 +404,7 @@ interface InitializeSessionOptions extends StoredRunOptions {
 }
 
 export function getSessionsDir(): string {
-  return path.join(getOracleHomeDir(), "sessions");
+  return path.join(getVellumPixHomeDir(), "sessions");
 }
 const METADATA_FILENAME = "meta.json";
 const LEGACY_SESSION_FILENAME = "session.json";
@@ -964,7 +964,7 @@ export async function listSessionsMetadata(): Promise<SessionMetadata[]> {
   for (const entry of entries) {
     let meta = await readRawSessionMetadata(entry);
     if (meta) {
-      // Keep stored metadata consistent with status reconciliation done by `oracle status`.
+      // Keep stored metadata consistent with status reconciliation done by `vellumpix status`.
       meta = await reconcileSessionMetadata(meta, { persist: true });
       metas.push(meta);
     }

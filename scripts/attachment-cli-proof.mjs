@@ -20,7 +20,7 @@ const option = (name) => {
 };
 const baseline = option("--baseline-cli");
 const captures = option("--captures");
-const root = await fs.mkdtemp(path.join(os.homedir(), "oracle-attachment-cli-"));
+const root = await fs.mkdtemp(path.join(os.homedir(), "vellumpix-attachment-cli-"));
 const chromePath = [
   process.env.CHROME_PATH,
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -40,9 +40,9 @@ const png = Buffer.from(
 for (const name of files) await fs.writeFile(path.join(root, name), png);
 const page = (
   mode,
-) => `<!doctype html><meta charset="utf-8"><title>Oracle attachment safety fixture</title>
+) => `<!doctype html><meta charset="utf-8"><title>VellumPix attachment safety fixture</title>
 <style>body{font:18px system-ui;margin:30px}#prompt-textarea{width:600px;min-height:100px;white-space:pre-wrap}button{padding:8px}#chips{min-height:60px}article{padding:12px}.tile{display:inline-block;margin:4px}img{width:30px;height:30px}</style>
-<h1>Oracle attachment safety fixture</h1><p>Synthetic page and files; no provider account.</p>
+<h1>VellumPix attachment safety fixture</h1><p>Synthetic page and files; no provider account.</p>
 <button data-testid="profile-button">Synthetic profile</button><button data-testid="model-switcher-dropdown-button">GPT-5.5</button>
 <button type="button" role="radio" data-mode="chat" aria-checked="${mode === "localized-work" ? "false" : "true"}">${mode.startsWith("localized") ? "Unterhaltung" : "Chat"}</button>
 <${mode === "localized-work" ? "div" : 'button type="button"'} role="radio" data-mode="work" aria-checked="${mode === "localized-work" ? "true" : "false"}">${mode.startsWith("localized") ? "Arbeit" : "Work"}</${mode === "localized-work" ? "div" : "button"}>
@@ -104,7 +104,7 @@ function commit(){
   const user=document.createElement('article');user.dataset.testid='conversation-turn-0';user.dataset.turn='user';const message=document.createElement('div');message.dataset.messageAuthorRole='user';message.dataset.messageId='attachment-user';message.textContent=prompt;user.append(message);
   for(const file of uploads){const chip=document.createElement('div');chip.dataset.testid='attachment-chip';chip.textContent=file.name;user.append(chip);}document.querySelector('#turns').append(user);
   editor.value='';document.querySelector('#chips').replaceChildren();stop.remove();history.replaceState({},'', '/c/fixture-'+mode);
-  const answer=document.createElement('article');answer.dataset.testid='conversation-turn-1';answer.dataset.turn='assistant';answer.innerHTML='<div data-message-author-role="assistant" data-message-id="fixture-answer"><div class="markdown"><p>ORACLE_ATTACHMENT_CLI_OK</p></div></div><button type="button" data-testid="copy-turn-action-button">Copy</button>';answer.querySelector('button').onclick=()=>navigator.clipboard.writeText('ORACLE_ATTACHMENT_CLI_OK');document.querySelector('#turns').append(answer);report();
+  const answer=document.createElement('article');answer.dataset.testid='conversation-turn-1';answer.dataset.turn='assistant';answer.innerHTML='<div data-message-author-role="assistant" data-message-id="fixture-answer"><div class="markdown"><p>VELLUMPIX_ATTACHMENT_CLI_OK</p></div></div><button type="button" data-testid="copy-turn-action-button">Copy</button>';answer.querySelector('button').onclick=()=>navigator.clipboard.writeText('VELLUMPIX_ATTACHMENT_CLI_OK');document.querySelector('#turns').append(answer);report();
  },1800);
 }
 send.onclick=commit;send.onkeydown=e=>{if(e.key==='Enter')state.sendKeys.push(e.type);};
@@ -274,7 +274,7 @@ try {
     const initialPath =
       run.mode === "same-conversation" ? "/c/fixture-initial" : "/g/project-a/project";
     const args = [
-      run.baseline ? baseline : (option("--cli") ?? path.join(repo, "dist/bin/oracle-cli.js")),
+      run.baseline ? baseline : (option("--cli") ?? path.join(repo, "dist/bin/vellumpix-cli.js")),
       "--engine",
       "browser",
       "--model",
@@ -330,7 +330,7 @@ try {
     const done = new Promise((resolve, reject) => {
       child = spawn(process.execPath, args, {
         cwd: repo,
-        env: { ...process.env, ORACLE_HOME_DIR: home, ORACLE_CHROME_NO_SANDBOX: "1" },
+        env: { ...process.env, VELLUMPIX_HOME_DIR: home, VELLUMPIX_CHROME_NO_SANDBOX: "1" },
         stdio: ["ignore", "pipe", "pipe"],
       });
       child.stdout.on("data", (d) => {
@@ -393,7 +393,7 @@ try {
       else if (!refused) {
         assert.equal(state.sentWhileBusy, false, JSON.stringify(state));
         assert.equal(state.sendKeys.length, 1, JSON.stringify(state));
-        assert.match(output, /ORACLE_ATTACHMENT_CLI_OK/);
+        assert.match(output, /VELLUMPIX_ATTACHMENT_CLI_OK/);
       }
       if (refused)
         assert.match(

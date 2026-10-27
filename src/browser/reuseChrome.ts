@@ -1,6 +1,6 @@
 import type { LaunchedChrome } from "chrome-launcher";
 import type { BrowserLogger } from "./types.js";
-import { formatElapsed } from "../oracle/format.js";
+import { formatElapsed } from "../vellumpix/format.js";
 import { delay } from "./utils.js";
 import {
   cleanupStaleProfileState,
@@ -41,7 +41,7 @@ export async function maybeReuseRunningChrome(
           `No reachable Chrome DevTools target found for ${userDataDir}; clearing stale profile state before launching new Chrome.`,
         );
         await cleanupStaleProfileState(userDataDir, logger, {
-          lockRemovalMode: "if_oracle_pid_dead",
+          lockRemovalMode: "if_vellumpix_pid_dead",
         });
       }
       return null;
@@ -56,8 +56,10 @@ export async function maybeReuseRunningChrome(
     logger(
       `Chrome for ${userDataDir} on port ${port} is unreachable (${probe.error}); launching new Chrome.`,
     );
-    // Safe cleanup: remove stale DevToolsActivePort; only remove lock files if this was an Oracle-owned pid that died.
-    await cleanupStaleProfileState(userDataDir, logger, { lockRemovalMode: "if_oracle_pid_dead" });
+    // Safe cleanup: remove stale DevToolsActivePort; only remove lock files if this was an VellumPix-owned pid that died.
+    await cleanupStaleProfileState(userDataDir, logger, {
+      lockRemovalMode: "if_vellumpix_pid_dead",
+    });
     return null;
   }
 

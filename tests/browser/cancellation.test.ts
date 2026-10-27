@@ -92,7 +92,7 @@ test("cancelled owned targets close even when the browser is kept; borrowed targ
 });
 
 test("cancelled tab and profile waiters never steal their owners' locks", async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-cancel-locks-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-cancel-locks-"));
   const owner = await acquireBrowserTabLease(root, { maxConcurrentTabs: 1 });
   const profile = await acquireProfileRunLock(root, { timeoutMs: 1000 });
   const controller = new AbortController();
@@ -103,7 +103,7 @@ test("cancelled tab and profile waiters never steal their owners' locks", async 
   await Promise.all(assertions);
   try {
     const registry = JSON.parse(
-      await fs.readFile(path.join(root, "oracle-tab-leases.json"), "utf8"),
+      await fs.readFile(path.join(root, "vellumpix-tab-leases.json"), "utf8"),
     );
     expect(registry.leases.map((entry: { id: string }) => entry.id)).toEqual([owner.id]);
     expect(JSON.parse(await fs.readFile(profile!.path, "utf8")).lockId).toBe(profile?.lockId);

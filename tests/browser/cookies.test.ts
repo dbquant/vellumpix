@@ -152,7 +152,7 @@ describe("clearStaleChatGptConversationCookies", () => {
 
 describe("syncCookies", () => {
   test("reports partial transfer and reader warnings without exposing cookie values (#541)", async () => {
-    vi.stubEnv("ORACLE_DEBUG_COOKIES", "");
+    vi.stubEnv("VELLUMPIX_DEBUG_COOKIES", "");
     getCookies.mockResolvedValue({
       cookies: ["first", "second", "third"].map((name) => ({
         name,

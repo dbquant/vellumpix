@@ -31,8 +31,8 @@ export function resolveRemoteServiceConfig({
   const configBrowserHost = normalizeString(userConfig?.browser?.remoteHost);
   const configBrowserToken = normalizeString(userConfig?.browser?.remoteToken);
 
-  const envHost = normalizeString(env.ORACLE_REMOTE_HOST);
-  const envToken = normalizeString(env.ORACLE_REMOTE_TOKEN);
+  const envHost = normalizeString(env.VELLUMPIX_REMOTE_HOST);
+  const envToken = normalizeString(env.VELLUMPIX_REMOTE_TOKEN);
 
   const cliHostValue = normalizeString(cliHost);
   const cliTokenValue = normalizeString(cliToken);

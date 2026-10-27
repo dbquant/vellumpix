@@ -18,8 +18,8 @@ import { delay } from "./utils.js";
 import { normalizeChromeHost } from "./targetClaim.js";
 
 export const DEFAULT_MAX_CONCURRENT_CHATGPT_TABS = 3;
-const REGISTRY_FILENAME = "oracle-tab-leases.json";
-const REGISTRY_LOCK_DIRNAME = "oracle-tab-leases.lock";
+const REGISTRY_FILENAME = "vellumpix-tab-leases.json";
+const REGISTRY_LOCK_DIRNAME = "vellumpix-tab-leases.lock";
 const DEFAULT_POLL_MS = 1000;
 const DEFAULT_STALE_MS = 2 * 60 * 1000;
 const LEASE_HEARTBEAT_INTERVAL_MS = 15_000;
@@ -240,7 +240,7 @@ export async function updateBrowserTabLease(
     const registry = await readRegistry(profileDir);
     if (!registry.leases.some((lease) => lease.id === leaseId)) {
       throw new Error(
-        `Oracle ChatGPT browser slot ${leaseId.slice(0, 8)} is no longer owned by this controller.`,
+        `VellumPix ChatGPT browser slot ${leaseId.slice(0, 8)} is no longer owned by this controller.`,
       );
     }
     const leases = registry.leases.map((lease) =>
@@ -267,7 +267,7 @@ export async function releaseBrowserTabLease(
     const releasedLease = registry.leases.find((lease) => lease.id === leaseId);
     if (!releasedLease) {
       throw new Error(
-        `Oracle ChatGPT browser slot ${leaseId.slice(0, 8)} was already lost; refusing final shared-Chrome cleanup.`,
+        `VellumPix ChatGPT browser slot ${leaseId.slice(0, 8)} was already lost; refusing final shared-Chrome cleanup.`,
       );
     }
     const leases = registry.leases.filter((lease) => lease.id !== leaseId);
@@ -360,7 +360,7 @@ async function withRegistryLock<T>(
     signal?.throwIfAborted();
     try {
       // mkdir is exclusive on every platform; rename can replace a live empty
-      // directory on POSIX (including locks held by older Oracle controllers).
+      // directory on POSIX (including locks held by older VellumPix controllers).
       await mkdir(lockDir, { recursive: false });
     } catch (error) {
       const code = (error as { code?: string }).code;
@@ -381,7 +381,7 @@ async function withRegistryLock<T>(
       }
       if (Date.now() - startedAt > REGISTRY_LOCK_TIMEOUT_MS) {
         throw new Error(
-          `Timed out waiting for Oracle tab lease registry lock ${lockDir}; preserving the existing lock to avoid split-brain cleanup.`,
+          `Timed out waiting for VellumPix tab lease registry lock ${lockDir}; preserving the existing lock to avoid split-brain cleanup.`,
         );
       }
       await delay(50, signal);
@@ -545,7 +545,7 @@ async function removeRegistryLockIfOwned(
   if (!owner) {
     if (lockIdentity && options.requireOwned) {
       throw new Error(
-        `Unable to verify ownership while releasing Oracle tab lease registry lock ${lockDir}.`,
+        `Unable to verify ownership while releasing VellumPix tab lease registry lock ${lockDir}.`,
       );
     }
     return false;
@@ -553,7 +553,7 @@ async function removeRegistryLockIfOwned(
   if (owner?.id !== lockId) {
     if (options.requireOwned) {
       throw new Error(
-        `Oracle tab lease registry lock ${lockDir} changed owners before release; preserving it.`,
+        `VellumPix tab lease registry lock ${lockDir} changed owners before release; preserving it.`,
       );
     }
     return false;
@@ -647,7 +647,7 @@ async function withRegistryRecoveryLock<T>(
 ): Promise<T> {
   const identity = await canonicalProfileIdentity(profileDir);
   const digest = createHash("sha256").update(identity).digest("hex").slice(0, 24);
-  const windowsEndpoint = `\\\\.\\pipe\\oracle-tab-lease-recovery-${digest}`;
+  const windowsEndpoint = `\\\\.\\pipe\\vellumpix-tab-lease-recovery-${digest}`;
   const posixPort = 20_000 + (Number.parseInt(digest.slice(0, 8), 16) % 40_000);
   const endpoint = process.platform === "win32" ? windowsEndpoint : `127.0.0.1:${posixPort}`;
   const startedAt = Date.now();
@@ -675,7 +675,7 @@ async function withRegistryRecoveryLock<T>(
         throw error;
       }
       if (Date.now() - startedAt > REGISTRY_LOCK_TIMEOUT_MS) {
-        throw new Error(`Timed out waiting for Oracle tab lease recovery mutex ${endpoint}.`);
+        throw new Error(`Timed out waiting for VellumPix tab lease recovery mutex ${endpoint}.`);
       }
       await delay(REGISTRY_RECOVERY_POLL_MS);
     }
@@ -723,10 +723,10 @@ async function readRegistry(profileDir: string): Promise<BrowserTabLeaseRegistry
     const raw = await readFile(registryPath(profileDir), "utf8");
     const parsed = JSON.parse(raw) as BrowserTabLeaseRegistryFile;
     if (!Array.isArray(parsed.leases)) {
-      throw new Error("Oracle tab lease registry is missing its leases array.");
+      throw new Error("VellumPix tab lease registry is missing its leases array.");
     }
     if (!parsed.leases.every(isLeaseRecord)) {
-      throw new Error("Oracle tab lease registry contains an invalid lease record.");
+      throw new Error("VellumPix tab lease registry contains an invalid lease record.");
     }
     return {
       version: 1,
@@ -737,7 +737,7 @@ async function readRegistry(profileDir: string): Promise<BrowserTabLeaseRegistry
       return { version: 1, leases: [] };
     }
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Unable to read Oracle tab lease registry: ${message}`, { cause: error });
+    throw new Error(`Unable to read VellumPix tab lease registry: ${message}`, { cause: error });
   }
 }
 

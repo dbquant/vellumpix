@@ -1,6 +1,6 @@
 import type { EngineMode } from "./engine.js";
-import type { ModelName, ReasoningMode } from "../oracle.js";
-import { isProModel } from "../oracle/modelResolver.js";
+import type { ModelName, ReasoningMode } from "../vellumpix.js";
+import { isProModel } from "../vellumpix/modelResolver.js";
 import { isGpt6ProAlias } from "./browserConfig.js";
 
 export function shouldDetachSession({

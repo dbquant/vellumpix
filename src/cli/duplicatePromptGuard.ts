@@ -41,7 +41,7 @@ export async function shouldBlockDuplicatePrompt({
 
   log(
     chalk.yellow(
-      `A session with the same prompt is already running (${duplicate.id}). Reattach with "oracle session ${duplicate.id}" or rerun with --force to start another run.`,
+      `A session with the same prompt is already running (${duplicate.id}). Reattach with "vellumpix session ${duplicate.id}" or rerun with --force to start another run.`,
     ),
   );
   return true;

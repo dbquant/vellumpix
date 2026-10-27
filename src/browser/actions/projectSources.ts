@@ -7,7 +7,7 @@ import {
 } from "../../projectSources/plan.js";
 import { delay } from "../utils.js";
 
-const PROJECT_SOURCES_INPUT_MARKER = "data-oracle-project-sources-input";
+const PROJECT_SOURCES_INPUT_MARKER = "data-vellumpix-project-sources-input";
 
 type Runtime = ChromeClient["Runtime"];
 type Dom = ChromeClient["DOM"];

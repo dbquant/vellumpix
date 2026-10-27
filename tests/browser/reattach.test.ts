@@ -5,7 +5,7 @@ import { describe, expect, test, vi } from "vitest";
 import { resumeBrowserSession, __test__ } from "../../src/browser/reattach.js";
 import * as chromeLifecycle from "../../src/browser/chromeLifecycle.js";
 import type { BrowserLogger, ChromeClient } from "../../src/browser/types.js";
-import { BrowserRunCancelledError } from "../../src/oracle/errors.js";
+import { BrowserRunCancelledError } from "../../src/vellumpix/errors.js";
 
 type FakeTarget = { id?: string; targetId?: string; type?: string; url?: string };
 type FakeClient = {
@@ -30,7 +30,7 @@ describe("resumeBrowserSession", () => {
     const launchChrome = vi.fn();
     let profileDir = "";
     const createTemporaryProfile = async () => {
-      profileDir = await mkdtemp(path.join(os.tmpdir(), "oracle-reattach-cancel-test-"));
+      profileDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-reattach-cancel-test-"));
       cancellation.abort();
       return profileDir;
     };
@@ -402,7 +402,7 @@ describe("resumeBrowserSession", () => {
   test("tries live reattach from browser websocket metadata before falling back", async () => {
     const runtime = {
       chromeBrowserWSEndpoint: "ws://127.0.0.1:9222/devtools/browser/abc",
-      chromeProfileRoot: "/tmp/oracle-attach-running-profile",
+      chromeProfileRoot: "/tmp/vellumpix-attach-running-profile",
       tabUrl: "https://chatgpt.com/c/abc",
       chromeTargetId: "target-2",
     };
@@ -630,7 +630,7 @@ describe("reattach helpers", () => {
 
 describe("manual-login cookie sync recovery", () => {
   test("invokes cookie sync while reopening an explicitly synchronized manual-login profile", async () => {
-    const profileDir = await mkdtemp(path.join(os.tmpdir(), "oracle-reattach-cookie-sync-"));
+    const profileDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-reattach-cookie-sync-"));
     try {
       const expected = new Error("stop after cookie sync");
       const kill = vi.fn(async () => {});

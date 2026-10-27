@@ -26,7 +26,7 @@ import {
 import { ensureModelSelection } from "../dist/src/browser/actions/modelSelection.js";
 import { submitPrompt } from "../dist/src/browser/actions/promptComposer.js";
 
-const root = await mkdtemp(path.join(os.homedir(), "oracle-layout-proof-"));
+const root = await mkdtemp(path.join(os.homedir(), "vellumpix-layout-proof-"));
 const chromePath = [
   process.env.CHROME_PATH,
   "/usr/bin/chromium",

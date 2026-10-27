@@ -3,14 +3,14 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { loadUserConfig, PROJECT_CONFIG_RELATIVE_PATH } from "../src/config.js";
-import { setOracleHomeDirOverrideForTest } from "../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../src/vellumpixHome.js";
 
 describe("loadUserConfig", () => {
   let tempDir: string;
 
   beforeEach(async () => {
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-config-"));
-    setOracleHomeDirOverrideForTest(tempDir);
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-config-"));
+    setVellumPixHomeDirOverrideForTest(tempDir);
   });
 
   it("parses JSON5 config with comments", async () => {
@@ -67,9 +67,9 @@ describe("loadUserConfig", () => {
         path.join(tempDir, "config.json"),
         JSON.stringify({ browser: { captureProviderNative } }),
       );
-      const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-provider-config-"));
+      const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-provider-config-"));
       try {
-        await fs.mkdir(path.join(repoDir, ".oracle"));
+        await fs.mkdir(path.join(repoDir, ".vellumpix"));
         await fs.writeFile(
           path.join(repoDir, PROJECT_CONFIG_RELATIVE_PATH),
           JSON.stringify({ browser: { captureProviderNative: !captureProviderNative } }),
@@ -96,10 +96,10 @@ describe("loadUserConfig", () => {
       }`,
       "utf8",
     );
-    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-repo-"));
+    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-repo-"));
     const nestedDir = path.join(repoDir, "packages", "web");
-    await fs.mkdir(path.join(repoDir, ".oracle"), { recursive: true });
-    await fs.mkdir(path.join(nestedDir, ".oracle"), { recursive: true });
+    await fs.mkdir(path.join(repoDir, ".vellumpix"), { recursive: true });
+    await fs.mkdir(path.join(nestedDir, ".vellumpix"), { recursive: true });
     await fs.writeFile(
       path.join(repoDir, PROJECT_CONFIG_RELATIVE_PATH),
       `{
@@ -156,8 +156,8 @@ describe("loadUserConfig", () => {
       }`,
       "utf8",
     );
-    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-repo-"));
-    await fs.mkdir(path.join(repoDir, ".oracle"), { recursive: true });
+    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-repo-"));
+    await fs.mkdir(path.join(repoDir, ".vellumpix"), { recursive: true });
     await fs.writeFile(
       path.join(repoDir, PROJECT_CONFIG_RELATIVE_PATH),
       `{
@@ -184,8 +184,8 @@ describe("loadUserConfig", () => {
       }`,
       "utf8",
     );
-    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-repo-"));
-    await fs.mkdir(path.join(repoDir, ".oracle"), { recursive: true });
+    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-repo-"));
+    await fs.mkdir(path.join(repoDir, ".vellumpix"), { recursive: true });
     await fs.writeFile(
       path.join(repoDir, PROJECT_CONFIG_RELATIVE_PATH),
       `{
@@ -220,8 +220,8 @@ describe("loadUserConfig", () => {
       }`,
       "utf8",
     );
-    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-repo-"));
-    await fs.mkdir(path.join(repoDir, ".oracle"), { recursive: true });
+    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-repo-"));
+    await fs.mkdir(path.join(repoDir, ".vellumpix"), { recursive: true });
     await fs.writeFile(
       path.join(repoDir, PROJECT_CONFIG_RELATIVE_PATH),
       `{
@@ -258,9 +258,9 @@ describe("loadUserConfig", () => {
   });
 
   it("inherits project configs from arbitrary parent folders", async () => {
-    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-workspace-"));
+    const workspaceDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-workspace-"));
     const repoDir = path.join(workspaceDir, "repo");
-    await fs.mkdir(path.join(workspaceDir, ".oracle"), { recursive: true });
+    await fs.mkdir(path.join(workspaceDir, ".vellumpix"), { recursive: true });
     await fs.mkdir(repoDir, { recursive: true });
     await fs.writeFile(
       path.join(workspaceDir, PROJECT_CONFIG_RELATIVE_PATH),
@@ -278,8 +278,8 @@ describe("loadUserConfig", () => {
 
   it("can disable project discovery", async () => {
     await fs.writeFile(path.join(tempDir, "config.json"), `{ model: "gpt-5.5-pro" }`, "utf8");
-    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-repo-"));
-    await fs.mkdir(path.join(repoDir, ".oracle"), { recursive: true });
+    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-repo-"));
+    await fs.mkdir(path.join(repoDir, ".vellumpix"), { recursive: true });
     await fs.writeFile(
       path.join(repoDir, PROJECT_CONFIG_RELATIVE_PATH),
       `{ model: "gpt-5.4" }`,
@@ -319,8 +319,8 @@ describe("loadUserConfig", () => {
 
   it("does not let project configs set modelOverrides", async () => {
     await fs.writeFile(path.join(tempDir, "config.json"), `{ model: "gpt-5.5" }`, "utf8");
-    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-repo-"));
-    await fs.mkdir(path.join(repoDir, ".oracle"), { recursive: true });
+    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-repo-"));
+    await fs.mkdir(path.join(repoDir, ".vellumpix"), { recursive: true });
     await fs.writeFile(
       path.join(repoDir, PROJECT_CONFIG_RELATIVE_PATH),
       `{
@@ -347,8 +347,8 @@ describe("loadUserConfig", () => {
       }`,
       "utf8",
     );
-    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-repo-"));
-    await fs.mkdir(path.join(repoDir, ".oracle"), { recursive: true });
+    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-repo-"));
+    await fs.mkdir(path.join(repoDir, ".vellumpix"), { recursive: true });
     await fs.writeFile(
       path.join(repoDir, PROJECT_CONFIG_RELATIVE_PATH),
       `{ model: "gpt-5.4" }`,
@@ -364,6 +364,6 @@ describe("loadUserConfig", () => {
   });
 
   afterAll(() => {
-    setOracleHomeDirOverrideForTest(null);
+    setVellumPixHomeDirOverrideForTest(null);
   });
 });

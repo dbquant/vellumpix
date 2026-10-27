@@ -1,8 +1,8 @@
 import { describe, expect, test, vi } from "vitest";
 import { runDryRunSummary, runBrowserPreview } from "../../src/cli/dryRun.js";
-import type { RunOracleOptions } from "../../src/oracle/types.js";
+import type { RunVellumPixOptions } from "../../src/vellumpix/types.js";
 
-const baseRunOptions: RunOracleOptions = {
+const baseRunOptions: RunVellumPixOptions = {
   prompt: "Do it",
   system: "SYS",
   file: [],
@@ -20,7 +20,7 @@ describe("runDryRunSummary", () => {
     );
 
     expect(log).toHaveBeenCalledWith(
-      expect.stringContaining("[dry-run] Oracle (0.4.1) would call gpt-5.2-pro"),
+      expect.stringContaining("[dry-run] VellumPix (0.4.1) would call gpt-5.2-pro"),
     );
     expect(log).toHaveBeenCalledWith(expect.stringContaining("No files matched"));
   });

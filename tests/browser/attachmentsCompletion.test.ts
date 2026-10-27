@@ -155,14 +155,14 @@ describe("attachment completion fallbacks", () => {
             uploading: false,
             filesAttached: false,
             attachedNames: [],
-            inputNames: ["oracle-attach-verify.txt"],
+            inputNames: ["vellumpix-attach-verify.txt"],
             fileCount: 0,
           },
         },
       }),
     } as unknown as ChromeClient["Runtime"];
 
-    const promise = waitForAttachmentCompletion(runtime, 10_000, ["oracle-attach-verify.txt"]);
+    const promise = waitForAttachmentCompletion(runtime, 10_000, ["vellumpix-attach-verify.txt"]);
     await vi.advanceTimersByTimeAsync(2_000);
     await expect(promise).resolves.toBeUndefined();
     useRealTime();
@@ -179,14 +179,14 @@ describe("attachment completion fallbacks", () => {
             uploading: true,
             filesAttached: false,
             attachedNames: [],
-            inputNames: ["oracle-attach-verify.txt"],
+            inputNames: ["vellumpix-attach-verify.txt"],
             fileCount: 0,
           },
         },
       }),
     } as unknown as ChromeClient["Runtime"];
 
-    const promise = waitForAttachmentCompletion(runtime, 5_000, ["oracle-attach-verify.txt"]);
+    const promise = waitForAttachmentCompletion(runtime, 5_000, ["vellumpix-attach-verify.txt"]);
     const assertion = expect(promise).rejects.toThrow(/did not finish uploading/i);
     await vi.advanceTimersByTimeAsync(6_000);
     await assertion;
@@ -278,14 +278,14 @@ describe("attachment completion fallbacks", () => {
             uploading: false,
             filesAttached: false,
             attachedNames: [],
-            inputNames: ["oracle-attach-verify.txt", "unexpected-extra.txt"],
+            inputNames: ["vellumpix-attach-verify.txt", "unexpected-extra.txt"],
             fileCount: 0,
           },
         },
       }),
     } as unknown as ChromeClient["Runtime"];
 
-    const promise = waitForAttachmentCompletion(runtime, 2_000, ["oracle-attach-verify.txt"]);
+    const promise = waitForAttachmentCompletion(runtime, 2_000, ["vellumpix-attach-verify.txt"]);
     const assertion = expect(promise).rejects.toThrow(/did not finish uploading/i);
     await vi.advanceTimersByTimeAsync(3_000);
     await assertion;
@@ -303,13 +303,13 @@ describe("attachment completion fallbacks", () => {
             uploading: false,
             filesAttached: true,
             attachedNames: [],
-            inputNames: ["oracle-attach-verify.txt"],
+            inputNames: ["vellumpix-attach-verify.txt"],
           },
         },
       }),
     } as unknown as ChromeClient["Runtime"];
 
-    const promise = waitForAttachmentCompletion(runtime, 10_000, ["oracle-attach-verify.txt"]);
+    const promise = waitForAttachmentCompletion(runtime, 10_000, ["vellumpix-attach-verify.txt"]);
     await vi.advanceTimersByTimeAsync(2_000);
     await expect(promise).resolves.toBeUndefined();
     useRealTime();
@@ -325,14 +325,14 @@ describe("attachment completion fallbacks", () => {
             state: "disabled",
             uploading: false,
             filesAttached: true,
-            attachedNames: ["oracle-attach-verify.txt"],
+            attachedNames: ["vellumpix-attach-verify.txt"],
             inputNames: [],
           },
         },
       }),
     } as unknown as ChromeClient["Runtime"];
 
-    const promise = waitForAttachmentCompletion(runtime, 800, ["oracle-attach-verify.txt"]);
+    const promise = waitForAttachmentCompletion(runtime, 800, ["vellumpix-attach-verify.txt"]);
     const assertion = expect(promise).rejects.toThrow(/did not finish uploading/i);
     await vi.advanceTimersByTimeAsync(2_000);
     await assertion;
@@ -356,7 +356,7 @@ describe("attachment completion fallbacks", () => {
       }),
     } as unknown as ChromeClient["Runtime"];
 
-    const promise = waitForAttachmentCompletion(runtime, 800, ["oracle-attach-verify.txt"]);
+    const promise = waitForAttachmentCompletion(runtime, 800, ["vellumpix-attach-verify.txt"]);
     const assertion = expect(promise).rejects.toThrow(/did not finish uploading/i);
     await vi.advanceTimersByTimeAsync(2_000);
     await assertion;
@@ -381,7 +381,7 @@ describe("attachment completion fallbacks", () => {
       }),
     } as unknown as ChromeClient["Runtime"];
 
-    const promise = waitForAttachmentCompletion(runtime, 800, ["oracle-feature.txt"]);
+    const promise = waitForAttachmentCompletion(runtime, 800, ["vellumpix-feature.txt"]);
     const assertion = expect(promise).rejects.toThrow(/did not finish uploading/i);
     await vi.advanceTimersByTimeAsync(2_000);
     await assertion;
@@ -396,7 +396,7 @@ describe("sent turn attachment verification", () => {
         result: {
           value: {
             ok: true,
-            text: "You said:\noracle-attach-verify.txt\nDocument",
+            text: "You said:\nvellumpix-attach-verify.txt\nDocument",
             attrs: [],
             hasAttachmentUi: true,
           },
@@ -405,7 +405,7 @@ describe("sent turn attachment verification", () => {
     } as unknown as ChromeClient["Runtime"];
 
     await expect(
-      waitForUserTurnAttachments(runtime, ["oracle-attach-verify.txt"], 1000),
+      waitForUserTurnAttachments(runtime, ["vellumpix-attach-verify.txt"], 1000),
     ).resolves.toBe(true);
   });
 
@@ -425,7 +425,7 @@ describe("sent turn attachment verification", () => {
       }),
     } as unknown as ChromeClient["Runtime"];
 
-    const promise = waitForUserTurnAttachments(runtime, ["oracle-attach-verify.txt"], 600);
+    const promise = waitForUserTurnAttachments(runtime, ["vellumpix-attach-verify.txt"], 600);
     const assertion = expect(promise).rejects.toThrow(/Attachment was not present/i);
     await vi.advanceTimersByTimeAsync(2_000);
     await assertion;
@@ -448,7 +448,7 @@ describe("sent turn attachment verification", () => {
       }),
     } as unknown as ChromeClient["Runtime"];
 
-    const promise = waitForUserTurnAttachments(runtime, ["oracle-attach-verify.txt"], 600);
+    const promise = waitForUserTurnAttachments(runtime, ["vellumpix-attach-verify.txt"], 600);
     await vi.advanceTimersByTimeAsync(2_000);
     await expect(promise).resolves.toBe(false);
     useRealTime();
@@ -473,7 +473,7 @@ describe("sent turn attachment verification", () => {
     await expect(
       waitForUserTurnAttachments(
         runtime,
-        ["oracle-attach-verify-a.txt", "oracle-attach-verify-b.txt"],
+        ["vellumpix-attach-verify-a.txt", "vellumpix-attach-verify-b.txt"],
         1000,
       ),
     ).resolves.toBe(true);
@@ -494,7 +494,7 @@ describe("sent turn attachment verification", () => {
 
     const promise = waitForUserTurnAttachments(
       runtime,
-      ["oracle-attach-verify.txt"],
+      ["vellumpix-attach-verify.txt"],
       600,
       undefined,
       {
@@ -514,7 +514,7 @@ describe("sent turn attachment verification", () => {
         result: {
           value: {
             ok: true,
-            text: "You said: unrelated prompt oracle-attach-verify.txt",
+            text: "You said: unrelated prompt vellumpix-attach-verify.txt",
             attrs: [],
             hasAttachmentUi: true,
             promptMatches: false,
@@ -525,7 +525,7 @@ describe("sent turn attachment verification", () => {
 
     const promise = waitForUserTurnAttachments(
       runtime,
-      ["oracle-attach-verify.txt"],
+      ["vellumpix-attach-verify.txt"],
       600,
       undefined,
       {
@@ -554,7 +554,7 @@ describe("sent turn attachment verification", () => {
 
     const promise = waitForUserTurnAttachments(
       runtime,
-      ["oracle-attach-verify.txt"],
+      ["vellumpix-attach-verify.txt"],
       600,
       undefined,
       {

@@ -61,7 +61,7 @@ export async function ensureModelSelection(
       }
       if (typeof label === "string" && isNewerModelLabel(label, desiredModel)) {
         logger(
-          `[browser] Model selection warning: no model was specified, so Oracle's default will switch ChatGPT from "${label}" to "${desiredModel}" before submission. Pass --model explicitly or --browser-model-strategy current to keep the selected model.`,
+          `[browser] Model selection warning: no model was specified, so VellumPix's default will switch ChatGPT from "${label}" to "${desiredModel}" before submission. Pass --model explicitly or --browser-model-strategy current to keep the selected model.`,
         );
       }
     }

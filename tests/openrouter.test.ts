@@ -6,7 +6,7 @@ import {
   resetOpenRouterCatalogCacheForTest,
   getOpenRouterCatalogCacheSizeForTest,
   getOpenRouterCatalogCacheMaxEntriesForTest,
-} from "../src/oracle/modelResolver.js";
+} from "../src/vellumpix/modelResolver.js";
 
 describe("OpenRouter helpers", () => {
   it("slugifies model ids with slashes", () => {

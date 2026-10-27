@@ -253,7 +253,7 @@ describe("browser provider routing", () => {
   test.each(["gpt-5.5", "gemini-3.1-pro"])(
     "CLI new runs and restarts dispatch %s on the remote host",
     async (model) => {
-      const home = await mkdtemp(path.join(os.tmpdir(), "oracle-provider-cli-"));
+      const home = await mkdtemp(path.join(os.tmpdir(), "vellumpix-provider-cli-"));
       const server = await createRemoteServer({ host: "127.0.0.1", logger: () => {} });
       try {
         const remoteArgs = [
@@ -265,14 +265,14 @@ describe("browser provider routing", () => {
         ];
         const env = {
           ...process.env,
-          ORACLE_HOME_DIR: home,
-          ORACLE_NO_DETACH: "1",
-          ORACLE_NOTIFY: "0",
+          VELLUMPIX_HOME_DIR: home,
+          VELLUMPIX_NO_DETACH: "1",
+          VELLUMPIX_NOTIFY: "0",
         };
         const cli = (...args: string[]) =>
           promisify(execFile)(
             process.execPath,
-            ["--import", "tsx", path.resolve("bin/oracle-cli.ts"), ...args],
+            ["--import", "tsx", path.resolve("bin/vellumpix-cli.ts"), ...args],
             { env, timeout: 60_000 },
           ).catch((error) => {
             throw new Error(`CLI failed: ${error.stdout} ${error.stderr}`);

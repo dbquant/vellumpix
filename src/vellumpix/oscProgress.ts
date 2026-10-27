@@ -1,0 +1,36 @@
+import process from "node:process";
+import {
+  startOscProgress as startOscProgressShared,
+  supportsOscProgress as supportsOscProgressShared,
+  type OscProgressOptions as OscProgressOptionsShared,
+} from "osc-progress";
+
+export type OscProgressOptions = OscProgressOptionsShared;
+
+export function supportsOscProgress(
+  env: NodeJS.ProcessEnv = process.env,
+  isTty: boolean = process.stdout.isTTY === true,
+): boolean {
+  if (env.CODEX_MANAGED_BY_NPM === "1" && env.VELLUMPIX_FORCE_OSC_PROGRESS !== "1") {
+    return false;
+  }
+  return supportsOscProgressShared(env, isTty, {
+    disableEnvVar: "VELLUMPIX_NO_OSC_PROGRESS",
+    forceEnvVar: "VELLUMPIX_FORCE_OSC_PROGRESS",
+  });
+}
+
+export function startOscProgress(options: OscProgressOptions = {}): () => void {
+  const env = options.env ?? process.env;
+  if (env.CODEX_MANAGED_BY_NPM === "1" && env.VELLUMPIX_FORCE_OSC_PROGRESS !== "1") {
+    return () => {};
+  }
+  return startOscProgressShared({
+    ...options,
+    // Preserve VellumPix's previous defaults: progress emits to and checks stdout.
+    write: options.write ?? ((text) => process.stdout.write(text)),
+    isTty: options.isTty ?? process.stdout.isTTY === true,
+    disableEnvVar: "VELLUMPIX_NO_OSC_PROGRESS",
+    forceEnvVar: "VELLUMPIX_FORCE_OSC_PROGRESS",
+  });
+}

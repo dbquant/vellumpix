@@ -19,14 +19,14 @@ const TERMINAL_SESSION_STATUSES = new Set(["completed", "partial", "error", "can
 const DEFAULT_FALLBACK_INTERVAL_MS = 1_000;
 
 const waitInputShape = {
-  id: z.string().min(1, "Session id is required.").describe("Oracle session id or slug."),
+  id: z.string().min(1, "Session id is required.").describe("VellumPix session id or slug."),
   timeoutMs: z
     .number()
     .int()
     .nonnegative()
     .optional()
     .describe(
-      "How long to wait for a terminal session state. Omit to wait indefinitely; 0 returns an immediate snapshot. A wait timeout never cancels the Oracle session.",
+      "How long to wait for a terminal session state. Omit to wait indefinitely; 0 returns an immediate snapshot. A wait timeout never cancels the VellumPix session.",
     ),
 } satisfies z.ZodRawShape;
 
@@ -63,7 +63,7 @@ export interface WaitForSessionResult {
 function abortReason(signal: AbortSignal): Error {
   return signal.reason instanceof Error
     ? signal.reason
-    : new DOMException("Oracle session wait was cancelled.", "AbortError");
+    : new DOMException("VellumPix session wait was cancelled.", "AbortError");
 }
 
 function throwIfAborted(signal?: AbortSignal): void {
@@ -229,9 +229,9 @@ export function registerWaitTool(server: McpServer): void {
   server.registerTool(
     "wait",
     {
-      title: "Wait for an oracle session",
+      title: "Wait for an vellumpix session",
       description:
-        "Wait for an existing Oracle session to reach a terminal state without agent-side polling. Omit timeoutMs to wait indefinitely, or set a bounded caller wait. Wait timeout or request cancellation never cancels the Oracle session; call wait again with the same id to continue waiting.",
+        "Wait for an existing VellumPix session to reach a terminal state without agent-side polling. Omit timeoutMs to wait indefinitely, or set a bounded caller wait. Wait timeout or request cancellation never cancels the VellumPix session; call wait again with the same id to continue waiting.",
       inputSchema: z.object(waitInputShape),
       outputSchema: z.object(waitOutputShape),
     },

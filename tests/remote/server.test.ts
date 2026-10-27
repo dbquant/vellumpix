@@ -9,9 +9,9 @@ import { createRemoteServer, RunSlots, pickClientBrowserConfig } from "../../src
 import { createRemoteBrowserExecutor } from "../../src/remote/client.js";
 import type { BrowserRunResult } from "../../src/browserMode.js";
 import type { RemoteArtifactDescriptor } from "../../src/remote/types.js";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 import { runBrowserMode, runSubmissionWithRecoveryForTest } from "../../src/browser/index.js";
-import { BrowserAutomationError } from "../../src/oracle/errors.js";
+import { BrowserAutomationError } from "../../src/vellumpix/errors.js";
 import { resolveSessionArtifactsDir } from "../../src/browser/artifacts.js";
 
 const CAN_LISTEN_LOCALHOST =
@@ -192,8 +192,8 @@ describe("remote browser service", () => {
   test.skipIf(!CAN_LISTEN_LOCALHOST)(
     "streams logs and returns results via client executor",
     async () => {
-      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "oracle-remote-test-"));
-      setOracleHomeDirOverrideForTest(tmpDir);
+      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-remote-test-"));
+      setVellumPixHomeDirOverrideForTest(tmpDir);
       const clientImagePath = path.join(tmpDir, "client-output.png");
       const attachmentPath = path.join(tmpDir, "note.txt");
       const fallbackAttachmentPath = path.join(tmpDir, "fallback.txt");
@@ -327,14 +327,14 @@ describe("remote browser service", () => {
 
       await server.close();
       await rm(tmpDir, { recursive: true, force: true });
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
     },
   );
 
   test.skipIf(!CAN_LISTEN_LOCALHOST)(
     "does not materialize a pending fallback bundle before the primary remote submit",
     async () => {
-      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "oracle-remote-lazy-fallback-"));
+      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-remote-lazy-fallback-"));
       const fallbackPath = path.join(tmpDir, "fallback.txt");
       await writeFile(fallbackPath, "lazy fallback", "utf8");
       const prepare = async () => {
@@ -441,7 +441,7 @@ describe("remote browser service", () => {
   test.skipIf(!CAN_LISTEN_LOCALHOST)(
     "keeps manual-login Chrome but requests completed run-tab cleanup",
     async () => {
-      const manualLoginProfileDir = "/tmp/oracle-manual-login-profile-test";
+      const manualLoginProfileDir = "/tmp/vellumpix-manual-login-profile-test";
       const cleanupPolicies: Array<boolean | undefined> = [];
       const server = await createRemoteServer(
         {
@@ -500,9 +500,9 @@ describe("remote browser service", () => {
   test.skipIf(!CAN_LISTEN_LOCALHOST)(
     "transfers saved browser file artifacts to the client session directory",
     async () => {
-      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "oracle-remote-artifact-test-"));
+      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-remote-artifact-test-"));
       const clientHome = path.join(tmpDir, "client-home");
-      setOracleHomeDirOverrideForTest(clientHome);
+      setVellumPixHomeDirOverrideForTest(clientHome);
       const hostArtifactPath = path.join(
         clientHome,
         "sessions",
@@ -734,15 +734,15 @@ describe("remote browser service", () => {
 
       await server.close();
       await rm(tmpDir, { recursive: true, force: true });
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
     },
   );
 
   test.skipIf(!CAN_LISTEN_LOCALHOST).each(["missing", "checksum", "truncated", "registration"])(
     "rejects explicit image output on %s transfer failure",
     async (failure) => {
-      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "oracle-image-transfer-failed-"));
-      setOracleHomeDirOverrideForTest(tmpDir);
+      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-image-transfer-failed-"));
+      setVellumPixHomeDirOverrideForTest(tmpDir);
       const payload = Buffer.from("image payload");
       const bridge = await createFakeArtifactBridge({
         descriptor: createArtifactDescriptor(payload, {
@@ -773,7 +773,7 @@ describe("remote browser service", () => {
       } finally {
         await bridge.close();
         await rm(tmpDir, { recursive: true, force: true });
-        setOracleHomeDirOverrideForTest(null);
+        setVellumPixHomeDirOverrideForTest(null);
       }
     },
   );
@@ -781,8 +781,8 @@ describe("remote browser service", () => {
   test.skipIf(!CAN_LISTEN_LOCALHOST)(
     "rejects untrusted artifact identifiers before creating local paths",
     async () => {
-      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "oracle-remote-invalid-artifact-"));
-      setOracleHomeDirOverrideForTest(tmpDir);
+      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-remote-invalid-artifact-"));
+      setVellumPixHomeDirOverrideForTest(tmpDir);
       const payload = Buffer.from("zip");
       const bridge = await createFakeArtifactBridge({
         descriptor: createArtifactDescriptor(payload, { artifactId: "../../escape" }),
@@ -806,7 +806,7 @@ describe("remote browser service", () => {
       } finally {
         await bridge.close();
         await rm(tmpDir, { recursive: true, force: true });
-        setOracleHomeDirOverrideForTest(null);
+        setVellumPixHomeDirOverrideForTest(null);
       }
     },
   );
@@ -814,8 +814,8 @@ describe("remote browser service", () => {
   test.skipIf(!CAN_LISTEN_LOCALHOST)(
     "stops chunked artifact downloads that exceed the declared size",
     async () => {
-      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "oracle-remote-oversize-artifact-"));
-      setOracleHomeDirOverrideForTest(tmpDir);
+      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-remote-oversize-artifact-"));
+      setVellumPixHomeDirOverrideForTest(tmpDir);
       const declared = Buffer.from("zip");
       const bridge = await createFakeArtifactBridge({
         descriptor: createArtifactDescriptor(declared),
@@ -841,7 +841,7 @@ describe("remote browser service", () => {
       } finally {
         await bridge.close();
         await rm(tmpDir, { recursive: true, force: true });
-        setOracleHomeDirOverrideForTest(null);
+        setVellumPixHomeDirOverrideForTest(null);
       }
     },
   );
@@ -854,7 +854,7 @@ async function expectRemoteAttachmentStaging({
   location: "primary" | "fallback";
   files: Array<{ fileName: string; content: string; stagedName: string }>;
 }): Promise<void> {
-  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "oracle-remote-staging-test-"));
+  const tmpDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-remote-staging-test-"));
   const sourceAttachments = [];
   for (const [index, file] of files.entries()) {
     const sourceDir = path.join(tmpDir, String(index));
@@ -1038,7 +1038,7 @@ async function createFakeArtifactBridge({
       artifactRequestCount += 1;
       res.writeHead(artifactStatus, {
         "Content-Type": descriptor.mimeType ?? "application/zip",
-        "X-Oracle-Artifact-Sha256": descriptor.sha256,
+        "X-VellumPix-Artifact-Sha256": descriptor.sha256,
       });
       res.write(payload);
       res.end();
@@ -1547,7 +1547,7 @@ describe("bridged result sanitization", () => {
               promptSubmitted: true,
               chromePid: 4242,
               chromePort: 9222,
-              userDataDir: "/Users/someone/.oracle/browser-profile",
+              userDataDir: "/Users/someone/.vellumpix/browser-profile",
             };
             return result;
           },

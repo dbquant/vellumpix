@@ -1,10 +1,11 @@
 import chalk from "chalk";
+import { CLI_NAME, PRODUCT_NAME } from "../brand.js";
 
 const TAGLINES = [
   "Whispering your tokens to the silicon sage.",
   "Turning scattered files into one sharp question.",
   "One slug to gather them all.",
-  "Token thrift, oracle lift.",
+  "Token thrift, vellumpix lift.",
   "Globs to gospel, minus the incense.",
   "Your repo, neatly bottled, gently shaken.",
   "Clarity, with a hint of smoke.",
@@ -41,13 +42,13 @@ const TAGLINES = [
   "From globs to guidance in one breath.",
   "Quiet prompt, thunderous answers.",
   "Balanced mystique, measurable results.",
-  "Debugger by day, oracle by night.",
+  "Debugger by day, vellumpix by night.",
   "Your code's confessional booth.",
   "Edge cases fear this inbox.",
   "Slop in, sharp answers out.",
   "Your AI coworker's quality control.",
   "Because vibes aren't a deliverable.",
-  "When the other agents shrug, the oracle ships.",
+  "When the other agents shrug, the vellumpix ships.",
   "Hallucinations checked at the door.",
   "Context police for overeager LLMs.",
   "Turns prompt spaghetti into ship-ready sauce.",
@@ -64,11 +65,11 @@ const TAGLINES = [
   "Stops the hallucination before it hits prod.",
   "Slop filter set to aggressive.",
   "We debug the debugger.",
-  "Model said maybe; oracle says ship/no.",
+  "Model said maybe; vellumpix says ship/no.",
   "Less lorem, more logic.",
   "Your prompt's adult supervision.",
   "Cleanup crew for AI messes.",
-  "AI wrote it? Oracle babysits it.",
+  "AI wrote it? VellumPix babysits it.",
   "Turning maybe into mergeable.",
   "The AI said vibes; we said tests.",
   "Cleanup crew for model-made messes—now with citations.",
@@ -89,7 +90,7 @@ const TAGLINES = [
   "From 'it told me so' to 'tests say so'.",
   "We refactor the model's hubris before it hits prod.",
   "Prompt chaos triaged, answers discharged.",
-  "Oracle babysits; you merge.",
+  "VellumPix babysits; you merge.",
   "Vibes quarantined; facts admitted.",
   "The cleanup crew for speculative stack traces.",
   "Ship-ready answers, minus the AI improv.",
@@ -103,12 +104,12 @@ const TAGLINES = [
   "Slop filter set past 11.",
   "Bottled prompt chaos, filtered answers.",
   "Your AI's swagger, audited.",
-  "New year, same oracle: resolutions shipped, not wished.",
+  "New year, same vellumpix: resolutions shipped, not wished.",
   "Lunar New Year sweep: clear caches, invite good deploys.",
   "Eid Mubarak: feast on clarity, fast from hallucinations.",
   "Diwali: lights on, incident lights off.",
   "Holi colors on dashboards, not in logs.",
-  "Workers' Day: let oracle haul the heavy context.",
+  "Workers' Day: let vellumpix haul the heavy context.",
   "Earth Day: trim carbon, trim token waste.",
   "Halloween: ship treats, not trick exceptions.",
   "Independence Day: sparkles in the sky, not in the error console.",
@@ -180,7 +181,7 @@ const isFourthThursdayOfNovember: HolidayRule = (date) => {
 };
 
 const HOLIDAY_RULES = new Map<string, HolidayRule>([
-  ["New year, same oracle: resolutions shipped, not wished.", onMonthDay(0, 1)],
+  ["New year, same vellumpix: resolutions shipped, not wished.", onMonthDay(0, 1)],
   [
     "Lunar New Year sweep: clear caches, invite good deploys.",
     onSpecificDates(
@@ -225,7 +226,7 @@ const HOLIDAY_RULES = new Map<string, HolidayRule>([
       1,
     ),
   ],
-  ["Workers' Day: let oracle haul the heavy context.", onMonthDay(4, 1)],
+  ["Workers' Day: let vellumpix haul the heavy context.", onMonthDay(4, 1)],
   ["Earth Day: trim carbon, trim token waste.", onMonthDay(3, 22)],
   ["Halloween: ship treats, not trick exceptions.", onMonthDay(9, 31)],
   ["Independence Day: sparkles in the sky, not in the error console.", onMonthDay(6, 4)],
@@ -273,7 +274,7 @@ export function activeTaglines(options: TaglineOptions = {}): string[] {
 
 export function pickTagline(options: TaglineOptions = {}): string {
   const env = options.env ?? process.env;
-  const override = env?.ORACLE_TAGLINE_INDEX;
+  const override = env?.VELLUMPIX_TAGLINE_INDEX;
   if (override !== undefined) {
     const parsed = Number.parseInt(override, 10);
     if (!Number.isNaN(parsed) && parsed >= 0) {
@@ -290,9 +291,9 @@ export function formatIntroLine(version: string, options: TaglineOptions = {}): 
   const tagline = pickTagline(options);
   const rich = options.richTty ?? true;
   if (rich && chalk.level > 0) {
-    return `${chalk.bold("🧿 oracle")} ${version} — ${tagline}`;
+    return `${chalk.bold(`🪶 ${PRODUCT_NAME}`)} ${version} — ${tagline}`;
   }
-  return `🧿 oracle ${version} — ${tagline}`;
+  return `🪶 ${CLI_NAME} ${version} — ${tagline}`;
 }
 
 export { TAGLINES };

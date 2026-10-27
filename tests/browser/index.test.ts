@@ -16,7 +16,7 @@ import {
 } from "../../src/browser/index.js";
 import { resolveBrowserConfig } from "../../src/browser/config.js";
 import { redactBrowserConfigForDebugLog } from "../../src/browser/configLogging.js";
-import { BrowserAutomationError } from "../../src/oracle/errors.js";
+import { BrowserAutomationError } from "../../src/vellumpix/errors.js";
 
 describe("generated image response failures", () => {
   test("completes image generation when a detached gallery appears without answer text", async () => {
@@ -388,7 +388,7 @@ describe("browser run target cleanup", () => {
       terminationHandled: true,
       releaseError: releaseFailure,
     });
-    expect(logger).toHaveBeenCalledWith(expect.stringContaining("restart Oracle/Codex MCP"));
+    expect(logger).toHaveBeenCalledWith(expect.stringContaining("restart VellumPix/Codex MCP"));
   });
 
   test("fails closed when the tab lease release decision is unavailable", async () => {
@@ -484,7 +484,7 @@ describe("manual-login profile setup gate", () => {
   });
 
   test("fails fast for an uninitialized manual-login profile unless setup keeps Chrome open", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-empty-profile-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-empty-profile-"));
     try {
       await expect(
         __test__.assertManualLoginProfileReadyForRun({
@@ -505,7 +505,7 @@ describe("manual-login profile setup gate", () => {
   });
 
   test("accepts an initialized manual-login Chrome profile", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-initialized-profile-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-initialized-profile-"));
     try {
       await mkdir(path.join(dir, "Default"));
       await expect(
@@ -520,8 +520,8 @@ describe("manual-login profile setup gate", () => {
   });
 
   test("formats the first-time setup command with the selected profile", () => {
-    expect(__test__.formatManualLoginSetupCommand("/tmp/oracle profile")).toContain(
-      '--browser-manual-login-profile-dir "/tmp/oracle profile"',
+    expect(__test__.formatManualLoginSetupCommand("/tmp/vellumpix profile")).toContain(
+      '--browser-manual-login-profile-dir "/tmp/vellumpix profile"',
     );
   });
 
@@ -1242,16 +1242,16 @@ describe("resolveRemoteTabLeaseProfileDirForTest", () => {
     const coordinated = resolveBrowserConfig({
       remoteChrome: { host: "127.0.0.1", port: 9222 },
       manualLogin: true,
-      manualLoginProfileDir: "/tmp/oracle-profile",
+      manualLoginProfileDir: "/tmp/vellumpix-profile",
     });
     expect(resolveRemoteTabLeaseProfileDirForTest(coordinated)).toBe(
-      path.resolve("/tmp/oracle-profile"),
+      path.resolve("/tmp/vellumpix-profile"),
     );
 
     const uncoordinated = resolveBrowserConfig({
       remoteChrome: { host: "127.0.0.1", port: 9222 },
       manualLogin: false,
-      manualLoginProfileDir: "/tmp/oracle-profile",
+      manualLoginProfileDir: "/tmp/vellumpix-profile",
     });
     expect(resolveRemoteTabLeaseProfileDirForTest(uncoordinated)).toBeNull();
   });

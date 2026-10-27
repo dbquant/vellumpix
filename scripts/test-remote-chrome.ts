@@ -61,10 +61,10 @@ async function main() {
 
     await client.close();
     console.log("\n✓ POC successful! Remote Chrome connection works.");
-    console.log("\nTo use Oracle with remote Chrome, you would need to:");
+    console.log("\nTo use VellumPix with remote Chrome, you would need to:");
     console.log("1. Ensure cookies are loaded in remote Chrome");
-    console.log("2. Configure Oracle with --remote-chrome <host:port> to use this instance");
-    console.log("3. Ensure Oracle skips local Chrome launch when --remote-chrome is specified");
+    console.log("2. Configure VellumPix with --remote-chrome <host:port> to use this instance");
+    console.log("3. Ensure VellumPix skips local Chrome launch when --remote-chrome is specified");
   } catch (error) {
     console.error("✗ Connection failed:", error instanceof Error ? error.message : error);
     console.log("\nTroubleshooting:");

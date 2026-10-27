@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { createReadStream } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { getOracleHomeDir } from "../oracleHome.js";
+import { getVellumPixHomeDir } from "../vellumpixHome.js";
 import type { SessionArtifact } from "../sessionStore.js";
 import { isDeepResearchIncompleteText } from "./deepResearchResult.js";
 import type { BrowserLogger } from "./types.js";
@@ -60,7 +60,7 @@ function normalizeSessionId(sessionId: string): string {
 
 export function resolveSessionArtifactsDir(sessionId: string): string {
   return path.join(
-    getOracleHomeDir(),
+    getVellumPixHomeDir(),
     "sessions",
     normalizeSessionId(sessionId),
     ARTIFACTS_DIRNAME,
@@ -406,7 +406,7 @@ export async function saveBrowserTranscriptArtifact(params: {
     ? ["", `Conversation: ${params.conversationUrl}`, ""]
     : ["", ""];
   const body = [
-    "# Oracle Browser Transcript",
+    "# VellumPix Browser Transcript",
     ...conversationLines,
     "## Prompt",
     "",

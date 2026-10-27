@@ -226,7 +226,7 @@ export async function captureProviderNativeConversation(params: {
     return { status: "unavailable", failure: { reason: "invalid-conversation-id" } };
   }
   const deadline = Date.now() + CAPTURE_TIMEOUT_MS;
-  const key = JSON.stringify(`__oracleCapture_${randomUUID()}`);
+  const key = JSON.stringify(`__vellumpixCapture_${randomUUID()}`);
   const source = fetchSource(conversationId, deadline);
   const safeExpression = (body: string) =>
     `(async () => { try { ${body} } catch { return {ok:false, reason:'evaluate-failed'}; } })()`;
@@ -388,7 +388,7 @@ export async function finalizeProviderNativeCapture(params: {
     });
     const evidence = `${JSON.stringify(
       {
-        schema: "oracle.provider-native-capture-evidence/v1",
+        schema: "vellumpix.provider-native-capture-evidence/v1",
         normalization: "text-fields-v1",
         ...summary,
         materializedDocument: {

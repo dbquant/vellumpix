@@ -23,7 +23,7 @@ import {
 import * as attachments from "../../src/browser/actions/attachments.js";
 import * as attachmentDataTransfer from "../../src/browser/actions/attachmentDataTransfer.js";
 import type { ChromeClient } from "../../src/browser/types.js";
-import { BrowserAutomationError } from "../../src/oracle/errors.js";
+import { BrowserAutomationError } from "../../src/vellumpix/errors.js";
 import { FakeDocument, FakeElement, FakeInputElement } from "./domFixture.js";
 import { formatUserErrorMetadata } from "../../src/cli/sessionDisplay.js";
 
@@ -97,7 +97,7 @@ describe("navigateToChatGPT", () => {
   type NavigationStep = TabState & { errorText?: string };
 
   // A tab whose document changes on each Page.navigate. Runtime.evaluate runs the real readiness
-  // expression against that document, so the test checks what Oracle actually reads.
+  // expression against that document, so the test checks what VellumPix actually reads.
   function fakeTab(
     steps: NavigationStep[],
     initial: TabState = { readyState: "complete", href: "about:blank" },
@@ -369,7 +369,7 @@ describe("navigateToChatGPT", () => {
       "https://user:SECRET_PASS@chatgpt.com/g/p/project?state=STATE_SENTINEL#FRAG_SENTINEL",
     );
     const error = outcome as BrowserAutomationError;
-    // What `oracle session <id>` prints for a stored user error.
+    // What `vellumpix session <id>` prints for a stored user error.
     const metadata = formatUserErrorMetadata({
       category: error.category,
       message: error.message,
@@ -1803,7 +1803,7 @@ describe("ensureLoggedIn", () => {
   });
 
   test("normalizes the configured account without exposing it in errors or logs", async () => {
-    vi.stubEnv("ORACLE_CHATGPT_ACCOUNT_EMAIL", " PETE@EXAMPLE.TEST ");
+    vi.stubEnv("VELLUMPIX_CHATGPT_ACCOUNT_EMAIL", " PETE@EXAMPLE.TEST ");
     const runtime = {
       evaluate: vi
         .fn()
@@ -1824,7 +1824,7 @@ describe("ensureLoggedIn", () => {
       (caught: unknown) => caught,
     );
     expect(error).toBeInstanceOf(Error);
-    expect((error as Error).message).toContain("ORACLE_CHATGPT_ACCOUNT_EMAIL did not match");
+    expect((error as Error).message).toContain("VELLUMPIX_CHATGPT_ACCOUNT_EMAIL did not match");
     expect((error as Error).message).not.toContain("pete@example.test");
     expect(logger.mock.calls.flat().join(" ")).not.toContain("pete@example.test");
   });
@@ -2897,7 +2897,7 @@ describe("uploadAttachmentFile", () => {
     ...runtime,
     evaluate: (params) => {
       const expression = String(params.expression ?? "");
-      if (expression.includes("__oracleAttachmentInputGuards"))
+      if (expression.includes("__vellumpixAttachmentInputGuards"))
         return Promise.resolve({
           result: {
             type: "object",
@@ -2931,7 +2931,7 @@ describe("uploadAttachmentFile", () => {
   beforeEach(() => {
     transferSpy = vi
       .spyOn(attachmentDataTransfer, "transferAttachmentViaDataTransfer")
-      .mockResolvedValue({ fileName: "oracle-browser-smoke.txt", size: 1 });
+      .mockResolvedValue({ fileName: "vellumpix-browser-smoke.txt", size: 1 });
   });
 
   afterEach(() => {
@@ -3085,7 +3085,7 @@ describe("uploadAttachmentFile", () => {
     await expect(
       uploadAttachmentFile(
         { runtime: withStableNavigation(runtime), dom },
-        { path: "/tmp/oracle-browser-smoke.txt", displayPath: "oracle-browser-smoke.txt" },
+        { path: "/tmp/vellumpix-browser-smoke.txt", displayPath: "vellumpix-browser-smoke.txt" },
         logger,
       ),
     ).resolves.toBe(true);
@@ -3126,7 +3126,7 @@ describe("uploadAttachmentFile", () => {
     await expect(
       uploadAttachmentFile(
         { runtime: withStableNavigation(runtime), dom },
-        { path: "/tmp/oracle-browser-smoke.txt", displayPath: "oracle-browser-smoke.txt" },
+        { path: "/tmp/vellumpix-browser-smoke.txt", displayPath: "vellumpix-browser-smoke.txt" },
         logger,
         { expectedCount: 1 },
       ),
@@ -3168,7 +3168,7 @@ describe("uploadAttachmentFile", () => {
     await expect(
       uploadAttachmentFile(
         { runtime: withStableNavigation(runtime), dom },
-        { path: "/tmp/oracle-browser-smoke.txt", displayPath: "oracle-browser-smoke.txt" },
+        { path: "/tmp/vellumpix-browser-smoke.txt", displayPath: "vellumpix-browser-smoke.txt" },
         logger,
         { expectedCount: 1 },
       ),
@@ -3228,7 +3228,7 @@ describe("uploadAttachmentFile", () => {
               value: {
                 chipCount: 1,
                 chips: [],
-                inputNames: ["oracle-browser-smoke.txt"],
+                inputNames: ["vellumpix-browser-smoke.txt"],
                 composerText: "",
                 uploading: true,
               },
@@ -3248,7 +3248,7 @@ describe("uploadAttachmentFile", () => {
     await expect(
       uploadAttachmentFile(
         { runtime: withStableNavigation(runtime), dom },
-        { path: "/tmp/oracle-browser-smoke.txt", displayPath: "oracle-browser-smoke.txt" },
+        { path: "/tmp/vellumpix-browser-smoke.txt", displayPath: "vellumpix-browser-smoke.txt" },
         logger,
       ),
     ).resolves.toBe(true);
@@ -3341,7 +3341,7 @@ describe("uploadAttachmentFile", () => {
     vi.useFakeTimers();
     const uploadPromise = uploadAttachmentFile(
       { runtime: withStableNavigation(runtime), dom },
-      { path: "/tmp/oracle-browser-smoke.txt", displayPath: "oracle-browser-smoke.txt" },
+      { path: "/tmp/vellumpix-browser-smoke.txt", displayPath: "vellumpix-browser-smoke.txt" },
       logger,
     );
     await Promise.resolve();
@@ -3591,7 +3591,10 @@ describe("uploadAttachmentFile", () => {
             },
           };
         }
-        if (expr.includes('input[type="file"][data-oracle-upload-idx') && expr.includes("names")) {
+        if (
+          expr.includes('input[type="file"][data-vellumpix-upload-idx') &&
+          expr.includes("names")
+        ) {
           return { result: { value: { names: [], value: "", count: 0 } } };
         }
         if (
@@ -3624,7 +3627,7 @@ describe("uploadAttachmentFile", () => {
     vi.useFakeTimers();
     const uploadPromise = uploadAttachmentFile(
       { runtime: withStableNavigation(runtime), dom },
-      { path: "/tmp/oracle-browser-smoke.txt", displayPath: "oracle-browser-smoke.txt" },
+      { path: "/tmp/vellumpix-browser-smoke.txt", displayPath: "vellumpix-browser-smoke.txt" },
       logger,
     );
     const handledPromise = uploadPromise.catch((error) => error as Error);
@@ -3641,7 +3644,7 @@ describe("uploadAttachmentFile", () => {
         ([params]) =>
           params.expression.includes("input.value = ''") &&
           params.expression.includes(
-            JSON.stringify('input[type="file"][data-oracle-upload-idx="0"]'),
+            JSON.stringify('input[type="file"][data-vellumpix-upload-idx="0"]'),
           ),
       );
     expect(clearCall).toBeGreaterThanOrEqual(0);
@@ -3722,7 +3725,7 @@ describe("uploadAttachmentFile", () => {
     vi.useFakeTimers();
     const uploadPromise = uploadAttachmentFile(
       { runtime: withStableNavigation(runtime), dom },
-      { path: "/tmp/oracle-browser-smoke.txt", displayPath: "oracle-browser-smoke.txt" },
+      { path: "/tmp/vellumpix-browser-smoke.txt", displayPath: "vellumpix-browser-smoke.txt" },
       logger,
     );
     const assertion = expect(uploadPromise).rejects.toThrow(/Attachment did not register/i);
@@ -3766,7 +3769,7 @@ describe("waitForAttachmentVisible", () => {
     const runtime = { evaluate } as unknown as ChromeClient["Runtime"];
 
     await expect(
-      attachments.waitForAttachmentVisible(runtime, "oracle-browser-smoke.txt", 100, logger),
+      attachments.waitForAttachmentVisible(runtime, "vellumpix-browser-smoke.txt", 100, logger),
     ).resolves.toBeUndefined();
 
     const call = (evaluate as unknown as { mock: { calls: unknown[][] } }).mock.calls[0]?.[0] as

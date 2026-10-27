@@ -20,11 +20,11 @@ async function callResource(
   return parsed;
 }
 
-describe("oracle-session resources via stdio", () => {
+describe("vellumpix-session resources via stdio", () => {
   let proc: ReturnType<typeof spawn>;
 
   beforeAll(async () => {
-    const entry = path.join(process.cwd(), "dist/bin/oracle-mcp.js");
+    const entry = path.join(process.cwd(), "dist/bin/vellumpix-mcp.js");
     proc = spawn(process.execPath, [entry], { stdio: ["pipe", "pipe", "pipe"] });
     await new Promise((resolve) => setTimeout(resolve, 200)); // give stdio transport time
   }, 10_000);
@@ -38,7 +38,7 @@ describe("oracle-session resources via stdio", () => {
 
   it("responds to resource/read (metadata)", async () => {
     const res = await callResource(proc, "resource/read", 1, {
-      uri: "oracle-session://nonexistent/metadata",
+      uri: "vellumpix-session://nonexistent/metadata",
     });
     expect(res.error?.message || res.result?.contents).toBeDefined();
   }, 15_000);

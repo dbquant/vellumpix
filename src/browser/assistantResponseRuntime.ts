@@ -7,8 +7,8 @@ import { readAssistantSnapshot, throwIfAssistantUiError } from "./actions/assist
 import { waitForResumedConversationHydration } from "./actions/navigation.js";
 import { isStableConversationUrl as isConversationUrl } from "./conversationUrl.js";
 import { throwChatGptUiWarningIfPresent } from "./uiWarnings.js";
-import { BrowserAutomationError } from "../oracle/errors.js";
-import { formatElapsed } from "../oracle/format.js";
+import { BrowserAutomationError } from "../vellumpix/errors.js";
+import { formatElapsed } from "../vellumpix/format.js";
 import { delay } from "./utils.js";
 import type { BrowserLogger, ChromeClient } from "./types.js";
 

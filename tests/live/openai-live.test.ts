@@ -1,13 +1,13 @@
 import { describe, test, expect } from "vitest";
-import { runOracle, extractTextOutput } from "../../src/oracle.ts";
-import { OracleTransportError } from "../../src/oracle/errors.ts";
+import { runVellumPix, extractTextOutput } from "../../src/vellumpix.ts";
+import { VellumPixTransportError } from "../../src/vellumpix/errors.ts";
 
-const ENABLE_LIVE = process.env.ORACLE_LIVE_TEST === "1";
+const ENABLE_LIVE = process.env.VELLUMPIX_LIVE_TEST === "1";
 const LIVE_API_KEY = process.env.OPENAI_API_KEY;
 
 if (!ENABLE_LIVE || !LIVE_API_KEY) {
   describe.skip("OpenAI live smoke tests", () => {
-    test("Set ORACLE_LIVE_TEST=1 with a real OPENAI_API_KEY to run these integration tests.", () => {});
+    test("Set VELLUMPIX_LIVE_TEST=1 with a real OPENAI_API_KEY to run these integration tests.", () => {});
   });
 } else {
   const sharedDeps = {
@@ -20,7 +20,7 @@ if (!ENABLE_LIVE || !LIVE_API_KEY) {
     test(
       "gpt-5.1 returns completed (no in_progress)",
       async () => {
-        const result = await runOracle(
+        const result = await runVellumPix(
           {
             prompt: 'Reply with "live 5.1 completion" on one line.',
             model: "gpt-5.1",
@@ -44,7 +44,7 @@ if (!ENABLE_LIVE || !LIVE_API_KEY) {
     test(
       "gpt-5.2 returns completed (no in_progress)",
       async () => {
-        const result = await runOracle(
+        const result = await runVellumPix(
           {
             prompt: 'Reply with "live 5.2 completion" on one line.',
             model: "gpt-5.2",
@@ -68,7 +68,7 @@ if (!ENABLE_LIVE || !LIVE_API_KEY) {
     test(
       "gpt-5.5-pro background flow eventually completes",
       async () => {
-        const result = await runOracle(
+        const result = await runVellumPix(
           {
             prompt: 'Reply with "live 5.5 pro smoke test" on a single line.',
             model: "gpt-5.5-pro",
@@ -91,7 +91,7 @@ if (!ENABLE_LIVE || !LIVE_API_KEY) {
     test(
       "gpt-5.6-sol Pro reasoning mode background flow eventually completes",
       async () => {
-        const result = await runOracle(
+        const result = await runVellumPix(
           {
             prompt: 'Reply with "live 5.6 sol pro smoke test" on a single line.',
             model: "gpt-5.6-sol",
@@ -118,9 +118,9 @@ if (!ENABLE_LIVE || !LIVE_API_KEY) {
     test(
       "gpt-5.2-instant foreground flow still streams normally",
       async () => {
-        let result: Awaited<ReturnType<typeof runOracle>>;
+        let result: Awaited<ReturnType<typeof runVellumPix>>;
         try {
-          result = await runOracle(
+          result = await runVellumPix(
             {
               prompt: 'Reply with "live 5.2 instant smoke test" on a single line.',
               model: "gpt-5.2-instant",
@@ -135,7 +135,7 @@ if (!ENABLE_LIVE || !LIVE_API_KEY) {
           );
         } catch (error) {
           if (
-            error instanceof OracleTransportError &&
+            error instanceof VellumPixTransportError &&
             (error.reason === "client-timeout" ||
               error.reason === "api-error" ||
               error.reason === "connection-lost")

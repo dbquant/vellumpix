@@ -8,8 +8,8 @@ import {
   DEFAULT_MODEL,
   MODEL_CONFIGS,
   type ModelName,
-  type RunOracleOptions,
-} from "../../oracle.js";
+  type RunVellumPixOptions,
+} from "../../vellumpix.js";
 import { renderMarkdownAnsi } from "../markdownRenderer.js";
 import type { SessionMetadata, SessionMode, BrowserSessionConfig } from "../../sessionStore.js";
 import { sessionStore, pruneOldSessions } from "../../sessionStore.js";
@@ -20,7 +20,7 @@ import { buildBrowserConfig, resolveBrowserModelLabel } from "../browserConfig.j
 import { resolveNotificationSettings } from "../notifier.js";
 import { loadUserConfig, type UserConfig } from "../../config.js";
 import { resolveConfiguredMaxFileSizeBytes } from "../fileSize.js";
-import { formatTokenCount } from "../../oracle/runUtils.js";
+import { formatTokenCount } from "../../vellumpix/runUtils.js";
 import {
   formatSessionBrowserModelWithRequestedKey,
   resolveSessionBrowserModelDisplayName,
@@ -49,12 +49,12 @@ export async function launchTui({ version, printIntro = true }: LaunchTuiOptions
   if (printIntro) {
     if (rich) {
       console.log(
-        chalk.bold("🧿 oracle"),
+        chalk.bold("🪶 vellumpix"),
         `${version}`,
         dim("— Whispering your tokens to the silicon sage"),
       );
     } else {
-      console.log(`🧿 oracle ${version} — Whispering your tokens to the silicon sage`);
+      console.log(`🪶 vellumpix ${version} — Whispering your tokens to the silicon sage`);
     }
   }
   console.log("");
@@ -66,7 +66,7 @@ export async function launchTui({ version, printIntro = true }: LaunchTuiOptions
     const headerLabel = formatSessionTableHeader(isTty());
 
     // Start with a selectable row so focus never lands on a separator
-    choices.push({ name: chalk.bold.green("ask oracle"), value: "__ask__" });
+    choices.push({ name: chalk.bold.green("ask vellumpix"), value: "__ask__" });
 
     if (!showingOlder) {
       if (recent.length > 0) {
@@ -84,7 +84,7 @@ export async function launchTui({ version, printIntro = true }: LaunchTuiOptions
 
     choices.push(new inquirer.Separator(" "));
     choices.push(new inquirer.Separator("Actions"));
-    choices.push({ name: chalk.bold.green("ask oracle"), value: "__ask__" });
+    choices.push({ name: chalk.bold.green("ask vellumpix"), value: "__ask__" });
 
     if (!showingOlder && olderTotal > 0) {
       choices.push({ name: "Older page", value: "__older__" });
@@ -112,7 +112,7 @@ export async function launchTui({ version, printIntro = true }: LaunchTuiOptions
           pagingFailures += 1;
           const message = error instanceof Error ? error.message : String(error);
           if (message.includes("SIGINT") || message.includes("force closed the prompt")) {
-            console.log(chalk.green("🧿 Closing the book. See you next prompt."));
+            console.log(chalk.green("🪶 Closing the book. See you next prompt."));
             exitMessageShown = true;
             resolve("__exit__");
             return;
@@ -121,7 +121,7 @@ export async function launchTui({ version, printIntro = true }: LaunchTuiOptions
           if (message.includes("setRawMode") || message.includes("EIO") || pagingFailures >= 3) {
             console.error(
               chalk.red("Terminal input unavailable; exiting TUI."),
-              dim("Try `stty sane` then rerun oracle, or use `oracle recent`."),
+              dim("Try `stty sane` then rerun vellumpix, or use `vellumpix recent`."),
             );
             resolve("__exit__");
             return;
@@ -130,19 +130,19 @@ export async function launchTui({ version, printIntro = true }: LaunchTuiOptions
         });
     });
 
-    if (process.env.ORACLE_DEBUG_TUI === "1") {
+    if (process.env.VELLUMPIX_DEBUG_TUI === "1") {
       console.error(`[tui] selection=${JSON.stringify(selection)}`);
     }
     pagingFailures = 0;
 
     if (selection === "__exit__") {
       if (!exitMessageShown) {
-        console.log(chalk.green("🧿 Closing the book. See you next prompt."));
+        console.log(chalk.green("🪶 Closing the book. See you next prompt."));
       }
       return;
     }
     if (selection === "__ask__") {
-      await askOracleFlow(version, userConfig);
+      await askVellumPixFlow(version, userConfig);
       continue;
     }
     if (selection === "__older__") {
@@ -244,7 +244,7 @@ async function showSessionDetail(sessionId: string): Promise<void> {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       if (message.includes("SIGINT") || message.includes("force closed the prompt")) {
-        console.log(chalk.green("🧿 Closing the book. See you next prompt."));
+        console.log(chalk.green("🪶 Closing the book. See you next prompt."));
         return;
       }
       console.error(chalk.red("Paging failed; returning to session list."), message);
@@ -351,7 +351,7 @@ interface WizardAnswers {
   mode?: SessionMode;
 }
 
-async function askOracleFlow(version: string, userConfig: UserConfig): Promise<void> {
+async function askVellumPixFlow(version: string, userConfig: UserConfig): Promise<void> {
   const modelChoices = Object.keys(MODEL_CONFIGS) as ModelName[];
   const hasApiKey = Boolean(process.env.OPENAI_API_KEY);
   const initialMode: SessionMode = hasApiKey ? "api" : "browser";
@@ -476,7 +476,7 @@ async function askOracleFlow(version: string, userConfig: UserConfig): Promise<v
           ),
         )
       : [answers.model];
-  const runOptions: RunOracleOptions = {
+  const runOptions: RunVellumPixOptions = {
     prompt: promptWithSuffix,
     model: answers.model,
     file: answers.files,
@@ -538,7 +538,7 @@ async function askOracleFlow(version: string, userConfig: UserConfig): Promise<v
       logLine(message);
     }
   };
-  // Write streamed chunks to the session log; stdout handling is owned by runOracle.
+  // Write streamed chunks to the session log; stdout handling is owned by runVellumPix.
   const combinedWrite = (chunk: string): boolean => {
     writeChunk(chunk);
     return true;
@@ -547,7 +547,7 @@ async function askOracleFlow(version: string, userConfig: UserConfig): Promise<v
   console.log(chalk.bold(`Session ${sessionMeta.id} starting...`));
   console.log(
     dim(
-      `Log path: ${path.join(os.homedir(), ".oracle", "sessions", sessionMeta.id, "output.log")}`,
+      `Log path: ${path.join(os.homedir(), ".vellumpix", "sessions", sessionMeta.id, "output.log")}`,
     ),
   );
 
@@ -606,5 +606,5 @@ async function readStoredPrompt(sessionId: string): Promise<string | null> {
 }
 
 // Exported for testing
-export { askOracleFlow, showSessionDetail };
+export { askVellumPixFlow, showSessionDetail };
 export { resolveSessionCost as resolveCost } from "../sessionTable.js";

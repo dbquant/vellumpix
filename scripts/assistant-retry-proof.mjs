@@ -27,9 +27,9 @@ const probes = cases.map((test) => ({
   ...test,
   expression: buildAssistantSnapshotExpressionForTest(test.minTurn ?? 1),
 }));
-const html = `<!doctype html><meta charset="utf-8"><title>Oracle Retry collector proof</title>
+const html = `<!doctype html><meta charset="utf-8"><title>VellumPix Retry collector proof</title>
 <style>body{font:18px system-ui;max-width:900px;margin:40px auto}button{padding:10px}iframe{width:100%;height:180px;border:1px solid #888}pre{white-space:pre-wrap}</style>
-<h1>Oracle Retry collector proof</h1><p>Controlled fixtures using the compiled production collector. No provider requests.</p>
+<h1>VellumPix Retry collector proof</h1><p>Controlled fixtures using the compiled production collector. No provider requests.</p>
 <button id="run">Run proof</button><pre id="results">Ready.</pre><iframe title="Synthetic assistant turn"></iframe>
 <script type="module">
 const cases = ${JSON.stringify(probes).replaceAll("<", "\\u003c")};

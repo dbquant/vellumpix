@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { sessionStore } from "../../src/sessionStore.js";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 import { connectToRemoteChromeTarget } from "../../src/browser/chromeLifecycle.js";
 import {
   matchesOwnedRecoveryTarget,
@@ -43,8 +43,8 @@ let createTarget: ReturnType<typeof vi.fn>;
 
 beforeEach(async () => {
   vi.clearAllMocks();
-  root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-recovery-target-"));
-  setOracleHomeDirOverrideForTest(root);
+  root = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-recovery-target-"));
+  setVellumPixHomeDirOverrideForTest(root);
   metadata = await sessionStore.createSession(
     { prompt: "Recovery test", model: "gpt-5.5", mode: "browser" },
     root,
@@ -97,7 +97,7 @@ beforeEach(async () => {
 });
 afterEach(async () => {
   vi.restoreAllMocks();
-  setOracleHomeDirOverrideForTest(null);
+  setVellumPixHomeDirOverrideForTest(null);
   await fs.rm(root, { recursive: true, force: true });
 });
 
@@ -274,7 +274,7 @@ describe("owned recovery target retirement", () => {
     const profile = path.join(root, "profile");
     await fs.mkdir(profile);
     await fs.writeFile(
-      path.join(profile, "oracle-tab-leases.json"),
+      path.join(profile, "vellumpix-tab-leases.json"),
       JSON.stringify({
         version: 1,
         leases: [

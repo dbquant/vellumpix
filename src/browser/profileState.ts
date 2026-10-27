@@ -15,7 +15,7 @@ const DEVTOOLS_ACTIVE_PORT_RELATIVE_PATHS = [
 ] as const;
 
 const CHROME_PID_FILENAME = "chrome.pid";
-const ORACLE_PROFILE_LOCK_FILENAME = "oracle-automation.lock";
+const VELLUMPIX_PROFILE_LOCK_FILENAME = "vellumpix-automation.lock";
 
 const execFileAsync = promisify(execFile);
 let ownProcessStartTime: Promise<number | null> | undefined;
@@ -358,7 +358,7 @@ export async function acquireProfileRunLock(
     typeof options.pollMs === "number" && Number.isFinite(options.pollMs) && options.pollMs > 0
       ? options.pollMs
       : 1000;
-  const lockPath = path.join(userDataDir, ORACLE_PROFILE_LOCK_FILENAME);
+  const lockPath = path.join(userDataDir, VELLUMPIX_PROFILE_LOCK_FILENAME);
   const lockId = randomUUID();
   const startedAt = Date.now();
   let warned = false;
@@ -374,7 +374,7 @@ export async function acquireProfileRunLock(
       };
       await mkdir(path.dirname(lockPath), { recursive: true });
       await writeFile(lockPath, JSON.stringify(payload), { encoding: "utf8", flag: "wx" });
-      options.logger?.(`Acquired Oracle profile lock at ${lockPath}`);
+      options.logger?.(`Acquired VellumPix profile lock at ${lockPath}`);
       return {
         path: lockPath,
         lockId,
@@ -391,7 +391,7 @@ export async function acquireProfileRunLock(
         await delay(200, options.signal);
         existing = parseProfileRunLock(await readFile(lockPath, "utf8").catch(() => null));
         if (!existing) {
-          options.logger?.("Oracle profile lock unreadable; deleting lockfile.");
+          options.logger?.("VellumPix profile lock unreadable; deleting lockfile.");
           await rm(lockPath, { force: true }).catch(() => undefined);
           continue;
         }
@@ -403,14 +403,14 @@ export async function acquireProfileRunLock(
       if (!warned) {
         const waited = Math.round(timeoutMs / 1000);
         options.logger?.(
-          `Oracle profile lock held by pid ${existing.pid}; waiting up to ${waited}s.`,
+          `VellumPix profile lock held by pid ${existing.pid}; waiting up to ${waited}s.`,
         );
         warned = true;
       }
       const elapsed = Date.now() - startedAt;
       if (elapsed >= timeoutMs) {
         throw new Error(
-          `Oracle profile lock still held by pid ${existing.pid} after ${Math.round(elapsed / 1000)}s`,
+          `VellumPix profile lock still held by pid ${existing.pid} after ${Math.round(elapsed / 1000)}s`,
         );
       }
       await delay(Math.min(pollMs, timeoutMs - elapsed), options.signal);
@@ -429,7 +429,7 @@ export async function releaseProfileRunLock(
       return;
     }
     await rm(lockPath, { force: true });
-    logger?.(`Released Oracle profile lock ${lockPath}`);
+    logger?.(`Released VellumPix profile lock ${lockPath}`);
   } catch {
     // best effort
   }
@@ -499,7 +499,7 @@ export async function shouldCleanupManualLoginProfileState(
 export async function cleanupStaleProfileState(
   userDataDir: string,
   logger?: ProfileStateLogger,
-  options: { lockRemovalMode?: "never" | "if_oracle_pid_dead" } = {},
+  options: { lockRemovalMode?: "never" | "if_vellumpix_pid_dead" } = {},
 ): Promise<void> {
   for (const candidate of getDevToolsActivePortPaths(userDataDir)) {
     try {

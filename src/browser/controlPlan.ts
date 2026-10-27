@@ -20,7 +20,7 @@ export interface BrowserControlPlan {
   mode: "attach-running" | "remote-chrome" | "headless" | "hidden-window" | "visible-window";
   launchesChrome: boolean;
   mayFocusWindow: boolean;
-  /** --browser-no-focus: Oracle skips Chrome activation for launch, new tabs, and send. */
+  /** --browser-no-focus: VellumPix skips Chrome activation for launch, new tabs, and send. */
   noFocus?: boolean;
   summary: string;
   guidance: string[];
@@ -38,17 +38,17 @@ export function describeBrowserControlPlan(config: BrowserControlConfig = {}): B
   const reusesExistingTab = tabRef.length > 0;
   const noFocus = resolveBrowserNoFocus(config);
   const noFocusGuidance = reusesExistingTab
-    ? "Oracle reuses that tab without bringing Chrome to the front (--browser-no-focus)."
-    : "Oracle opens its tab in a background window and skips Chrome activation during launch, tab creation, and send (--browser-no-focus). A reattach that falls back to relaunching Chrome can still bring it forward.";
+    ? "VellumPix reuses that tab without bringing Chrome to the front (--browser-no-focus)."
+    : "VellumPix opens its tab in a background window and skips Chrome activation during launch, tab creation, and send (--browser-no-focus). A reattach that falls back to relaunching Chrome can still bring it forward.";
 
   if (config.attachRunning) {
     guidance.push(
       reusesExistingTab
-        ? `Oracle reuses the matching ChatGPT tab (${tabRef}) and leaves the existing browser process alone.`
-        : "Oracle opens a dedicated tab and leaves the existing browser process alone.",
+        ? `VellumPix reuses the matching ChatGPT tab (${tabRef}) and leaves the existing browser process alone.`
+        : "VellumPix opens a dedicated tab and leaves the existing browser process alone.",
     );
     if (config.keepBrowser) {
-      guidance.push("The browser stays open because Oracle did not launch it.");
+      guidance.push("The browser stays open because VellumPix did not launch it.");
     }
     if (noFocus) guidance.push(noFocusGuidance);
     return {
@@ -66,8 +66,8 @@ export function describeBrowserControlPlan(config: BrowserControlConfig = {}): B
   if (config.remoteChrome) {
     guidance.push(
       reusesExistingTab
-        ? `Oracle reuses the matching ChatGPT tab (${tabRef}) in the configured remote Chrome session.`
-        : "Oracle opens a dedicated tab in the configured remote Chrome session.",
+        ? `VellumPix reuses the matching ChatGPT tab (${tabRef}) in the configured remote Chrome session.`
+        : "VellumPix opens a dedicated tab in the configured remote Chrome session.",
     );
     guidance.push("Local Chrome launch, cookie copy, and window hiding flags are skipped.");
     // Opening the tab and Page.bringToFront activate a remote Chrome too.
@@ -100,7 +100,9 @@ export function describeBrowserControlPlan(config: BrowserControlConfig = {}): B
   }
 
   if (config.hideWindow) {
-    guidance.push("On macOS, Oracle launches Chrome off-screen while keeping the page rendered.");
+    guidance.push(
+      "On macOS, VellumPix launches Chrome off-screen while keeping the page rendered.",
+    );
     guidance.push(
       noFocus
         ? noFocusGuidance
@@ -118,11 +120,11 @@ export function describeBrowserControlPlan(config: BrowserControlConfig = {}): B
 
   if (config.manualLogin) {
     guidance.push(
-      `Manual-login mode may show the persistent Oracle ${browserName} profile for sign-in or automation.`,
+      `Manual-login mode may show the persistent VellumPix ${browserName} profile for sign-in or automation.`,
     );
   } else if (!noFocus) {
     guidance.push(
-      `A visible automation ${browserName} window may take focus while Oracle controls ChatGPT.`,
+      `A visible automation ${browserName} window may take focus while VellumPix controls ChatGPT.`,
     );
   }
   guidance.push(

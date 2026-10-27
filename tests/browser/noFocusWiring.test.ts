@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { BrowserAutomationError } from "../../src/oracle/errors.js";
+import { BrowserAutomationError } from "../../src/vellumpix/errors.js";
 
 // Drives the real runBrowserMode through launch, tab creation and focus emulation up to the
 // provider submission. CDP and Chrome are faked at their package boundaries; page actions that
@@ -234,7 +234,7 @@ describe("runBrowserMode no-focus wiring", () => {
       vi.mocked(pageActions.ensureLoggedIn)
         .mockRejectedValueOnce(new Error("Login button detected"))
         .mockResolvedValue(undefined);
-      const profile = await mkdtemp(path.join(os.tmpdir(), "oracle-no-focus-signin-"));
+      const profile = await mkdtemp(path.join(os.tmpdir(), "vellumpix-no-focus-signin-"));
       const log = vi.fn<(message: string) => void>();
       try {
         const { runBrowserMode } = await import("../../src/browser/index.js");

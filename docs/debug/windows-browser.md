@@ -1,6 +1,6 @@
 # Windows browser cookies
 
-Oracle reads Chrome cookies via `@steipete/sweet-cookie` (uses `node:sqlite` + PowerShell DPAPI on Windows).
+VellumPix reads Chrome cookies via `@steipete/sweet-cookie` (uses `node:sqlite` + PowerShell DPAPI on Windows).
 
 Notes:
 

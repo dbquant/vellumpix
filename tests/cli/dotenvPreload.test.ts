@@ -15,15 +15,15 @@ describe("CLI dotenv preload contract", () => {
   test.each([false, true])(
     "loads quietly and preserves shell values (legacy path override: %s)",
     async (customPath) => {
-      const cwd = await mkdtemp(path.join(os.tmpdir(), "oracle-dotenv-"));
+      const cwd = await mkdtemp(path.join(os.tmpdir(), "vellumpix-dotenv-"));
       try {
         const filename = path.join(cwd, customPath ? "custom env" : ".env");
         await writeFile(
           filename,
-          'ORACLE_TEST_ENV_FILE="one\\ntwo"\nORACLE_TEST_ENV_KEEP=from-file\n',
+          'VELLUMPIX_TEST_ENV_FILE="one\\ntwo"\nVELLUMPIX_TEST_ENV_KEEP=from-file\n',
         );
-        const env: NodeJS.ProcessEnv = { ...process.env, ORACLE_TEST_ENV_KEEP: "from-shell" };
-        delete env.ORACLE_TEST_ENV_FILE;
+        const env: NodeJS.ProcessEnv = { ...process.env, VELLUMPIX_TEST_ENV_KEEP: "from-shell" };
+        delete env.VELLUMPIX_TEST_ENV_FILE;
         for (const name of Object.keys(env)) {
           if (name.startsWith("DOTENV_")) delete env[name];
         }
@@ -34,7 +34,7 @@ describe("CLI dotenv preload contract", () => {
             "--import",
             preload,
             "-e",
-            "process.stdout.write(JSON.stringify([process.env.ORACLE_TEST_ENV_FILE, process.env.ORACLE_TEST_ENV_KEEP]))",
+            "process.stdout.write(JSON.stringify([process.env.VELLUMPIX_TEST_ENV_FILE, process.env.VELLUMPIX_TEST_ENV_KEEP]))",
           ],
           { cwd, env },
         );

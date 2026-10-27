@@ -12,16 +12,16 @@ import type {
   SessionArtifact,
   SessionModelRun,
 } from "../sessionStore.js";
-import type { ProviderFailureContext, RunOracleOptions, UsageSummary } from "../oracle.js";
+import type { ProviderFailureContext, RunVellumPixOptions, UsageSummary } from "../vellumpix.js";
 import {
-  runOracle,
-  OracleResponseError,
-  OracleTransportError,
+  runVellumPix,
+  VellumPixResponseError,
+  VellumPixTransportError,
   extractResponseMetadata,
-  asOracleUserError,
+  asVellumPixUserError,
   extractTextOutput,
   classifyProviderFailure,
-} from "../oracle.js";
+} from "../vellumpix.js";
 import {
   ensureSessionArtifacts,
   runBrowserSessionExecution,
@@ -36,16 +36,19 @@ import {
   deriveNotificationSettingsFromMetadata,
 } from "./notifier.js";
 import { sessionStore } from "../sessionStore.js";
-import { runMultiModelApiSession, type MultiModelRunSummary } from "../oracle/multiModelRunner.js";
-import { MODEL_CONFIGS, DEFAULT_SYSTEM_PROMPT } from "../oracle/config.js";
-import { isKnownModel } from "../oracle/modelResolver.js";
-import { resolveModelConfig } from "../oracle/modelResolver.js";
-import { buildPrompt, buildRequestBody } from "../oracle/request.js";
-import { estimateRequestTokens } from "../oracle/tokenEstimate.js";
-import { formatTokenEstimate, formatTokenValue } from "../oracle/runUtils.js";
-import { formatFinishLine } from "../oracle/finishLine.js";
+import {
+  runMultiModelApiSession,
+  type MultiModelRunSummary,
+} from "../vellumpix/multiModelRunner.js";
+import { MODEL_CONFIGS, DEFAULT_SYSTEM_PROMPT } from "../vellumpix/config.js";
+import { isKnownModel } from "../vellumpix/modelResolver.js";
+import { resolveModelConfig } from "../vellumpix/modelResolver.js";
+import { buildPrompt, buildRequestBody } from "../vellumpix/request.js";
+import { estimateRequestTokens } from "../vellumpix/tokenEstimate.js";
+import { formatTokenEstimate, formatTokenValue } from "../vellumpix/runUtils.js";
+import { formatFinishLine } from "../vellumpix/finishLine.js";
 import { sanitizeOscProgress } from "./oscUtils.js";
-import { readFiles } from "../oracle/files.js";
+import { readFiles } from "../vellumpix/files.js";
 import { cwd as getCwd } from "node:process";
 import { resumeBrowserSession } from "../browser/reattach.js";
 import {
@@ -57,16 +60,16 @@ import { hasRecoverableChatGptConversation } from "../browser/reattachability.js
 import { delay, estimateTokenCount } from "../browser/utils.js";
 import type { BrowserLogger, SavedBrowserFile } from "../browser/types.js";
 import { computeFileSha256, sanitizeArtifactFilename } from "../browser/artifacts.js";
-import { formatElapsed } from "../oracle/format.js";
+import { formatElapsed } from "../vellumpix/format.js";
 import { formatBrowserReattachGuidance } from "./reattachGuidance.js";
-import { BrowserRunCancelledError } from "../oracle/errors.js";
+import { BrowserRunCancelledError } from "../vellumpix/errors.js";
 
 const isTty = process.stdout.isTTY;
 const dim = (text: string): string => (isTty ? kleur.dim(text) : text);
 
 export interface SessionRunParams {
   sessionMeta: SessionMetadata;
-  runOptions: RunOracleOptions;
+  runOptions: RunVellumPixOptions;
   mode: SessionMode;
   browserConfig?: BrowserSessionConfig;
   cwd: string;
@@ -299,7 +302,7 @@ export async function performSessionRun({
       const multiRunTips: string[] = [];
       if (files.length === 0) {
         multiRunTips.push(
-          "Tip: no files attached — Oracle works best with project context. Add files via --file path/to/code or docs.",
+          "Tip: no files attached — VellumPix works best with project context. Add files via --file path/to/code or docs.",
         );
       }
       const shortPrompt = (runOptions.prompt?.trim().length ?? 0) < 80;
@@ -372,8 +375,8 @@ export async function performSessionRun({
             : undefined,
         },
         {
-          runOracleImpl: muteStdout
-            ? (opts, deps) => runOracle(opts, { ...deps, allowStdout: false })
+          runVellumPixImpl: muteStdout
+            ? (opts, deps) => runVellumPix(opts, { ...deps, allowStdout: false })
             : undefined,
         },
       );
@@ -538,7 +541,7 @@ export async function performSessionRun({
       return;
     }
     const singleModelOverride = multiModels.length === 1 ? multiModels[0] : undefined;
-    const apiRunOptions: RunOracleOptions = singleModelOverride
+    const apiRunOptions: RunVellumPixOptions = singleModelOverride
       ? { ...runOptions, model: singleModelOverride, models: undefined }
       : runOptions;
     if (modelForStatus && singleModelOverride == null) {
@@ -547,7 +550,7 @@ export async function performSessionRun({
         startedAt: new Date().toISOString(),
       });
     }
-    const result = await runOracle(apiRunOptions, {
+    const result = await runVellumPix(apiRunOptions, {
       cwd,
       log,
       write,
@@ -595,7 +598,7 @@ export async function performSessionRun({
     const message = formatError(error);
     log(`ERROR: ${message}`);
     markErrorLogged(error);
-    const userError = asOracleUserError(error);
+    const userError = asVellumPixUserError(error);
     const connectionLost =
       userError?.category === "browser-automation" &&
       (userError.details as { stage?: string } | undefined)?.stage === "connection-lost";
@@ -840,13 +843,13 @@ export async function performSessionRun({
     if (userError) {
       log(dim(`User error (${userError.category}): ${userError.message}`));
     }
-    const responseMetadata = error instanceof OracleResponseError ? error.metadata : undefined;
+    const responseMetadata = error instanceof VellumPixResponseError ? error.metadata : undefined;
     const metadataLine = formatResponseMetadata(responseMetadata);
     if (metadataLine) {
       log(dim(`Response metadata: ${metadataLine}`));
     }
     const transportMetadata =
-      error instanceof OracleTransportError ? { reason: error.reason } : undefined;
+      error instanceof VellumPixTransportError ? { reason: error.reason } : undefined;
     const transportLine = formatTransportMetadata(transportMetadata);
     if (transportLine) {
       log(dim(`Transport: ${transportLine}`));
@@ -911,7 +914,7 @@ function formatError(error: unknown): string {
 
 function providerFailureContextForModel(
   model: string,
-  runOptions: RunOracleOptions,
+  runOptions: RunVellumPixOptions,
 ): ProviderFailureContext {
   return {
     model,
@@ -926,7 +929,7 @@ function formatMultiModelFailure(
   error: unknown,
   context?: string | ProviderFailureContext,
 ): string {
-  const userError = asOracleUserError(error);
+  const userError = asVellumPixUserError(error);
   if (userError) {
     return `${userError.category}, ${userError.message}`;
   }
@@ -934,10 +937,10 @@ function formatMultiModelFailure(
   if (providerFailure) {
     return providerFailure.label;
   }
-  if (error instanceof OracleTransportError) {
+  if (error instanceof VellumPixTransportError) {
     return `${error.reason}, ${error.message}`;
   }
-  if (error instanceof OracleResponseError) {
+  if (error instanceof VellumPixResponseError) {
     return error.message;
   }
   return formatError(error);
@@ -974,10 +977,10 @@ function sanitizeMultiModelFailureForThrow(
     return new Error(message);
   }
   let sanitized: Error;
-  if (error instanceof OracleTransportError) {
-    sanitized = new OracleTransportError(error.reason, message);
-  } else if (error instanceof OracleResponseError) {
-    sanitized = new OracleResponseError(message, error.response);
+  if (error instanceof VellumPixTransportError) {
+    sanitized = new VellumPixTransportError(error.reason, message);
+  } else if (error instanceof VellumPixResponseError) {
+    sanitized = new VellumPixResponseError(message, error.response);
   } else {
     sanitized = new Error(message);
     sanitized.name = error.name;
@@ -1018,7 +1021,7 @@ export function deriveOutputManifestPath(basePath: string): string {
   const ext = path.extname(basePath);
   const stem = path.basename(basePath, ext);
   const dir = path.dirname(basePath);
-  return path.join(dir, `${stem}.oracle.json`);
+  return path.join(dir, `${stem}.vellumpix.json`);
 }
 
 async function collectMultiModelRunLogs(
@@ -1059,7 +1062,7 @@ async function writeMultiModelOutputManifest({
   savedOutputs: Array<{ model: string; path: string }>;
   modelRuns?: SessionModelRun[];
   runLogs: MultiModelManifestRunLog[];
-  runOptions: RunOracleOptions;
+  runOptions: RunVellumPixOptions;
   log: (message: string) => void;
 }): Promise<string | undefined> {
   const manifestPath = deriveOutputManifestPath(baseOutputPath);
@@ -1114,7 +1117,7 @@ function buildMultiModelOutputManifest({
   savedOutputs: Array<{ model: string; path: string }>;
   modelRuns?: SessionModelRun[];
   runLogs: MultiModelManifestRunLog[];
-  runOptions: RunOracleOptions;
+  runOptions: RunVellumPixOptions;
 }): MultiModelOutputManifest {
   const outputByModel = new Map(savedOutputs.map((entry) => [entry.model, entry.path]));
   const logsByModel = new Map(runLogs.map((entry) => [entry.model, entry.path]));
@@ -1135,7 +1138,7 @@ function buildMultiModelOutputManifest({
       const run = runsByModel.get(model);
       const fulfilled = fulfilledByModel.get(model);
       const reason = rejectedByModel.get(model);
-      const userError = reason ? asOracleUserError(reason) : undefined;
+      const userError = reason ? asVellumPixUserError(reason) : undefined;
       const providerFailure = reason
         ? classifyProviderFailure(reason, providerFailureContextForModel(model, runOptions))
         : undefined;
@@ -1354,7 +1357,7 @@ async function autoReattachUntilComplete({
   runtime?: BrowserRuntimeMetadata;
   browserConfig?: BrowserSessionConfig;
   browserMetadata?: SessionMetadata["browser"];
-  runOptions: RunOracleOptions;
+  runOptions: RunVellumPixOptions;
   modelForStatus?: string;
   notificationSettings: NotificationSettings;
   log: (message?: string) => void;

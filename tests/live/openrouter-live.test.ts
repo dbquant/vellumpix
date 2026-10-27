@@ -2,11 +2,11 @@ import { describe, test, expect } from "vitest";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { runOracle, extractTextOutput } from "../../src/oracle.js";
-import { runMultiModelApiSession } from "../../src/oracle/multiModelRunner.js";
+import { runVellumPix, extractTextOutput } from "../../src/vellumpix.js";
+import { runMultiModelApiSession } from "../../src/vellumpix/multiModelRunner.js";
 import { sessionStore } from "../../src/sessionStore.js";
 
-const ENABLE = process.env.ORACLE_LIVE_TEST === "1";
+const ENABLE = process.env.VELLUMPIX_LIVE_TEST === "1";
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
@@ -39,7 +39,7 @@ async function loadCatalog(): Promise<Set<string> | null> {
       return;
     }
     try {
-      const result = await runOracle(
+      const result = await runVellumPix(
         {
           prompt: 'Return the string "openrouter glm ok" exactly.',
           model: modelId,
@@ -128,7 +128,7 @@ async function loadCatalog(): Promise<Set<string> | null> {
       return;
     }
     try {
-      const result = await runOracle(
+      const result = await runVellumPix(
         {
           prompt: 'Reply with "deepseek ok" exactly.',
           model: modelId,
@@ -162,7 +162,7 @@ async function loadCatalog(): Promise<Set<string> | null> {
       return;
     }
     try {
-      const result = await runOracle(
+      const result = await runVellumPix(
         {
           prompt: 'Reply "glm ok" exactly.',
           model: modelId,
@@ -195,7 +195,7 @@ async function loadCatalog(): Promise<Set<string> | null> {
       console.warn(`Skipping OpenRouter kat-coder test; ${modelId} not available for this key.`);
       return;
     }
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-kat-coder-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-kat-coder-"));
     const filePath = path.join(tmpDir, "snippet.txt");
     await fs.writeFile(
       filePath,
@@ -203,7 +203,7 @@ async function loadCatalog(): Promise<Set<string> | null> {
       "utf8",
     );
     try {
-      const result = await runOracle(
+      const result = await runVellumPix(
         {
           prompt: 'Read the attached code and answer with "kat coder ok" plus a 5-word summary.',
           model: modelId,

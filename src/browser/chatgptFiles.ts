@@ -769,7 +769,7 @@ function buildClickAssistantDownloadButtonsExpression(
     const RETURN_DIAGNOSTICS = ${returnDiagnosticsLiteral};
     const MAX_CLICKS = ${maxClicksLiteral};
     const HAS_EXPECTED_LABELS = EXPECTED_LABELS.length > 0;
-    const CLICKED_ATTRIBUTE = 'data-oracle-download-clicked';
+    const CLICKED_ATTRIBUTE = 'data-vellumpix-download-clicked';
     const isAssistantTurn = (node) => {
       if (!(node instanceof HTMLElement)) return false;
       const searchKey = (node.getAttribute('data-content-search-unit-key') || node.getAttribute('data-chatgpt-search-unit-key') || '').toLowerCase();
@@ -1096,7 +1096,7 @@ async function clickGeneratedDownloadUrl(params: {
     anchor.download = ${JSON.stringify(filename)};
     anchor.rel = 'noopener';
     anchor.style.display = 'none';
-    anchor.setAttribute('data-oracle-generated-download-anchor', 'true');
+    anchor.setAttribute('data-vellumpix-generated-download-anchor', 'true');
     document.body.appendChild(anchor);
     anchor.click();
     setTimeout(() => anchor.remove(), 0);
@@ -1107,7 +1107,7 @@ async function clickGeneratedDownloadUrl(params: {
         text: '',
         ariaLabel: '',
         title: '',
-        testId: 'oracle-generated-download-anchor',
+        testId: 'vellumpix-generated-download-anchor',
         tagName: 'A',
         role: '',
         hrefKind: ${JSON.stringify(classifyUrlKind(params.downloadUrl))},

@@ -11,7 +11,7 @@ vi.setConfig({ testTimeout: 20_000 });
 // A fake remote page. The transfer expression carries the file bytes ("const base64Data") and
 // fills the input. ChatGPT takes the file from transfer `pickedUpOnTransfer` on: its change
 // handler empties the input and the chip shows `chipDelayMs` later. An earlier transfer is
-// dropped. With `dropped: "held"` no handler runs and the input keeps Oracle's own FileList,
+// dropped. With `dropped: "held"` no handler runs and the input keeps VellumPix's own FileList,
 // which the visibility probe reports unless told not to count file inputs, as the real probe
 // does. With `dropped: "emptied"` the handler empties the input but keeps nothing, as live
 // ChatGPT did while its composer was still loading. Everything else succeeds.
@@ -62,7 +62,7 @@ let file: string;
 beforeEach(async () => {
   // Only the upload's own waits are faked; the file read still needs real I/O turns.
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
-  root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-remote-transfer-"));
+  root = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-remote-transfer-"));
   file = path.join(root, "synthetic.txt");
   await fs.writeFile(file, "synthetic attachment");
 });

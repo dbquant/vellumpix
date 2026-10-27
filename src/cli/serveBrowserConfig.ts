@@ -18,7 +18,7 @@ export function buildServeBrowserConfig(
     remoteChrome: options.remoteChrome,
     browserApprovalWait:
       options.browserApprovalWait ??
-      (process.env.ORACLE_BROWSER_APPROVAL_WAIT?.trim() || undefined),
+      (process.env.VELLUMPIX_BROWSER_APPROVAL_WAIT?.trim() || undefined),
     browserNoFocus: options.browserNoFocus,
   };
   const browser = config.browser;

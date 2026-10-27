@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 /**
  * Lightweight browser connectivity smoke test.
- * - Launches Chrome headful with a fixed DevTools port (default 45871 or env ORACLE_BROWSER_PORT/ORACLE_BROWSER_DEBUG_PORT).
+ * - Launches Chrome headful with a fixed DevTools port (default 45871 or env VELLUMPIX_BROWSER_PORT/VELLUMPIX_BROWSER_DEBUG_PORT).
  * - Verifies the DevTools /json/version endpoint responds.
  * - Prints a WSL-friendly firewall hint if the port is unreachable.
  */
@@ -12,7 +12,7 @@ import { isWsl, resolveWslHost } from "../src/browser/wslHost.js";
 
 const DEFAULT_PORT = 45871;
 const port =
-  normalizePort(process.env.ORACLE_BROWSER_PORT ?? process.env.ORACLE_BROWSER_DEBUG_PORT) ??
+  normalizePort(process.env.VELLUMPIX_BROWSER_PORT ?? process.env.VELLUMPIX_BROWSER_DEBUG_PORT) ??
   DEFAULT_PORT;
 const hostHint = resolveWslHost();
 const targetHost = hostHint ?? "127.0.0.1";

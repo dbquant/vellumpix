@@ -25,7 +25,7 @@ export async function runBridgeCodexConfig(options: BridgeCodexConfigCliOptions)
   if (!options.printToken) {
     console.error("");
     console.error(
-      chalk.dim("Tip: rerun with --print-token to include ORACLE_REMOTE_TOKEN in the snippet."),
+      chalk.dim("Tip: rerun with --print-token to include VELLUMPIX_REMOTE_TOKEN in the snippet."),
     );
   }
 }
@@ -45,16 +45,16 @@ export function formatCodexMcpSnippet({
   return [
     "# ~/.codex/config.toml",
     "",
-    "[mcp.servers.oracle]",
-    'command = "oracle-mcp"',
+    "[mcp.servers.vellumpix]",
+    'command = "vellumpix-mcp"',
     "args = []",
-    `env = { ORACLE_ENGINE = "browser", ORACLE_REMOTE_HOST = "${escapeTomlString(hostValue)}", ORACLE_REMOTE_TOKEN = "${escapeTomlString(tokenValue)}" }`,
+    `env = { VELLUMPIX_ENGINE = "browser", VELLUMPIX_REMOTE_HOST = "${escapeTomlString(hostValue)}", VELLUMPIX_REMOTE_TOKEN = "${escapeTomlString(tokenValue)}" }`,
     "",
     "# If you prefer npx:",
-    "# [mcp.servers.oracle]",
+    "# [mcp.servers.vellumpix]",
     '# command = "npx"',
-    '# args = ["-y", "@steipete/oracle", "oracle-mcp"]',
-    `# env = { ORACLE_ENGINE = "browser", ORACLE_REMOTE_HOST = "${escapeTomlString(hostValue)}", ORACLE_REMOTE_TOKEN = "${escapeTomlString(tokenValue)}" }`,
+    '# args = ["-y", "@dbquant/vellumpix", "vellumpix-mcp"]',
+    `# env = { VELLUMPIX_ENGINE = "browser", VELLUMPIX_REMOTE_HOST = "${escapeTomlString(hostValue)}", VELLUMPIX_REMOTE_TOKEN = "${escapeTomlString(tokenValue)}" }`,
   ].join("\n");
 }
 

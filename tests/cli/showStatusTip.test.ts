@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 const sessionStoreMock = {
   listSessions: vi.fn(),
   filterSessions: vi.fn(),
-  sessionsDir: vi.fn().mockReturnValue("/tmp/.oracle/sessions"),
+  sessionsDir: vi.fn().mockReturnValue("/tmp/.vellumpix/sessions"),
 };
 
 vi.mock("../../src/sessionStore.ts", () => ({
@@ -30,6 +30,6 @@ describe("showStatus cleanup tip", () => {
   test("prints cleanup tip when no sessions found", async () => {
     const { showStatus } = await import("../../src/cli/sessionDisplay.ts");
     await showStatus({ hours: 24, includeAll: false, limit: 10, showExamples: false });
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("oracle session --clear"));
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("vellumpix session --clear"));
   }, 15_000);
 });

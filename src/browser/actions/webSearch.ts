@@ -1,5 +1,5 @@
 import type { ChromeClient, BrowserLogger } from "../types.js";
-import { BrowserAutomationError } from "../../oracle/errors.js";
+import { BrowserAutomationError } from "../../vellumpix/errors.js";
 import { INPUT_SELECTORS } from "../constants.js";
 import { delay } from "../utils.js";
 import {

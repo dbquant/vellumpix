@@ -1,7 +1,7 @@
 import { buildConversationTurnListExpression } from "../conversationTurns.js";
 import { RESPONSE_COMPLETE_ANNOUNCEMENTS } from "../constants.js";
 
-const TRACKER_KEY = "__oracleCurrentTurnCompletionV1";
+const TRACKER_KEY = "__vellumpixCurrentTurnCompletionV1";
 
 /** Start before prompt dispatch so even a fast answer has a turn-scoped completion signal. */
 export function buildInstallCompletionAnnouncementExpression(

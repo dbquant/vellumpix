@@ -23,7 +23,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("queues when the max concurrent tab limit is reached", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-"));
     const leases: BrowserTabLease[] = [];
     let pendingLease: Promise<BrowserTabLease> | undefined;
     try {
@@ -70,7 +70,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("drops stale leases owned by dead pids", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-"));
     try {
       const now = Date.now();
       const stale = await acquireBrowserTabLease(
@@ -97,7 +97,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
       await fresh.update({ chromeTargetId: "target-fresh", tabUrl: "https://chatgpt.com/c/1" });
 
       const registry = JSON.parse(
-        await readFile(path.join(dir, "oracle-tab-leases.json"), "utf8"),
+        await readFile(path.join(dir, "vellumpix-tab-leases.json"), "utf8"),
       ) as { leases: Array<{ sessionId?: string; chromeTargetId?: string; tabUrl?: string }> };
       expect(registry.leases).toHaveLength(1);
       expect(registry.leases[0]).toMatchObject({
@@ -114,26 +114,30 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("fails closed instead of treating a corrupt registry as empty", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-corrupt-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-corrupt-"));
     try {
-      await writeFile(path.join(dir, "oracle-tab-leases.json"), '{"version":1,"leases":', "utf8");
+      await writeFile(
+        path.join(dir, "vellumpix-tab-leases.json"),
+        '{"version":1,"leases":',
+        "utf8",
+      );
 
       await expect(
         acquireBrowserTabLease(dir, {
           maxConcurrentTabs: 3,
           timeoutMs: 500,
         }),
-      ).rejects.toThrow(/Unable to read Oracle tab lease registry/i);
+      ).rejects.toThrow(/Unable to read VellumPix tab lease registry/i);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
   });
 
   test("fails closed instead of filtering invalid lease records", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-invalid-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-invalid-"));
     try {
       await writeFile(
-        path.join(dir, "oracle-tab-leases.json"),
+        path.join(dir, "vellumpix-tab-leases.json"),
         JSON.stringify({ version: 1, leases: [{ id: "partial" }] }),
         "utf8",
       );
@@ -150,9 +154,9 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("recovers a registry lock only when its recorded owner is dead", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-dead-lock-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-dead-lock-"));
     try {
-      const lockDir = path.join(dir, "oracle-tab-leases.lock");
+      const lockDir = path.join(dir, "vellumpix-tab-leases.lock");
       await mkdir(lockDir);
       await writeFile(
         path.join(lockDir, "owner.json"),
@@ -171,7 +175,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
         }),
       ]);
       const registry = JSON.parse(
-        await readFile(path.join(dir, "oracle-tab-leases.json"), "utf8"),
+        await readFile(path.join(dir, "vellumpix-tab-leases.json"), "utf8"),
       ) as { leases: unknown[] };
       expect(registry.leases).toHaveLength(2);
       await first.release();
@@ -182,9 +186,9 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("recovers a lock whose pid was reused by a different process identity", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-reused-pid-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-reused-pid-"));
     try {
-      const lockDir = path.join(dir, "oracle-tab-leases.lock");
+      const lockDir = path.join(dir, "vellumpix-tab-leases.lock");
       await mkdir(lockDir);
       await writeFile(
         path.join(lockDir, "owner.json"),
@@ -208,9 +212,9 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("uses legacy lock creation time to detect a reused live pid", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-legacy-reused-pid-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-legacy-reused-pid-"));
     try {
-      const lockDir = path.join(dir, "oracle-tab-leases.lock");
+      const lockDir = path.join(dir, "vellumpix-tab-leases.lock");
       await mkdir(lockDir);
       await writeFile(
         path.join(lockDir, "owner.json"),
@@ -232,10 +236,10 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
     }
   });
 
-  test("recovers an old ownerless lock left by a previous Oracle version", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-ownerless-"));
+  test("recovers an old ownerless lock left by a previous VellumPix version", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-ownerless-"));
     try {
-      const lockDir = path.join(dir, "oracle-tab-leases.lock");
+      const lockDir = path.join(dir, "vellumpix-tab-leases.lock");
       await mkdir(lockDir);
       const old = new Date(Date.now() - 10 * 60 * 1000);
       await utimes(lockDir, old, old);
@@ -253,7 +257,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   test.runIf(process.platform === "win32")(
     "canonicalizes Windows profile aliases before deriving the recovery mutex",
     async () => {
-      const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-canonical-"));
+      const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-canonical-"));
       try {
         const canonical = await canonicalProfileIdentityForTest(dir);
         const differentlyCased = await canonicalProfileIdentityForTest(dir.toUpperCase());
@@ -267,7 +271,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   );
 
   test("does not report a lease release after registry corruption", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-release-fail-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-release-fail-"));
     try {
       const logger = vi.fn();
       const lease = await acquireBrowserTabLease(dir, {
@@ -276,9 +280,9 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
         logger,
       });
       logger.mockClear();
-      await writeFile(path.join(dir, "oracle-tab-leases.json"), "not-json", "utf8");
+      await writeFile(path.join(dir, "vellumpix-tab-leases.json"), "not-json", "utf8");
 
-      await expect(lease.release()).rejects.toThrow(/Unable to read Oracle tab lease registry/i);
+      await expect(lease.release()).rejects.toThrow(/Unable to read VellumPix tab lease registry/i);
       expect(logger).not.toHaveBeenCalledWith(
         expect.stringContaining("Released ChatGPT browser slot"),
       );
@@ -288,7 +292,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("propagates an unverifiable registry unlock instead of leaving a silent live lock", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-unlock-fail-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-unlock-fail-"));
     try {
       const lease = await acquireBrowserTabLease(dir, {
         maxConcurrentTabs: 3,
@@ -298,7 +302,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
       await expect(
         lease.release({
           onRelease: async () => {
-            await writeFile(path.join(dir, "oracle-tab-leases.lock", "owner.json"), "not-json");
+            await writeFile(path.join(dir, "vellumpix-tab-leases.lock", "owner.json"), "not-json");
           },
         }),
       ).rejects.toThrow(/Unable to verify ownership while releasing/i);
@@ -308,8 +312,8 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("retries transient owner reads and Windows lock-directory removal", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-unlock-retry-"));
-    const lockDir = path.join(dir, "oracle-tab-leases.lock");
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-unlock-retry-"));
+    const lockDir = path.join(dir, "vellumpix-tab-leases.lock");
     try {
       await mkdir(lockDir);
       await writeFile(
@@ -349,8 +353,8 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("propagates exhausted registry lock-directory removal retries", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-unlock-exhausted-"));
-    const lockDir = path.join(dir, "oracle-tab-leases.lock");
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-unlock-exhausted-"));
+    const lockDir = path.join(dir, "vellumpix-tab-leases.lock");
     try {
       await mkdir(lockDir);
       await writeFile(
@@ -381,7 +385,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("detects other active leases before releasing a shared Chrome owner", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-"));
     try {
       const logger = vi.fn();
       const first = await acquireBrowserTabLease(dir, {
@@ -422,7 +426,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("runs cleanup exactly once when concurrent runs release their final lease", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-"));
     try {
       const first = await acquireBrowserTabLease(dir, {
         maxConcurrentTabs: 3,
@@ -450,7 +454,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
 
       expect(firstCleanup.mock.calls.length + secondCleanup.mock.calls.length).toBe(1);
       const registry = JSON.parse(
-        await readFile(path.join(dir, "oracle-tab-leases.json"), "utf8"),
+        await readFile(path.join(dir, "vellumpix-tab-leases.json"), "utf8"),
       ) as { leases: unknown[] };
       expect(registry.leases).toEqual([]);
     } finally {
@@ -459,7 +463,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("never prunes another controller while deciding whether release is final", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-release-fail-closed-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-release-fail-closed-"));
     try {
       const staleOwnerPid = 99_999_991;
       const first = await acquireBrowserTabLease(
@@ -482,7 +486,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
 
       expect(observedLastLease).toBe(false);
       const registry = JSON.parse(
-        await readFile(path.join(dir, "oracle-tab-leases.json"), "utf8"),
+        await readFile(path.join(dir, "vellumpix-tab-leases.json"), "utf8"),
       ) as { leases: Array<{ id: string; pid: number }> };
       expect(registry.leases).toHaveLength(1);
       expect(registry.leases[0]).toMatchObject({ id: first.id, pid: staleOwnerPid });
@@ -503,11 +507,11 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
       ).rejects.toThrow(/Timed out waiting for ChatGPT browser slot/i);
 
       const agedRegistry = JSON.parse(
-        await readFile(path.join(dir, "oracle-tab-leases.json"), "utf8"),
+        await readFile(path.join(dir, "vellumpix-tab-leases.json"), "utf8"),
       ) as { version: 1; leases: Array<{ updatedAt: string }> };
       agedRegistry.leases[0]!.updatedAt = new Date(Date.now() - 61_000).toISOString();
       await writeFile(
-        path.join(dir, "oracle-tab-leases.json"),
+        path.join(dir, "vellumpix-tab-leases.json"),
         `${JSON.stringify(agedRegistry, null, 2)}\n`,
         "utf8",
       );
@@ -539,14 +543,14 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("rejects updates after a controller loses ownership", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-lost-owner-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-lost-owner-"));
     try {
       const lease = await acquireBrowserTabLease(dir, {
         maxConcurrentTabs: 1,
         timeoutMs: 500,
       });
       await writeFile(
-        path.join(dir, "oracle-tab-leases.json"),
+        path.join(dir, "vellumpix-tab-leases.json"),
         `${JSON.stringify({ version: 1, leases: [] }, null, 2)}\n`,
         "utf8",
       );
@@ -561,7 +565,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("reclaims a stale lease when its pid has been reused", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-pid-reuse-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-pid-reuse-"));
     try {
       const reusedPid = 99_999_992;
       const original = await acquireBrowserTabLease(
@@ -573,7 +577,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
           readProcessStartTimeMs: async () => 1_000,
         },
       );
-      const registryPath = path.join(dir, "oracle-tab-leases.json");
+      const registryPath = path.join(dir, "vellumpix-tab-leases.json");
       const registry = JSON.parse(await readFile(registryPath, "utf8")) as {
         version: 1;
         leases: Array<{ updatedAt: string; processStartedAtMs?: number }>;
@@ -598,7 +602,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("preserves a stale live pid when process identity cannot be verified", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-pid-unknown-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-pid-unknown-"));
     try {
       const original = await acquireBrowserTabLease(
         dir,
@@ -609,7 +613,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
           readProcessStartTimeMs: async () => 1_000,
         },
       );
-      const registryPath = path.join(dir, "oracle-tab-leases.json");
+      const registryPath = path.join(dir, "vellumpix-tab-leases.json");
       const registry = JSON.parse(await readFile(registryPath, "utf8")) as {
         version: 1;
         leases: Array<{ updatedAt: string }>;
@@ -639,14 +643,14 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("refreshes an active lease heartbeat until release", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-heartbeat-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-heartbeat-"));
     try {
       const lease = await acquireBrowserTabLease(
         dir,
         { maxConcurrentTabs: 1, timeoutMs: 500, sessionId: "heartbeat-owner" },
         { heartbeatMs: 20 },
       );
-      const registryPath = path.join(dir, "oracle-tab-leases.json");
+      const registryPath = path.join(dir, "vellumpix-tab-leases.json");
       const before = JSON.parse(await readFile(registryPath, "utf8")) as {
         leases: Array<{ updatedAt: string }>;
       };
@@ -671,7 +675,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("drains an in-flight heartbeat before releasing its lease", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-heartbeat-drain-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-heartbeat-drain-"));
     try {
       const heartbeatLease = await acquireBrowserTabLease(
         dir,
@@ -713,11 +717,11 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
       await Promise.all([blockingRelease, heartbeatRelease]);
       expect(heartbeatReleaseSettled).toBe(true);
       const registry = JSON.parse(
-        await readFile(path.join(dir, "oracle-tab-leases.json"), "utf8"),
+        await readFile(path.join(dir, "vellumpix-tab-leases.json"), "utf8"),
       ) as { leases: unknown[] };
       expect(registry.leases).toEqual([]);
       expect(
-        (await readdir(dir)).filter((name) => name.startsWith("oracle-tab-leases.lock")),
+        (await readdir(dir)).filter((name) => name.startsWith("vellumpix-tab-leases.lock")),
       ).toEqual([]);
     } finally {
       await rm(dir, { recursive: true, force: true });
@@ -725,7 +729,7 @@ describe("tabLeaseRegistry", { timeout: process.platform === "win32" ? 30_000 : 
   });
 
   test("blocks a new lease until final-lease cleanup completes", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-tab-leases-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-tab-leases-"));
     try {
       const current = await acquireBrowserTabLease(dir, {
         maxConcurrentTabs: 3,

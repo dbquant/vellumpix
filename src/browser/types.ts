@@ -8,7 +8,7 @@ import type {
   BrowserRuntimeMetadata,
 } from "../sessionStore.js";
 import type { SessionArtifact } from "../sessionStore.js";
-import type { ThinkingTimeLevel } from "../oracle/types.js";
+import type { ThinkingTimeLevel } from "../vellumpix/types.js";
 import type { BrowserProvider, ConcreteBrowserProvider } from "./browserProvider.js";
 
 export type ChromeClient = Awaited<ReturnType<typeof CDP>>;

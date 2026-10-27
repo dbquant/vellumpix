@@ -1,9 +1,9 @@
 import chalk from "chalk";
-import { DEFAULT_MODEL } from "../oracle/config.js";
-import type { ApiProviderMode, AzureOptions, ModelName } from "../oracle/types.js";
+import { DEFAULT_MODEL } from "../vellumpix/config.js";
+import type { ApiProviderMode, AzureOptions, ModelName } from "../vellumpix/types.js";
 import { resolveApiModel } from "./options.js";
 import { loadUserConfig, type UserConfig } from "../config.js";
-import { buildProviderRoutePlan, type ProviderRoutePlan } from "../oracle/providerRoutePlan.js";
+import { buildProviderRoutePlan, type ProviderRoutePlan } from "../vellumpix/providerRoutePlan.js";
 
 export interface ProviderDoctorCliOptions {
   providers?: boolean;
@@ -20,7 +20,7 @@ export interface ProviderDoctorCliOptions {
 
 export async function runProviderDoctor(options: ProviderDoctorCliOptions): Promise<void> {
   if (!options.providers) {
-    console.log("Run `oracle doctor --providers` to inspect API provider readiness.");
+    console.log("Run `vellumpix doctor --providers` to inspect API provider readiness.");
     return;
   }
 

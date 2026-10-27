@@ -14,17 +14,17 @@ import {
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import { setOracleHomeDirOverrideForTest } from "../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../src/vellumpixHome.js";
 
 type SessionModule = typeof import("../src/sessionManager.ts");
 type SessionMetadata = Awaited<ReturnType<SessionModule["initializeSession"]>>;
 
 let sessionModule: SessionModule;
-let oracleHomeDir: string;
+let vellumpixHomeDir: string;
 
 beforeAll(async () => {
-  oracleHomeDir = await mkdtemp(path.join(os.tmpdir(), "oracle-session-tests-"));
-  setOracleHomeDirOverrideForTest(oracleHomeDir);
+  vellumpixHomeDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-session-tests-"));
+  setVellumPixHomeDirOverrideForTest(vellumpixHomeDir);
   sessionModule = await import("../src/sessionManager.ts");
   await sessionModule.ensureSessionStorage();
 });
@@ -35,8 +35,8 @@ beforeEach(async () => {
 });
 
 afterAll(async () => {
-  await rm(oracleHomeDir, { recursive: true, force: true });
-  setOracleHomeDirOverrideForTest(null);
+  await rm(vellumpixHomeDir, { recursive: true, force: true });
+  setVellumPixHomeDirOverrideForTest(null);
 });
 
 describe("session storage setup", () => {
@@ -51,7 +51,7 @@ describe("session storage setup", () => {
     if (process.platform === "win32") {
       return;
     }
-    const migrationHome = await mkdtemp(path.join(os.tmpdir(), "oracle-session-migration-"));
+    const migrationHome = await mkdtemp(path.join(os.tmpdir(), "vellumpix-session-migration-"));
     try {
       const sessionsDir = path.join(migrationHome, "sessions");
       const sessionDir = path.join(sessionsDir, "existing-session");
@@ -89,7 +89,7 @@ describe("session storage setup", () => {
         await chmod(file, 0o644);
       }
 
-      setOracleHomeDirOverrideForTest(migrationHome);
+      setVellumPixHomeDirOverrideForTest(migrationHome);
       await sessionModule.ensureSessionStorage();
 
       const mode = async (targetPath: string) => (await stat(targetPath)).mode & 0o777;
@@ -105,7 +105,7 @@ describe("session storage setup", () => {
       expect(await mode(outsideDir)).toBe(0o755);
       expect(await mode(outsideFile)).toBe(0o644);
     } finally {
-      setOracleHomeDirOverrideForTest(oracleHomeDir);
+      setVellumPixHomeDirOverrideForTest(vellumpixHomeDir);
       await rm(migrationHome, { recursive: true, force: true });
     }
   });
@@ -410,7 +410,7 @@ describe("session lifecycle", () => {
         attached: false,
         detached: true,
         workerPid: process.pid,
-        reattachCommand: `oracle session ${meta.id}`,
+        reattachCommand: `vellumpix session ${meta.id}`,
       },
       browser: {
         runtime: {
@@ -545,7 +545,7 @@ describe("session listing and filtering", () => {
     ]) {
       await writeMeta(id, { createdAt });
     }
-    // Shape seen in real ~/.oracle/sessions: no createdAt, startedAt null, completedAt set.
+    // Shape seen in real ~/.vellumpix/sessions: no createdAt, startedAt null, completedAt set.
     await writeMeta("d-completed-day-4", {
       startedAt: null,
       completedAt: "2026-06-04T00:00:00.000Z",

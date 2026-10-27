@@ -7,25 +7,30 @@ import { promisify } from "node:util";
 import { afterAll, beforeAll, expect, test } from "vitest";
 
 const execFileAsync = promisify(execFile);
-let oracleHome: string;
+let vellumpixHome: string;
 
 beforeAll(async () => {
-  oracleHome = await mkdtemp(path.join(os.tmpdir(), "oracle-help-"));
+  vellumpixHome = await mkdtemp(path.join(os.tmpdir(), "vellumpix-help-"));
 });
 afterAll(async () => {
-  await rm(oracleHome, { recursive: true, force: true });
+  await rm(vellumpixHome, { recursive: true, force: true });
 });
 
 async function help(args: string[]): Promise<string> {
   const { stdout } = await execFileAsync(
     process.execPath,
-    ["--import", "tsx", path.join(process.cwd(), "bin/oracle-cli.ts"), ...args],
+    ["--import", "tsx", path.join(process.cwd(), "bin/vellumpix-cli.ts"), ...args],
     {
-      env: { ...process.env, ORACLE_HOME_DIR: oracleHome, ORACLE_FORCE_TUI: "0", NO_COLOR: "1" },
+      env: {
+        ...process.env,
+        VELLUMPIX_HOME_DIR: vellumpixHome,
+        VELLUMPIX_FORCE_TUI: "0",
+        NO_COLOR: "1",
+      },
       timeout: 15_000,
     },
   );
-  expect(await readdir(oracleHome)).toEqual([]);
+  expect(await readdir(vellumpixHome)).toEqual([]);
   return stdout;
 }
 
@@ -82,10 +87,15 @@ test("advanced help lists every other hidden root option", async () => {
       "tsx",
       "--import",
       pathToFileURL(path.join(process.cwd(), "tests/fixtures/dump-cli-options.mjs")).href,
-      path.join(process.cwd(), "bin/oracle-cli.ts"),
+      path.join(process.cwd(), "bin/vellumpix-cli.ts"),
     ],
     {
-      env: { ...process.env, ORACLE_HOME_DIR: oracleHome, ORACLE_FORCE_TUI: "0", NO_COLOR: "1" },
+      env: {
+        ...process.env,
+        VELLUMPIX_HOME_DIR: vellumpixHome,
+        VELLUMPIX_FORCE_TUI: "0",
+        NO_COLOR: "1",
+      },
       timeout: 15_000,
     },
   );

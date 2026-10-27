@@ -10,7 +10,7 @@ import {
   __test__,
 } from "../../src/browser/chatgptFiles.js";
 import type { ChromeClient } from "../../src/browser/types.js";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 
 class FakeElement {
   clickCount = 0;
@@ -189,12 +189,12 @@ describe("saveChatGptDownloadableFiles", () => {
   afterEach(() => {
     globalThis.fetch = originalFetch;
     vi.restoreAllMocks();
-    setOracleHomeDirOverrideForTest(null);
+    setVellumPixHomeDirOverrideForTest(null);
   });
 
   test("saves ChatGPT downloadable files as session artifacts with cookies", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-files-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-files-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const network = {
       getCookies: vi.fn().mockResolvedValue({
         cookies: [{ name: "__Secure-next-auth.session-token", value: "abc" }],
@@ -247,8 +247,8 @@ describe("saveChatGptDownloadableFiles", () => {
   });
 
   test("saves sandbox-only references through the ChatGPT sandbox download endpoint", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-sandbox-file-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-sandbox-file-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const network = {
       getCookies: vi.fn().mockResolvedValue({
         cookies: [{ name: "__Secure-next-auth.session-token", value: "abc" }],
@@ -307,8 +307,8 @@ describe("saveChatGptDownloadableFiles", () => {
   });
 
   test("does not forward ChatGPT cookies across external redirects", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-redirect-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-redirect-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const network = {
       getCookies: vi.fn().mockResolvedValue({
         cookies: [{ name: "__Secure-next-auth.session-token", value: "abc" }],
@@ -393,12 +393,12 @@ describe("collectChatGptFileArtifacts", () => {
   afterEach(() => {
     globalThis.fetch = originalFetch;
     vi.restoreAllMocks();
-    setOracleHomeDirOverrideForTest(null);
+    setVellumPixHomeDirOverrideForTest(null);
   });
 
   test("discovers and saves downloadable file artifacts for a browser session", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-file-collect-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-file-collect-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const runtime = {
       evaluate: vi.fn().mockResolvedValue({
         result: {
@@ -475,8 +475,8 @@ describe("collectChatGptFileArtifacts", () => {
   });
 
   test("discovers sandbox links from captured answer markdown when DOM anchors are absent", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-file-text-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-file-text-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const csv = "name,value\nalpha,1\nbeta,2\n";
     const runtime = {
       evaluate: vi
@@ -488,7 +488,7 @@ describe("collectChatGptFileArtifacts", () => {
               ok: true,
               status: 200,
               statusText: "OK",
-              url: "https://chatgpt.com/backend-api/sandbox/download?path=%2Fmnt%2Fdata%2Foracle_pr245_file_artifact_smoke.csv",
+              url: "https://chatgpt.com/backend-api/sandbox/download?path=%2Fmnt%2Fdata%2Fvellumpix_pr245_file_artifact_smoke.csv",
               contentDisposition: null,
               contentType: "text/csv",
               base64: Buffer.from(csv).toString("base64"),
@@ -508,18 +508,18 @@ describe("collectChatGptFileArtifacts", () => {
       Network: network,
       sessionId: "collect-session",
       answerText:
-        "CHECK_FILE_ARTIFACT_OK — [oracle_pr245_file_artifact_smoke.csv](sandbox:/mnt/data/oracle_pr245_file_artifact_smoke.csv)",
+        "CHECK_FILE_ARTIFACT_OK — [vellumpix_pr245_file_artifact_smoke.csv](sandbox:/mnt/data/vellumpix_pr245_file_artifact_smoke.csv)",
     });
 
     expect(result.fileCount).toBe(1);
     expect(result.files[0]).toMatchObject({
-      sandboxUrl: "sandbox:/mnt/data/oracle_pr245_file_artifact_smoke.csv",
-      filename: "oracle_pr245_file_artifact_smoke.csv",
+      sandboxUrl: "sandbox:/mnt/data/vellumpix_pr245_file_artifact_smoke.csv",
+      filename: "vellumpix_pr245_file_artifact_smoke.csv",
     });
     expect(result.savedFiles[0]).toMatchObject({
       kind: "file",
-      filename: "oracle_pr245_file_artifact_smoke.csv",
-      sourceUrl: "sandbox:/mnt/data/oracle_pr245_file_artifact_smoke.csv",
+      filename: "vellumpix_pr245_file_artifact_smoke.csv",
+      sourceUrl: "sandbox:/mnt/data/vellumpix_pr245_file_artifact_smoke.csv",
       mimeType: "text/csv",
     });
     expect(result.savedFiles[0]?.path).toBe(
@@ -528,7 +528,7 @@ describe("collectChatGptFileArtifacts", () => {
         "sessions",
         "collect-session",
         "artifacts",
-        "oracle_pr245_file_artifact_smoke.csv",
+        "vellumpix_pr245_file_artifact_smoke.csv",
       ),
     );
     expect(globalThis.fetch).not.toHaveBeenCalled();
@@ -541,8 +541,8 @@ describe("collectChatGptFileArtifacts", () => {
   });
 
   test("reports sanitized direct sandbox fetch diagnostics when no browser-host file is saved", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-file-diagnostics-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-file-diagnostics-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const logger = vi.fn();
     const runtime = {
       evaluate: vi
@@ -597,11 +597,11 @@ describe("collectChatGptFileArtifacts", () => {
   });
 
   test("falls back to assistant download buttons when sandbox download URL is not fetchable", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-file-button-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-file-button-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const sessionId = "collect-session";
     const artifactsDir = path.join(tmpHome, "sessions", sessionId, "artifacts");
-    const filename = "oracle_pr245_file_artifact_smoke_out.csv";
+    const filename = "vellumpix_pr245_file_artifact_smoke_out.csv";
     const csv = "name,value\nalpha,1\nbeta,2\n";
     const runtime = {
       evaluate: vi
@@ -613,7 +613,7 @@ describe("collectChatGptFileArtifacts", () => {
               ok: false,
               status: 404,
               statusText: "Not Found",
-              url: "https://chatgpt.com/backend-api/sandbox/download?path=%2Fmnt%2Fdata%2Foracle_pr245_file_artifact_smoke_out.csv",
+              url: "https://chatgpt.com/backend-api/sandbox/download?path=%2Fmnt%2Fdata%2Fvellumpix_pr245_file_artifact_smoke_out.csv",
               contentDisposition: null,
               contentType: "application/json",
               base64: Buffer.from('{"detail":"Not Found"}').toString("base64"),
@@ -655,7 +655,7 @@ describe("collectChatGptFileArtifacts", () => {
       Network: network,
       sessionId,
       answerText:
-        "CHECK_FILE_ARTIFACT_OK [download](sandbox:/mnt/data/oracle_pr245_file_artifact_smoke_out.csv)",
+        "CHECK_FILE_ARTIFACT_OK [download](sandbox:/mnt/data/vellumpix_pr245_file_artifact_smoke_out.csv)",
     });
 
     expect(result.fileCount).toBe(1);
@@ -677,8 +677,8 @@ describe("collectChatGptFileArtifacts", () => {
   });
 
   test("clicks multiple assistant download buttons sequentially", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-file-sequential-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-file-sequential-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const sessionId = "collect-session";
     const artifactsDir = path.join(tmpHome, "sessions", sessionId, "artifacts");
     const runtime = {
@@ -745,8 +745,8 @@ describe("collectChatGptFileArtifacts", () => {
   });
 
   test("preserves a browser-provided filename for a generic download endpoint", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-file-filename-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-file-filename-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const sessionId = "collect-session";
     const artifactsDir = path.join(tmpHome, "sessions", sessionId, "artifacts");
     const runtime = {
@@ -786,8 +786,8 @@ describe("collectChatGptFileArtifacts", () => {
   });
 
   test("stops after a timed-out download so a late completion cannot become the next file", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-file-missing-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-file-missing-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const sessionId = "collect-session";
     const artifactsDir = path.join(tmpHome, "sessions", sessionId, "artifacts");
     const logger = vi.fn();
@@ -863,8 +863,8 @@ describe("collectChatGptFileArtifacts", () => {
   });
 
   test("merges DOM and answer-text references for the same file", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-file-dedupe-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-file-dedupe-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const runtime = {
       evaluate: vi.fn().mockResolvedValue({
         result: {
@@ -911,8 +911,8 @@ describe("collectChatGptFileArtifacts", () => {
   });
 
   test("scopes button fallback to failed files after a partial direct save", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-file-partial-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-file-partial-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const sessionId = "collect-session";
     const artifactsDir = path.join(tmpHome, "sessions", sessionId, "artifacts");
     const runtime = {
@@ -1040,11 +1040,11 @@ describe("collectChatGptFileArtifacts", () => {
     );
     expect(
       __test__.readTextDownloadableFiles(
-        "[file](sandbox:/mnt/data/oracle_pr245_file_artifact_smoke.csv)",
+        "[file](sandbox:/mnt/data/vellumpix_pr245_file_artifact_smoke.csv)",
       )[0],
     ).toMatchObject({
-      sandboxUrl: "sandbox:/mnt/data/oracle_pr245_file_artifact_smoke.csv",
-      filename: "oracle_pr245_file_artifact_smoke.csv",
+      sandboxUrl: "sandbox:/mnt/data/vellumpix_pr245_file_artifact_smoke.csv",
+      filename: "vellumpix_pr245_file_artifact_smoke.csv",
     });
   });
 
@@ -1122,7 +1122,7 @@ describe("collectChatGptFileArtifacts", () => {
       { text: "", ariaLabel: "Download result.zip", testId: "" },
     ]);
     expect(anchor.clickCount).toBe(1);
-    expect(anchor.getAttribute("data-oracle-download-clicked")).toBe("true");
+    expect(anchor.getAttribute("data-vellumpix-download-clicked")).toBe("true");
   });
 
   test("click expression ignores external download anchors", () => {
@@ -1172,11 +1172,11 @@ describe("collectChatGptFileArtifacts", () => {
     expect(evaluateClickExpression(expression("A.txt"), turns)).toEqual([
       { text: "Download", ariaLabel: "", testId: "" },
     ]);
-    expect(firstGeneric.getAttribute("data-oracle-download-clicked")).toBe("true");
+    expect(firstGeneric.getAttribute("data-vellumpix-download-clicked")).toBe("true");
     expect(evaluateClickExpression(expression("B.md"), turns)).toEqual([
       { text: "", ariaLabel: "", testId: "download-files-turn-action-button" },
     ]);
-    expect(secondGeneric.getAttribute("data-oracle-download-clicked")).toBe("true");
+    expect(secondGeneric.getAttribute("data-vellumpix-download-clicked")).toBe("true");
     expect(firstGeneric.clickCount).toBe(1);
     expect(secondGeneric.clickCount).toBe(1);
   });
@@ -1184,16 +1184,16 @@ describe("collectChatGptFileArtifacts", () => {
   test("matches ChatGPT behavior download buttons with descriptive labels", () => {
     const fileExpression = __test__.buildAssistantDownloadableFilesExpression();
     const expression = __test__.buildClickAssistantDownloadButtonsExpression(undefined, [
-      "oracle_pr245_file.csv",
+      "vellumpix_pr245_file.csv",
     ]);
     const scopedExpression = __test__.buildClickAssistantDownloadButtonsExpression(
       undefined,
-      ["oracle_pr245_file.csv"],
+      ["vellumpix_pr245_file.csv"],
       false,
     );
     const oneClickExpression = __test__.buildClickAssistantDownloadButtonsExpression(
       undefined,
-      ["oracle_pr245_file.csv"],
+      ["vellumpix_pr245_file.csv"],
       true,
       { markClicked: true, maxClicks: 1 },
     );
@@ -1202,7 +1202,7 @@ describe("collectChatGptFileArtifacts", () => {
     expect(fileExpression).not.toContain("if (files.length > 0) return files");
     expect(expression).toContain("/^download\\b/");
     expect(expression).not.toContain("/^download\b/");
-    expect(expression).toContain('"oracle_pr245_file.csv"');
+    expect(expression).toContain('"vellumpix_pr245_file.csv"');
     expect(expression).toContain("const downloadLabel = 'download ' + label");
     expect(expression).toContain("value === downloadLabel");
     expect(expression).toContain('[data-testid^=\\"conversation-turn\\"]');
@@ -1220,12 +1220,14 @@ describe("collectChatGptFileArtifacts", () => {
     expect(oneClickExpression).toContain("info.control.setAttribute(CLICKED_ATTRIBUTE, 'true')");
     const labels = __test__.resolveDownloadButtonLabels([
       {
-        url: "sandbox:/mnt/data/oracle_pr245_file.csv",
-        sandboxUrl: "sandbox:/mnt/data/oracle_pr245_file.csv",
+        url: "sandbox:/mnt/data/vellumpix_pr245_file.csv",
+        sandboxUrl: "sandbox:/mnt/data/vellumpix_pr245_file.csv",
         label: "Download the CSV",
       },
     ]);
     expect(labels).toHaveLength(2);
-    expect(labels).toEqual(expect.arrayContaining(["oracle_pr245_file.csv", "download the csv"]));
+    expect(labels).toEqual(
+      expect.arrayContaining(["vellumpix_pr245_file.csv", "download the csv"]),
+    );
   });
 });

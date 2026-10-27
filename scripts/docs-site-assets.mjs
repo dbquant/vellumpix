@@ -263,7 +263,7 @@ export function themeToggleHtml() {
 }
 
 export function faviconSvg() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="oracle">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="vellumpix">
 <defs>
   <radialGradient id="orb" cx="35%" cy="32%" r="65%">
     <stop offset="0" stop-color="#ffffff"/>

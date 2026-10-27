@@ -4,18 +4,18 @@ import path from "node:path";
 
 import { describe, test, expect, beforeAll, afterAll } from "vitest";
 
-import type { RunOracleOptions } from "../../src/oracle.ts";
+import type { RunVellumPixOptions } from "../../src/vellumpix.ts";
 import type { SessionMetadata } from "../../src/sessionManager.ts";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 
 const baseUrl = process.env.OPENAI_BASE_URL ?? "";
 const isOpenRouterBase = baseUrl.includes("openrouter");
 const ENABLE_LIVE =
-  process.env.ORACLE_LIVE_TEST === "1" && process.env.OPENAI_API_KEY && !isOpenRouterBase;
+  process.env.VELLUMPIX_LIVE_TEST === "1" && process.env.OPENAI_API_KEY && !isOpenRouterBase;
 
 if (!ENABLE_LIVE) {
   describe.skip("write-output live e2e", () => {
-    test("Set ORACLE_LIVE_TEST=1 with a real OPENAI_API_KEY (api.openai.com) to run this suite.", () => {});
+    test("Set VELLUMPIX_LIVE_TEST=1 with a real OPENAI_API_KEY (api.openai.com) to run this suite.", () => {});
   });
 } else {
   describe("write-output live e2e", () => {
@@ -27,15 +27,15 @@ if (!ENABLE_LIVE) {
     const write = () => true;
 
     beforeAll(async () => {
-      tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-live-write-"));
-      setOracleHomeDirOverrideForTest(tmpHome);
+      tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-live-write-"));
+      setVellumPixHomeDirOverrideForTest(tmpHome);
       ({ performSessionRun } = await import("../../src/cli/sessionRunner.ts"));
       ({ sessionStore } = await import("../../src/sessionStore.ts"));
       ({ getCliVersion } = await import("../../src/version.ts"));
     });
 
     afterAll(async () => {
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
       await fs.rm(tmpHome, { recursive: true, force: true }).catch(() => {});
     });
 
@@ -44,7 +44,7 @@ if (!ENABLE_LIVE) {
       async () => {
         await sessionStore.ensureStorage();
         const outputPath = path.join(tmpHome, "write-output-live.md");
-        const runOptions: RunOracleOptions = {
+        const runOptions: RunVellumPixOptions = {
           prompt: 'Reply with "write-output e2e" on a single line.',
           model: "gpt-4.1",
           writeOutputPath: outputPath,

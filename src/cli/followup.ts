@@ -3,8 +3,8 @@ import { CHATGPT_URL } from "../browser/constants.js";
 import { buildConversationUrl } from "../browser/reattachHelpers.js";
 import { resolveRecoveryUrl } from "../browser/recoverConversation.js";
 import { isRecoverableChatGptConversationUrl } from "../browser/reattachability.js";
-import { DEFAULT_MODEL } from "../oracle/config.js";
-import type { ModelName } from "../oracle/types.js";
+import { DEFAULT_MODEL } from "../vellumpix/config.js";
+import type { ModelName } from "../vellumpix/types.js";
 
 export interface BrowserFollowupResolution {
   sessionId: string;
@@ -73,7 +73,7 @@ export async function resolveBrowserFollowupReference(
   const resumeConversationUrl = resolveBrowserResumeConversationUrl(metadata);
   if (!resumeConversationUrl) {
     throw new Error(
-      `Session ${trimmed} is a browser session but does not contain a ChatGPT conversation URL. Run "oracle status --hours 72 --limit 20" to list recent sessions.`,
+      `Session ${trimmed} is a browser session but does not contain a ChatGPT conversation URL. Run "vellumpix status --hours 72 --limit 20" to list recent sessions.`,
     );
   }
   const parentBrowserConfig = metadata.options?.browserConfig ?? metadata.browser?.config;

@@ -102,7 +102,7 @@ async function releaseProjectSourcesBrowserTabLease(options: {
     releaseError = error instanceof Error ? error : new Error(String(error));
     if (!terminationHandled) keepBrowserOpen = true;
     options.logger(
-      `[browser] Failed to release the ChatGPT browser slot registry lock; restart Oracle/Codex MCP before another browser run: ${releaseError.message}`,
+      `[browser] Failed to release the ChatGPT browser slot registry lock; restart VellumPix/Codex MCP before another browser run: ${releaseError.message}`,
     );
   }
   if (!decisionObserved) {
@@ -167,7 +167,7 @@ export async function runBrowserProjectSources(
     : defaultManualLoginProfileDir();
   const userDataDir = manualLogin
     ? manualProfileDir
-    : await mkdtemp(path.join(os.tmpdir(), "oracle-project-sources-"));
+    : await mkdtemp(path.join(os.tmpdir(), "vellumpix-project-sources-"));
   const effectiveKeepBrowser = Boolean(config.keepBrowser);
   if (manualLogin) {
     await mkdir(userDataDir, { recursive: true });
@@ -448,7 +448,7 @@ export async function runBrowserProjectSources(
     if (tabLeaseReleaseError) {
       // oxlint-disable-next-line eslint/no-unsafe-finally -- This cleanup failure must override a successful Project Sources result or a live MCP owner can remain locked.
       throw new Error(
-        "Failed to release the ChatGPT browser slot registry lock; restart Oracle/Codex MCP before another browser run.",
+        "Failed to release the ChatGPT browser slot registry lock; restart VellumPix/Codex MCP before another browser run.",
         { cause: tabLeaseReleaseError },
       );
     }
@@ -551,7 +551,7 @@ async function waitForProjectSourcesLogin({
   const setupCommand = formatManualLoginSetupCommand(profileDir ?? defaultManualLoginProfileDir());
   throw new Error(
     "Manual login mode timed out waiting for ChatGPT session. " +
-      `Browser mode is using Oracle's private Chrome profile at ${profileDir ?? "(default profile)"}, not your normal Chrome profile. ` +
+      `Browser mode is using VellumPix's private Chrome profile at ${profileDir ?? "(default profile)"}, not your normal Chrome profile. ` +
       `Run first-time setup, sign in there, then retry: ${setupCommand}`,
   );
 }

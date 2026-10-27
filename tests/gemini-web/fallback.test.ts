@@ -144,7 +144,7 @@ describe("Gemini web model fallback", () => {
     });
     expect(output.text).toBe("");
     expect(output.images).toEqual([]);
-    const directory = await mkdtemp(path.join(os.tmpdir(), "oracle-raw-image-"));
+    const directory = await mkdtemp(path.join(os.tmpdir(), "vellumpix-raw-image-"));
     try {
       const filename = path.join(directory, "image.jpg");
       await expect(saveFirstGeminiImageFromOutput(output, {}, filename)).resolves.toMatchObject({

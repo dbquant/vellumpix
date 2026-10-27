@@ -14,10 +14,10 @@ describe.each(
     { name: "SDK v2 modern", Client: ModernClient, Transport: ModernTransport, modern: true },
   ].flatMap((client) => ["standalone", "alias"].map((entrypoint) => ({ ...client, entrypoint }))),
 )(
-  "oracle-mcp stdio compatibility: $name / $entrypoint",
+  "vellumpix-mcp stdio compatibility: $name / $entrypoint",
   ({ Client, Transport, modern, entrypoint }) => {
     test("discovers tools, previews a consult, reads durable resources, and closes", async () => {
-      const home = await mkdtemp(path.join(os.tmpdir(), "oracle-mcp-compat-"));
+      const home = await mkdtemp(path.join(os.tmpdir(), "vellumpix-mcp-compat-"));
       const dir = path.join(home, "sessions", "compat-session");
       await mkdir(dir, { recursive: true });
       await writeFile(
@@ -38,16 +38,16 @@ describe.each(
         JSON.stringify({ prompt: "Synthetic compatibility request" }),
       );
       const client = new Client(
-        { name: "oracle-compatibility-proof", version: "1.0.0" },
+        { name: "vellumpix-compatibility-proof", version: "1.0.0" },
         modern ? { versionNegotiation: { mode: { pin: "2026-07-28" } } } : undefined,
       );
       const transport = new Transport({
         command: process.execPath,
         args:
           entrypoint === "alias"
-            ? [path.join(process.cwd(), "dist/bin/oracle-cli.js"), "oracle-mcp"]
-            : [path.join(process.cwd(), "dist/bin/oracle-mcp.js")],
-        env: { ...process.env, ORACLE_HOME_DIR: home, ORACLE_DISABLE_KEYTAR: "1" },
+            ? [path.join(process.cwd(), "dist/bin/vellumpix-cli.js"), "vellumpix-mcp"]
+            : [path.join(process.cwd(), "dist/bin/vellumpix-mcp.js")],
+        env: { ...process.env, VELLUMPIX_HOME_DIR: home, VELLUMPIX_DISABLE_KEYTAR: "1" },
         stderr: "pipe",
       });
       const errors: Error[] = [];
@@ -102,12 +102,12 @@ describe.each(
         expect(await readdir(path.join(home, "sessions"))).toEqual(["compat-session"]);
         const templates = await client.listResourceTemplates();
         expect(templates.resourceTemplates.map((template) => template.uriTemplate)).toContain(
-          "oracle-session://{id}/{kind}",
+          "vellumpix-session://{id}/{kind}",
         );
-        const log = await client.readResource({ uri: "oracle-session://compat-session/log" });
+        const log = await client.readResource({ uri: "vellumpix-session://compat-session/log" });
         expect(log.contents[0]).toMatchObject({ text: "Synthetic compatibility answer\n" });
         const metadata = await client.readResource({
-          uri: "oracle-session://compat-session/metadata",
+          uri: "vellumpix-session://compat-session/metadata",
         });
         expect(JSON.parse((metadata.contents[0] as { text: string }).text)).toMatchObject({
           id: "compat-session",

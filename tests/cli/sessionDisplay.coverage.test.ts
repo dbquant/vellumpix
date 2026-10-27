@@ -34,7 +34,9 @@ describe("sessionDisplay helpers", () => {
     await showStatus({ hours: 24, includeAll: false, limit: 10, showExamples: true });
 
     expect(log).toHaveBeenCalledWith(
-      expect.stringContaining('Tip: Run "oracle session --clear --hours 24" to prune cached runs'),
+      expect.stringContaining(
+        'Tip: Run "vellumpix session --clear --hours 24" to prune cached runs',
+      ),
     );
     log.mockRestore();
   }, 15_000);

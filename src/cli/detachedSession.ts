@@ -64,14 +64,14 @@ export interface LaunchDetachedSessionOptions {
   spawnProcess?: (command: string, args: readonly string[], options: SpawnOptions) => ChildProcess;
 }
 
-export function resolveOracleCliEntrypoint(moduleUrl: string = import.meta.url): string {
+export function resolveVellumPixCliEntrypoint(moduleUrl: string = import.meta.url): string {
   const extension = fileURLToPath(moduleUrl).endsWith(".ts") ? "ts" : "js";
-  return fileURLToPath(new URL(`../../bin/oracle-cli.${extension}`, moduleUrl));
+  return fileURLToPath(new URL(`../../bin/vellumpix-cli.${extension}`, moduleUrl));
 }
 
 export function buildDetachedSessionSpawnSpec({
   sessionId,
-  cliEntrypoint = resolveOracleCliEntrypoint(),
+  cliEntrypoint = resolveVellumPixCliEntrypoint(),
   env = process.env,
   nodeExecutable = process.execPath,
 }: Omit<LaunchDetachedSessionOptions, "prepare" | "spawnProcess">): DetachedSessionSpawnSpec {
@@ -83,7 +83,7 @@ export function buildDetachedSessionSpawnSpec({
       stdio: ["pipe", "ignore", "ignore"],
       env: {
         ...env,
-        ORACLE_DETACHED_START_GATE: "1",
+        VELLUMPIX_DETACHED_START_GATE: "1",
       },
       windowsHide: true,
     },

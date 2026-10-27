@@ -1,5 +1,5 @@
 import type { BrowserLogger, ChromeClient } from "../types.js";
-import { formatElapsed } from "../../oracle/format.js";
+import { formatElapsed } from "../../vellumpix/format.js";
 import {
   ASSISTANT_ROLE_SELECTOR,
   CONVERSATION_TURN_SELECTOR,
@@ -286,7 +286,7 @@ function buildThinkingStatusExpression(): string {
         if (!(node instanceof HTMLElement)) continue;
         if (!isVisible(node) || isComposerAdjacent(node) || !looksLikeThinking(node)) continue;
         if (node.getAttribute('aria-haspopup') === 'menu') continue;
-        if (node.dataset?.oracleThinkingProbed === 'true') continue;
+        if (node.dataset?.vellumpixThinkingProbed === 'true') continue;
         const expanded = normalize(node.getAttribute('aria-expanded'));
         if (expanded !== 'false') {
           continue;
@@ -384,7 +384,7 @@ function buildThinkingStatusExpression(): string {
     const disclosure = currentTurn ? findThinkingDisclosure(currentTurn) : null;
     if (disclosure) {
       try {
-        disclosure.dataset.oracleThinkingProbed = 'true';
+        disclosure.dataset.vellumpixThinkingProbed = 'true';
         disclosure.click();
         panelOpened = true;
         await new Promise((resolve) => setTimeout(resolve, 200));

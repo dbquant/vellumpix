@@ -10,8 +10,8 @@ delete envWithoutKey.ANTHROPIC_API_KEY;
 delete envWithoutKey.GEMINI_API_KEY;
 delete envWithoutKey.XAI_API_KEY;
 delete envWithoutKey.OPENROUTER_API_KEY;
-delete envWithKey.ORACLE_ENGINE;
-delete envWithoutKey.ORACLE_ENGINE;
+delete envWithKey.VELLUMPIX_ENGINE;
+delete envWithoutKey.VELLUMPIX_ENGINE;
 
 describe("resolveEngine", () => {
   it("prefers api when no flags and OPENAI_API_KEY is set", () => {
@@ -24,25 +24,25 @@ describe("resolveEngine", () => {
     expect(engine).toBe<EngineMode>("browser");
   });
 
-  it("respects ORACLE_ENGINE=browser even when OPENAI_API_KEY is set", () => {
+  it("respects VELLUMPIX_ENGINE=browser even when OPENAI_API_KEY is set", () => {
     const env = { ...envWithKey } as NodeJS.ProcessEnv;
     // biome-ignore lint/complexity/useLiteralKeys: env var names are uppercase with underscores
-    env["ORACLE_ENGINE"] = "browser";
+    env["VELLUMPIX_ENGINE"] = "browser";
     const engine = resolveEngine({ engine: undefined, browserFlag: false, env });
     expect(engine).toBe<EngineMode>("browser");
   });
 
-  it("respects ORACLE_ENGINE=api even without OPENAI_API_KEY", () => {
+  it("respects VELLUMPIX_ENGINE=api even without OPENAI_API_KEY", () => {
     const env = { ...envWithoutKey } as NodeJS.ProcessEnv;
     // biome-ignore lint/complexity/useLiteralKeys: env var names are uppercase with underscores
-    env["ORACLE_ENGINE"] = "api";
+    env["VELLUMPIX_ENGINE"] = "api";
     const engine = resolveEngine({ engine: undefined, browserFlag: false, env });
     expect(engine).toBe<EngineMode>("api");
   });
 
-  it("lets ORACLE_ENGINE override config engine", () => {
+  it("lets VELLUMPIX_ENGINE override config engine", () => {
     const env = { ...envWithoutKey } as NodeJS.ProcessEnv;
-    env.ORACLE_ENGINE = "api";
+    env.VELLUMPIX_ENGINE = "api";
     const engine = resolveEngine({
       engine: undefined,
       configEngine: "browser",

@@ -1,10 +1,10 @@
 import { execFileSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const repoRoot = process.cwd();
-const tmpRoot = mkdtempSync(join(tmpdir(), "oracle-packed-cli-"));
+const tmpRoot = mkdtempSync(join(tmpdir(), "vellumpix-packed-cli-"));
 
 function run(command, args, options = {}) {
   return execFileSync(command, args, {
@@ -14,8 +14,16 @@ function run(command, args, options = {}) {
   });
 }
 
+function runPnpm(args, options = {}) {
+  const pnpmEntry = process.env.npm_execpath;
+  if (!pnpmEntry) {
+    throw new Error("npm_execpath is unavailable; run this smoke through `pnpm test:packed-cli`");
+  }
+  return run(process.execPath, [pnpmEntry, ...args], options);
+}
+
 try {
-  run("pnpm", ["pack", "--pack-destination", tmpRoot]);
+  runPnpm(["pack", "--pack-destination", tmpRoot]);
   const tarball = readdirSync(tmpRoot).find((entry) => entry.endsWith(".tgz"));
   if (!tarball) {
     throw new Error("pnpm pack did not produce a .tgz file");
@@ -23,18 +31,18 @@ try {
 
   const installDir = join(tmpRoot, "install");
   mkdirSync(installDir);
-  run("npm", ["init", "-y"], { cwd: installDir });
-  run("npm", ["install", "--ignore-scripts", "--no-audit", "--no-fund", join(tmpRoot, tarball)], {
+  writeFileSync(join(installDir, "package.json"), '{"private":true}\n');
+  runPnpm(["add", "--ignore-scripts", join(tmpRoot, tarball)], {
     cwd: installDir,
   });
   const cliPath = join(
     installDir,
     "node_modules",
-    "@steipete",
-    "oracle",
+    "@dbquant",
+    "vellumpix",
     "dist",
     "bin",
-    "oracle-cli.js",
+    "vellumpix-cli.js",
   );
   const help = run(process.execPath, [cliPath, "--help", "--verbose"], { cwd: installDir });
 

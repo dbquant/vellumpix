@@ -25,10 +25,10 @@ describe("browser provider resolution", () => {
   it("keeps Edge and Chrome automation profiles separate", () => {
     const homeDir = path.join("fixture", "home");
     expect(defaultBrowserProfileDir("edge", homeDir)).toBe(
-      path.join(homeDir, ".oracle", "browser-profiles", "edge"),
+      path.join(homeDir, ".vellumpix", "browser-profiles", "edge"),
     );
     expect(defaultBrowserProfileDir("chrome", homeDir)).toBe(
-      path.join(homeDir, ".oracle", "browser-profiles", "chrome"),
+      path.join(homeDir, ".vellumpix", "browser-profiles", "chrome"),
     );
   });
 

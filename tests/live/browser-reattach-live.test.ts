@@ -6,13 +6,13 @@ import type { BrowserLogger } from "../../src/browser/types.js";
 import { getCookies } from "@steipete/sweet-cookie";
 import { acquireLiveTestLock, releaseLiveTestLock } from "./liveLock.js";
 
-const LIVE = process.env.ORACLE_LIVE_TEST === "1";
+const LIVE = process.env.VELLUMPIX_LIVE_TEST === "1";
 const DEFAULT_PROJECT_URLS = [
   "https://chatgpt.com/g/g-p-69505ed97e3081918a275477a647a682/project",
-  "https://chatgpt.com/g/g-p-691edc9fec088191b553a35093da1ea8-oracle/project",
+  "https://chatgpt.com/g/g-p-691edc9fec088191b553a35093da1ea8-vellumpix/project",
 ];
-const PROJECT_URLS = process.env.ORACLE_CHATGPT_PROJECT_URL
-  ? [process.env.ORACLE_CHATGPT_PROJECT_URL]
+const PROJECT_URLS = process.env.VELLUMPIX_CHATGPT_PROJECT_URL
+  ? [process.env.VELLUMPIX_CHATGPT_PROJECT_URL]
   : DEFAULT_PROJECT_URLS;
 
 async function hasChatGptCookies(): Promise<boolean> {
@@ -110,7 +110,7 @@ function isMissingChatGptSessionError(error: unknown): boolean {
                 message.includes("project URL missing");
               const transient =
                 message.includes("Prompt did not appear in conversation before timeout") ||
-                message.includes("Chrome window closed before oracle finished") ||
+                message.includes("Chrome window closed before vellumpix finished") ||
                 message.includes("Reattach target did not respond");
               if (missingProject) {
                 console.warn(`Project URL unavailable (${projectUrl}); trying fallback.`);

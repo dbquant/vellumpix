@@ -47,7 +47,7 @@ export async function runBridgeClient(options: BridgeClientCliOptions): Promise<
       : " — artifact transfer unavailable; file downloads require manual copy";
     console.log(
       chalk.green(
-        `Remote service OK (${remoteHost})${health.version ? ` — oracle ${health.version}` : ""}${artifactTransfer}`,
+        `Remote service OK (${remoteHost})${health.version ? ` — vellumpix ${health.version}` : ""}${artifactTransfer}`,
       ),
     );
   }
@@ -74,14 +74,14 @@ export async function runBridgeClient(options: BridgeClientCliOptions): Promise<
 
   console.log("");
   console.log("Next:");
-  console.log(chalk.dim(`- oracle --engine browser -p "hello" --file README.md`));
+  console.log(chalk.dim(`- vellumpix --engine browser -p "hello" --file README.md`));
 
   if (options.printEnv) {
     console.log("");
     console.log("# Optional env overrides (paste into your shell):");
-    console.log(`export ORACLE_ENGINE=browser`);
-    console.log(`export ORACLE_REMOTE_HOST=${shellQuote(remoteHost)}`);
-    console.log(`export ORACLE_REMOTE_TOKEN=${shellQuote(remoteToken)}`);
+    console.log(`export VELLUMPIX_ENGINE=browser`);
+    console.log(`export VELLUMPIX_REMOTE_HOST=${shellQuote(remoteHost)}`);
+    console.log(`export VELLUMPIX_REMOTE_TOKEN=${shellQuote(remoteToken)}`);
   }
 }
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { runOracle, extractTextOutput } from "../../src/oracle.js";
+import { runVellumPix, extractTextOutput } from "../../src/vellumpix.js";
 
-const live = process.env.ORACLE_LIVE_TEST === "1";
+const live = process.env.VELLUMPIX_LIVE_TEST === "1";
 const hasKey = Boolean(process.env.GEMINI_API_KEY);
 const isAccessOrAuthError = (message: string): boolean =>
   /api key expired|api[_ ]?key[_ ]?invalid|invalid api key|API_KEY_INVALID|INVALID_ARGUMENT|permission|access|does not exist|not found|404/i.test(
@@ -15,9 +15,9 @@ const isAccessOrAuthError = (message: string): boolean =>
   }
 
   it("returns a short answer", async () => {
-    let result: Awaited<ReturnType<typeof runOracle>>;
+    let result: Awaited<ReturnType<typeof runVellumPix>>;
     try {
-      result = await runOracle(
+      result = await runVellumPix(
         {
           prompt: "Give one short sentence about photosynthesis.",
           model: "gemini-3-pro",

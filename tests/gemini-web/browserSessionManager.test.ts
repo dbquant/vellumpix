@@ -46,12 +46,12 @@ vi.mock("../../src/browser/profileState.js", () => ({
 }));
 
 describe("openGeminiBrowserSession", () => {
-  const originalProfileDir = process.env.ORACLE_BROWSER_PROFILE_DIR;
+  const originalProfileDir = process.env.VELLUMPIX_BROWSER_PROFILE_DIR;
   let tempRoot: string;
 
   beforeEach(async () => {
-    tempRoot = await mkdtemp(path.join(os.tmpdir(), "oracle-gemini-profile-"));
-    delete process.env.ORACLE_BROWSER_PROFILE_DIR;
+    tempRoot = await mkdtemp(path.join(os.tmpdir(), "vellumpix-gemini-profile-"));
+    delete process.env.VELLUMPIX_BROWSER_PROFILE_DIR;
 
     launchChrome.mockReset();
     connectWithNewTab.mockReset();
@@ -81,9 +81,9 @@ describe("openGeminiBrowserSession", () => {
 
   afterEach(async () => {
     if (originalProfileDir === undefined) {
-      delete process.env.ORACLE_BROWSER_PROFILE_DIR;
+      delete process.env.VELLUMPIX_BROWSER_PROFILE_DIR;
     } else {
-      process.env.ORACLE_BROWSER_PROFILE_DIR = originalProfileDir;
+      process.env.VELLUMPIX_BROWSER_PROFILE_DIR = originalProfileDir;
     }
     await rm(tempRoot, { recursive: true, force: true });
   });
@@ -155,7 +155,7 @@ describe("openGeminiBrowserSession", () => {
 
   it("prefers an explicit manual-login profile dir over the environment", async () => {
     const explicitDir = path.join(tempRoot, "explicit-profile");
-    process.env.ORACLE_BROWSER_PROFILE_DIR = path.join(tempRoot, "env-profile");
+    process.env.VELLUMPIX_BROWSER_PROFILE_DIR = path.join(tempRoot, "env-profile");
 
     const { openGeminiBrowserSession } =
       await import("../../src/gemini-web/browserSessionManager.js");
@@ -176,9 +176,9 @@ describe("openGeminiBrowserSession", () => {
     );
   });
 
-  it("uses ORACLE_BROWSER_PROFILE_DIR when no explicit profile dir is set", async () => {
+  it("uses VELLUMPIX_BROWSER_PROFILE_DIR when no explicit profile dir is set", async () => {
     const envDir = path.join(tempRoot, "env-profile");
-    process.env.ORACLE_BROWSER_PROFILE_DIR = envDir;
+    process.env.VELLUMPIX_BROWSER_PROFILE_DIR = envDir;
 
     const { openGeminiBrowserSession } =
       await import("../../src/gemini-web/browserSessionManager.js");
@@ -201,10 +201,15 @@ describe("openGeminiBrowserSession", () => {
   });
 
   it("ignores blank environment profile dirs and falls back to the default", async () => {
-    process.env.ORACLE_BROWSER_PROFILE_DIR = "   ";
+    process.env.VELLUMPIX_BROWSER_PROFILE_DIR = "   ";
     const homedir = path.join(tempRoot, "home");
     const homedirSpy = vi.spyOn(os, "homedir").mockReturnValue(homedir);
-    const defaultDir = path.join(homedir, ".oracle", "browser-profiles", defaultBrowserProvider());
+    const defaultDir = path.join(
+      homedir,
+      ".vellumpix",
+      "browser-profiles",
+      defaultBrowserProvider(),
+    );
 
     const { openGeminiBrowserSession } =
       await import("../../src/gemini-web/browserSessionManager.js");

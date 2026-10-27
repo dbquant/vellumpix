@@ -33,7 +33,7 @@ console.log(
 );
 
 const exchange = await fetch(
-  "https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/@steipete%2foracle",
+  "https://registry.npmjs.org/-/npm/v1/oidc/token/exchange/package/@dbquant%2fvellumpix",
   {
     method: "POST",
     headers: { Authorization: `Bearer ${identityToken}`, Accept: "application/json" },

@@ -13,7 +13,7 @@ import { connectToChrome } from "../dist/src/browser/chromeLifecycle.js";
 import { readAssistantSnapshot } from "../dist/src/browser/actions/assistantResponse.js";
 
 const repo = fileURLToPath(new URL("..", import.meta.url));
-const root = await fs.mkdtemp(path.join(os.homedir(), "oracle-failure-proof-"));
+const root = await fs.mkdtemp(path.join(os.homedir(), "vellumpix-failure-proof-"));
 const chromePath = [process.env.CHROME_PATH, "/usr/bin/chromium", "/usr/bin/google-chrome"].find(
   (candidate) => candidate && existsSync(candidate),
 );
@@ -118,7 +118,7 @@ try {
     const child = spawn(
       process.execPath,
       [
-        path.join(repo, "dist/bin/oracle-cli.js"),
+        path.join(repo, "dist/bin/vellumpix-cli.js"),
         "--engine",
         "browser",
         "--model",
@@ -146,8 +146,8 @@ try {
         cwd: repo,
         env: {
           ...process.env,
-          ORACLE_HOME_DIR: home,
-          ORACLE_CHROME_NO_SANDBOX: "1",
+          VELLUMPIX_HOME_DIR: home,
+          VELLUMPIX_CHROME_NO_SANDBOX: "1",
           NO_COLOR: "1",
         },
         stdio: ["ignore", "pipe", "pipe"],

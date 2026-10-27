@@ -6,8 +6,8 @@ import { runBrowserMode } from "../../src/browser/index.js";
 import { acquireLiveTestLock, releaseLiveTestLock } from "./liveLock.js";
 import { getCookies } from "@steipete/sweet-cookie";
 
-const LIVE = process.env.ORACLE_LIVE_TEST === "1";
-const FAST = process.env.ORACLE_LIVE_TEST_FAST === "1";
+const LIVE = process.env.VELLUMPIX_LIVE_TEST === "1";
+const FAST = process.env.VELLUMPIX_LIVE_TEST_FAST === "1";
 
 async function hasChatGptSession(): Promise<boolean> {
   try {
@@ -73,11 +73,11 @@ function isMissingChatGptSessionError(error: unknown): boolean {
         console.warn("Skipping fast live test (missing ChatGPT session cookie).");
         return;
       }
-      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "oracle-fast-live-"));
+      const tmpDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-fast-live-"));
       await acquireLiveTestLock("chatgpt-browser");
       try {
-        const fileA = path.join(tmpDir, "oracle-fast-a.txt");
-        const fileB = path.join(tmpDir, "oracle-fast-b.txt");
+        const fileA = path.join(tmpDir, "vellumpix-fast-a.txt");
+        const fileB = path.join(tmpDir, "vellumpix-fast-b.txt");
         await writeFile(fileA, `fast file a ${Date.now()}`);
         await writeFile(fileB, `fast file b ${Date.now()}`);
         const [statA, statB] = await Promise.all([stat(fileA), stat(fileB)]);
@@ -87,8 +87,8 @@ function isMissingChatGptSessionError(error: unknown): boolean {
           result = await runBrowserMode({
             prompt: `${promptToken}\nReply with OK only.`,
             attachments: [
-              { path: fileA, displayPath: "oracle-fast-a.txt", sizeBytes: statA.size },
-              { path: fileB, displayPath: "oracle-fast-b.txt", sizeBytes: statB.size },
+              { path: fileA, displayPath: "vellumpix-fast-a.txt", sizeBytes: statA.size },
+              { path: fileB, displayPath: "vellumpix-fast-b.txt", sizeBytes: statB.size },
             ],
             config: {
               timeoutMs: 240_000,

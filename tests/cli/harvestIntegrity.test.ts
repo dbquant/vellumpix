@@ -4,7 +4,7 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { persistBrowserHarvest } from "../../src/cli/harvestIntegrity.js";
 import { sessionStore } from "../../src/sessionStore.js";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 import type { ChatGptTabSummary } from "../../src/browser/liveTabs.js";
 
 const url = (id: string) => `https://chatgpt.com/c/${id}`;
@@ -28,11 +28,11 @@ function observed(id: string): ChatGptTabSummary {
 describe("harvest capture identity", () => {
   let home: string;
   beforeEach(async () => {
-    home = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-harvest-integrity-"));
-    setOracleHomeDirOverrideForTest(home);
+    home = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-harvest-integrity-"));
+    setVellumPixHomeDirOverrideForTest(home);
   });
   afterEach(async () => {
-    setOracleHomeDirOverrideForTest(null);
+    setVellumPixHomeDirOverrideForTest(null);
     await fs.rm(home, { recursive: true, force: true });
   });
 
@@ -44,7 +44,7 @@ describe("harvest capture identity", () => {
     const paths = await sessionStore.getPaths(meta.id);
     await fs.mkdir(path.join(paths.dir, "artifacts"), { recursive: true });
     const transcript = path.join(paths.dir, "artifacts", "transcript.md");
-    const body = `# Oracle Browser Transcript\n\nConversation: ${url(transcriptId)}\n\n## Answer\nOriginal answer\n`;
+    const body = `# VellumPix Browser Transcript\n\nConversation: ${url(transcriptId)}\n\n## Answer\nOriginal answer\n`;
     await fs.writeFile(transcript, body);
     await fs.writeFile(paths.log, "Original answer\n");
     await sessionStore.updateSession(meta.id, {

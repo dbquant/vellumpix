@@ -2,7 +2,7 @@ import type { McpServer, CallToolResult } from "@modelcontextprotocol/server";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
-import { getOracleHomeDir } from "../../oracleHome.js";
+import { getVellumPixHomeDir } from "../../vellumpixHome.js";
 import {
   browserThinkingTimeInputSchema,
   browserThinkingTimeRawSchema,
@@ -20,7 +20,7 @@ const chatGptImageInputShape = {
     .string()
     .optional()
     .describe(
-      "Where to save the first generated image. Defaults to a unique file under ORACLE_HOME_DIR/generated/.",
+      "Where to save the first generated image. Defaults to a unique file under VELLUMPIX_HOME_DIR/generated/.",
     ),
   aspectRatio: z
     .string()
@@ -32,7 +32,7 @@ const chatGptImageInputShape = {
       message: "chatgpt_image requires a ChatGPT/GPT model.",
     })
     .optional()
-    .describe("Optional ChatGPT/browser model label or alias. Defaults follow Oracle config."),
+    .describe("Optional ChatGPT/browser model label or alias. Defaults follow VellumPix config."),
   browserModelLabel: z
     .string()
     .optional()
@@ -88,7 +88,7 @@ function resolveDefaultImageOutputPath(): string {
   // Include a random token so concurrent agent calls in the same millisecond do
   // not resolve to the same default path and overwrite each other.
   const unique = `${Date.now().toString(36)}-${randomUUID().slice(0, 8)}`;
-  return path.join(getOracleHomeDir(), "generated", `chatgpt-image-${unique}.png`);
+  return path.join(getVellumPixHomeDir(), "generated", `chatgpt-image-${unique}.png`);
 }
 
 function appendAspectRatio(prompt: string, aspectRatio?: string): string {

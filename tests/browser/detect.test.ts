@@ -57,7 +57,7 @@ describe("attach-running browser detection", () => {
   });
 
   test("discovers DevToolsActivePort files recursively and derives profile roots", async () => {
-    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-detect-"));
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-detect-"));
     tempDirs.push(homeDir);
     const defaultDir = path.join(
       homeDir,

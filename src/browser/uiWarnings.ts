@@ -1,4 +1,4 @@
-import { BrowserAutomationError } from "../oracle/errors.js";
+import { BrowserAutomationError } from "../vellumpix/errors.js";
 import type { BrowserLogger, ChromeClient } from "./types.js";
 
 type ChatGptUiWarningType = "rate_limit" | "temporary_unavailable" | "auth_or_challenge";

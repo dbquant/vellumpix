@@ -6,7 +6,7 @@ import { assembleBrowserPrompt, cleanupGeneratedBrowserBundles } from "../../src
 import { runBrowserSessionExecution } from "../../src/browser/sessionRunner.js";
 
 async function fixture() {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-bundle-lifecycle-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-bundle-lifecycle-"));
   const file = ["one.ts", "two.ts", "attachments-bundle.zip", "attachments-bundle-2.zip"];
   await Promise.all(file.map((name) => fs.writeFile(path.join(root, name), name)));
   return { root, file };

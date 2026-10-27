@@ -1,5 +1,5 @@
 import type { ChromeClient, BrowserLogger } from "../types.js";
-import type { ThinkingTimeLevel } from "../../oracle/types.js";
+import type { ThinkingTimeLevel } from "../../vellumpix/types.js";
 import type {
   BrowserThinkingSelectionEvidence,
   BrowserThinkingSelectionStatus,
@@ -11,7 +11,7 @@ import {
 } from "../constants.js";
 import { logDomFailure } from "../domDebug.js";
 import { buildClickDispatcher } from "./domEvents.js";
-import { BrowserAutomationError } from "../../oracle/errors.js";
+import { BrowserAutomationError } from "../../vellumpix/errors.js";
 
 // Snapshot of the model-picker / thinking-effort subtree, captured at the moment
 // detection fails so a chip-not-found can be diagnosed without re-running with

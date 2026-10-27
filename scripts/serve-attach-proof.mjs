@@ -12,7 +12,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const repo = fileURLToPath(new URL("..", import.meta.url));
 const require = createRequire(import.meta.url);
 const { Server: WebSocketServer } = createRequire(require.resolve("chrome-remote-interface"))("ws");
-const root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-serve-attach-"));
+const root = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-serve-attach-"));
 const guard = path.join(root, "refuse-launch.mjs");
 await fs.writeFile(
   guard,
@@ -20,7 +20,7 @@ await fs.writeFile(
 const cp=createRequire(import.meta.url)("node:child_process");
 const os=createRequire(import.meta.url)("node:os");
 // Keep profile discovery inside the fixture instead of scanning the user's application data.
-os.homedir=()=>process.env.ORACLE_HOME_DIR;
+os.homedir=()=>process.env.VELLUMPIX_HOME_DIR;
 const spawn=cp.spawn;
 cp.spawn=function(command,...args){
   if(/(?:chrome|chromium)(?:\\.exe)?$/i.test(String(command)))throw new Error("UNEXPECTED_CHROME_LAUNCH");
@@ -97,14 +97,14 @@ async function prove(mode) {
   );
   const env = {
     ...process.env,
-    ORACLE_HOME_DIR: home,
+    VELLUMPIX_HOME_DIR: home,
     NO_COLOR: "1",
     NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ""} --import=${pathToFileURL(guard).href}`.trim(),
   };
-  delete env.ORACLE_BROWSER_APPROVAL_WAIT;
-  if (mode === "environment") env.ORACLE_BROWSER_APPROVAL_WAIT = "1s";
+  delete env.VELLUMPIX_BROWSER_APPROVAL_WAIT;
+  if (mode === "environment") env.VELLUMPIX_BROWSER_APPROVAL_WAIT = "1s";
   const args = [
-    path.join(repo, "dist/bin/oracle-cli.js"),
+    path.join(repo, "dist/bin/vellumpix-cli.js"),
     "serve",
     "--host",
     "127.0.0.1",
@@ -159,7 +159,7 @@ async function prove(mode) {
     client = spawn(
       process.execPath,
       [
-        path.join(repo, "dist/bin/oracle-cli.js"),
+        path.join(repo, "dist/bin/vellumpix-cli.js"),
         "--engine",
         "browser",
         "--model",
@@ -179,7 +179,7 @@ async function prove(mode) {
       ],
       {
         cwd: clientHome,
-        env: { ...env, ORACLE_HOME_DIR: clientHome, ORACLE_REMOTE_TOKEN: token },
+        env: { ...env, VELLUMPIX_HOME_DIR: clientHome, VELLUMPIX_REMOTE_TOKEN: token },
         stdio: ["ignore", "pipe", "pipe"],
       },
     );
@@ -201,7 +201,7 @@ async function prove(mode) {
       const retry = spawn(
         process.execPath,
         [
-          path.join(repo, "dist/bin/oracle-cli.js"),
+          path.join(repo, "dist/bin/vellumpix-cli.js"),
           "--engine",
           "browser",
           "--model",
@@ -215,7 +215,7 @@ async function prove(mode) {
         ],
         {
           cwd: clientHome,
-          env: { ...env, ORACLE_HOME_DIR: clientHome, ORACLE_REMOTE_TOKEN: token },
+          env: { ...env, VELLUMPIX_HOME_DIR: clientHome, VELLUMPIX_REMOTE_TOKEN: token },
           stdio: ["ignore", "pipe", "pipe"],
         },
       );

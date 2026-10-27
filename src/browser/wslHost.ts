@@ -35,7 +35,7 @@ type WslChromeHostOptions = {
 export function resolveWslChromeHost(options: WslChromeHostOptions = {}): string | null {
   const remoteDebugHost =
     options.remoteDebugHost === undefined
-      ? process.env.ORACLE_BROWSER_REMOTE_DEBUG_HOST
+      ? process.env.VELLUMPIX_BROWSER_REMOTE_DEBUG_HOST
       : options.remoteDebugHost;
   const wslHostIp = options.wslHostIp === undefined ? process.env.WSL_HOST_IP : options.wslHostIp;
   const override = remoteDebugHost?.trim() || wslHostIp?.trim();

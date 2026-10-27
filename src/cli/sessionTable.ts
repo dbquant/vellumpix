@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import kleur from "kleur";
-import { MODEL_CONFIGS } from "../oracle.js";
+import { MODEL_CONFIGS } from "../vellumpix.js";
 import type { SessionMetadata } from "../sessionStore.js";
 import { estimateUsdCost } from "tokentally";
 import { formatSessionExecutionLabel } from "./sessionLifecycle.js";

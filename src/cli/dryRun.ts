@@ -7,10 +7,10 @@ import {
   readFiles,
   getFileTokenStats,
   printFileTokenStats,
-  type RunOracleOptions,
+  type RunVellumPixOptions,
   type PreviewMode,
-} from "../oracle.js";
-import { isKnownModel } from "../oracle/modelResolver.js";
+} from "../vellumpix.js";
+import { isKnownModel } from "../vellumpix/modelResolver.js";
 import {
   assembleBrowserPrompt,
   cleanupGeneratedBrowserBundles,
@@ -38,7 +38,7 @@ export async function runDryRunSummary(
     browserConfig,
   }: {
     engine: "api" | "browser";
-    runOptions: RunOracleOptions;
+    runOptions: RunVellumPixOptions;
     cwd: string;
     version: string;
     log: (message: string) => void;
@@ -60,7 +60,7 @@ async function runApiDryRun(
     version,
     log,
   }: {
-    runOptions: RunOracleOptions;
+    runOptions: RunVellumPixOptions;
     cwd: string;
     version: string;
     log: (message: string) => void;
@@ -82,7 +82,7 @@ async function runApiDryRun(
     ],
     TOKENIZER_OPTIONS,
   );
-  const headerLine = `[dry-run] Oracle (${version}) would call ${runOptions.model} with ~${estimatedInputTokens.toLocaleString()} tokens and ${files.length} files.`;
+  const headerLine = `[dry-run] VellumPix (${version}) would call ${runOptions.model} with ~${estimatedInputTokens.toLocaleString()} tokens and ${files.length} files.`;
   log(chalk.cyan(headerLine));
   if (files.length === 0) {
     log(chalk.dim("[dry-run] No files matched the provided --file patterns."));
@@ -106,7 +106,7 @@ async function runBrowserDryRun(
     log,
     browserConfig,
   }: {
-    runOptions: RunOracleOptions;
+    runOptions: RunVellumPixOptions;
     cwd: string;
     version: string;
     log: (message: string) => void;
@@ -124,7 +124,7 @@ async function runBrowserDryRun(
       desiredModel: browserConfig?.desiredModel,
       modelStrategy: browserConfig?.modelStrategy,
     });
-    const headerLine = `[dry-run] Oracle (${version}) would launch browser mode (${displayModel}) with ~${artifacts.estimatedInputTokens.toLocaleString()} tokens${suffix}.`;
+    const headerLine = `[dry-run] VellumPix (${version}) would launch browser mode (${displayModel}) with ~${artifacts.estimatedInputTokens.toLocaleString()} tokens${suffix}.`;
     log(chalk.cyan(headerLine));
     logBrowserControlPlan(browserConfig, log, "dry-run");
     logBrowserFollowUpSummary(runOptions.browserFollowUps, log, "dry-run");
@@ -207,7 +207,7 @@ export async function runBrowserPreview(
     log,
     browserConfig,
   }: {
-    runOptions: RunOracleOptions;
+    runOptions: RunVellumPixOptions;
     cwd: string;
     version: string;
     previewMode: PreviewMode;
@@ -226,7 +226,7 @@ export async function runBrowserPreview(
       desiredModel: browserConfig?.desiredModel,
       modelStrategy: browserConfig?.modelStrategy,
     });
-    const headerLine = `[preview] Oracle (${version}) browser mode (${displayModel}) with ~${artifacts.estimatedInputTokens.toLocaleString()} tokens${suffix}.`;
+    const headerLine = `[preview] VellumPix (${version}) browser mode (${displayModel}) with ~${artifacts.estimatedInputTokens.toLocaleString()} tokens${suffix}.`;
     log(chalk.cyan(headerLine));
     logBrowserControlPlan(browserConfig, log, "preview");
     logBrowserFollowUpSummary(runOptions.browserFollowUps, log, "preview");
@@ -272,14 +272,14 @@ function logBrowserFollowUpSummary(
     log(chalk.bold(`[${label}] Browser follow-ups: ${count} additional prompt(s).`));
     log(
       chalk.dim(
-        `[${label}] Multi-turn is explicit only: Oracle will send these prompts in order, but it never invents follow-ups automatically.`,
+        `[${label}] Multi-turn is explicit only: VellumPix will send these prompts in order, but it never invents follow-ups automatically.`,
       ),
     );
   }
 }
 
 function validateBrowserFollowUps(
-  runOptions: RunOracleOptions,
+  runOptions: RunVellumPixOptions,
   browserConfig: BrowserSessionConfig | undefined,
 ): void {
   const followUpCount =

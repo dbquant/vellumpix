@@ -18,9 +18,9 @@ afterEach(() => {
 
 describe("browser reattach end-to-end (simulated)", () => {
   test("marks session completed after reconnection", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-reattach-"));
-    const { setOracleHomeDirOverrideForTest } = await import("../../src/oracleHome.js");
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-reattach-"));
+    const { setVellumPixHomeDirOverrideForTest } = await import("../../src/vellumpixHome.js");
+    setVellumPixHomeDirOverrideForTest(tmpHome);
 
     try {
       const { resumeBrowserSession } = await import("../../src/browser/reattach.js");
@@ -74,14 +74,14 @@ describe("browser reattach end-to-end (simulated)", () => {
       expect(runs.some((r) => r.status === "completed")).toBe(true);
     } finally {
       await fs.rm(tmpHome, { recursive: true, force: true });
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
     }
   }, 20_000);
 
   test("does not reattach an errored chrome-disconnected session without a conversation URL", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-reattach-"));
-    const { setOracleHomeDirOverrideForTest } = await import("../../src/oracleHome.js");
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-reattach-"));
+    const { setVellumPixHomeDirOverrideForTest } = await import("../../src/vellumpixHome.js");
+    setVellumPixHomeDirOverrideForTest(tmpHome);
 
     try {
       const { resumeBrowserSession } = await import("../../src/browser/reattach.js");
@@ -127,14 +127,14 @@ describe("browser reattach end-to-end (simulated)", () => {
       expect(resumeMock).not.toHaveBeenCalled();
     } finally {
       await fs.rm(tmpHome, { recursive: true, force: true });
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
     }
   }, 20_000);
 
   test("reattaches a live chrome-disconnected session with a stale cached URL", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-reattach-"));
-    const { setOracleHomeDirOverrideForTest } = await import("../../src/oracleHome.js");
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-reattach-"));
+    const { setVellumPixHomeDirOverrideForTest } = await import("../../src/vellumpixHome.js");
+    setVellumPixHomeDirOverrideForTest(tmpHome);
 
     try {
       const { resumeBrowserSession } = await import("../../src/browser/reattach.js");
@@ -182,14 +182,14 @@ describe("browser reattach end-to-end (simulated)", () => {
       expect(updated?.status).toBe("completed");
     } finally {
       await fs.rm(tmpHome, { recursive: true, force: true });
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
     }
   }, 20_000);
 
   test("reattaches completed Deep Research sessions that only captured a tool placeholder", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-reattach-"));
-    const { setOracleHomeDirOverrideForTest } = await import("../../src/oracleHome.js");
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-reattach-"));
+    const { setVellumPixHomeDirOverrideForTest } = await import("../../src/vellumpixHome.js");
+    setVellumPixHomeDirOverrideForTest(tmpHome);
 
     try {
       const { resumeBrowserSession } = await import("../../src/browser/reattach.js");
@@ -249,14 +249,14 @@ describe("browser reattach end-to-end (simulated)", () => {
       expect(log).not.toContain("Called tool");
     } finally {
       await fs.rm(tmpHome, { recursive: true, force: true });
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
     }
   }, 20_000);
 
   test("reattaches completed Deep Research placeholders from a project URL", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-reattach-"));
-    const { setOracleHomeDirOverrideForTest } = await import("../../src/oracleHome.js");
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-reattach-"));
+    const { setVellumPixHomeDirOverrideForTest } = await import("../../src/vellumpixHome.js");
+    setVellumPixHomeDirOverrideForTest(tmpHome);
 
     try {
       const { resumeBrowserSession } = await import("../../src/browser/reattach.js");
@@ -303,14 +303,14 @@ describe("browser reattach end-to-end (simulated)", () => {
       expect(resumeMock).toHaveBeenCalledTimes(1);
     } finally {
       await fs.rm(tmpHome, { recursive: true, force: true });
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
     }
   }, 20_000);
 
   test("reattaches when controller pid is gone even without incompleteReason", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-reattach-"));
-    const { setOracleHomeDirOverrideForTest } = await import("../../src/oracleHome.js");
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-reattach-"));
+    const { setVellumPixHomeDirOverrideForTest } = await import("../../src/vellumpixHome.js");
+    setVellumPixHomeDirOverrideForTest(tmpHome);
 
     try {
       const { resumeBrowserSession } = await import("../../src/browser/reattach.js");
@@ -379,14 +379,14 @@ describe("browser reattach end-to-end (simulated)", () => {
       expect(resumeMock).toHaveBeenCalledTimes(1);
     } finally {
       await fs.rm(tmpHome, { recursive: true, force: true });
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
     }
   }, 20_000);
 
   test("reattaches after CLI termination when Chrome is left running", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-reattach-"));
-    const { setOracleHomeDirOverrideForTest } = await import("../../src/oracleHome.js");
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-reattach-"));
+    const { setVellumPixHomeDirOverrideForTest } = await import("../../src/vellumpixHome.js");
+    setVellumPixHomeDirOverrideForTest(tmpHome);
 
     try {
       const { resumeBrowserSession } = await import("../../src/browser/reattach.js");
@@ -477,7 +477,7 @@ describe("browser reattach end-to-end (simulated)", () => {
       expect(resumeMock).toHaveBeenCalledTimes(1);
     } finally {
       await fs.rm(tmpHome, { recursive: true, force: true });
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
     }
   }, 20_000);
 });

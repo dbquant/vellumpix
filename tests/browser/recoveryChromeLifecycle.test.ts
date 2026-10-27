@@ -21,7 +21,7 @@ afterEach(async () => {
 });
 describe("recovery Chrome ownership", () => {
   test("transfers cleanup to the last recovery but never claims a borrowed browser", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-recovery-owner-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-recovery-owner-"));
     dirs.push(dir);
     state.readChromePid.mockResolvedValue(123);
     state.readProcessStartTimeMs.mockResolvedValue(456);
@@ -31,10 +31,10 @@ describe("recovery Chrome ownership", () => {
     await recordRecoveryChromeOwnership(dir, 123, 0);
     expect(await terminateRecoveryChrome(dir, logger)).toBe(true);
     expect(state.terminateRecordedChromeForProfile).toHaveBeenCalledOnce();
-    await expect(readFile(path.join(dir, "oracle-recovery-chrome.json"))).rejects.toThrow();
+    await expect(readFile(path.join(dir, "vellumpix-recovery-chrome.json"))).rejects.toThrow();
   });
   test("a keep-browser participant preserves the shared process for later recoveries", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-recovery-owner-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-recovery-owner-"));
     dirs.push(dir);
     state.readChromePid.mockResolvedValue(123);
     state.readProcessStartTimeMs.mockResolvedValue(456);
@@ -44,7 +44,7 @@ describe("recovery Chrome ownership", () => {
     expect(state.terminateRecordedChromeForProfile).not.toHaveBeenCalled();
   });
   test("keeps a browser when preservation precedes delayed ownership publication", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-recovery-owner-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-recovery-owner-"));
     dirs.push(dir);
     let finish!: (value: number) => void;
     state.readProcessStartTimeMs.mockReturnValueOnce(
@@ -64,7 +64,7 @@ describe("recovery Chrome ownership", () => {
   test.each(["pid", "startedAt", "malformed"])(
     "preserves a replacement browser with mismatched %s",
     async (changed) => {
-      const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-recovery-owner-"));
+      const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-recovery-owner-"));
       dirs.push(dir);
       state.readChromePid.mockResolvedValue(123);
       state.readProcessStartTimeMs.mockResolvedValue(456);
@@ -72,7 +72,7 @@ describe("recovery Chrome ownership", () => {
       if (changed === "pid") state.readChromePid.mockResolvedValue(124);
       if (changed === "startedAt") state.readProcessStartTimeMs.mockResolvedValue(457);
       if (changed === "malformed")
-        await writeFile(path.join(dir, "oracle-recovery-chrome.json"), "null");
+        await writeFile(path.join(dir, "vellumpix-recovery-chrome.json"), "null");
       expect(await terminateRecoveryChrome(dir, logger)).toBe(false);
       expect(state.terminateRecordedChromeForProfile).not.toHaveBeenCalled();
     },

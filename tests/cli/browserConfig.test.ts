@@ -499,7 +499,7 @@ describe("buildBrowserConfig", () => {
       buildBrowserConfig({
         model: "gpt-5.2-pro",
         browserAttachRunning: true,
-        browserManualLoginProfileDir: "/tmp/oracle-profile",
+        browserManualLoginProfileDir: "/tmp/vellumpix-profile",
       }),
     ).rejects.toThrow(/attach-running/i);
   });

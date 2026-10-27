@@ -1,8 +1,8 @@
 import type { ProviderNativeCaptureSummary } from "./chatgptConversation.js";
 import chalk from "chalk";
-import type { RunOracleOptions } from "../oracle.js";
-import { formatTokenCount } from "../oracle/runUtils.js";
-import { formatFinishLine } from "../oracle/finishLine.js";
+import type { RunVellumPixOptions } from "../vellumpix.js";
+import { formatTokenCount } from "../vellumpix/runUtils.js";
+import { formatFinishLine } from "../vellumpix/finishLine.js";
 import type {
   BrowserModelSelectionEvidence,
   BrowserThinkingSelectionEvidence,
@@ -20,7 +20,7 @@ import {
   cleanupGeneratedBrowserBundles,
   materializeBrowserFallback,
 } from "./prompt.js";
-import { BrowserAutomationError, BrowserRunCancelledError } from "../oracle/errors.js";
+import { BrowserAutomationError, BrowserRunCancelledError } from "../vellumpix/errors.js";
 import type { BrowserArchiveResult, BrowserLogger, SavedBrowserFile } from "./types.js";
 import {
   appendArtifacts,
@@ -56,7 +56,7 @@ export interface BrowserExecutionResult {
 }
 
 interface RunBrowserSessionArgs {
-  runOptions: RunOracleOptions;
+  runOptions: RunVellumPixOptions;
   browserConfig: BrowserSessionConfig;
   cwd: string;
   log: (message?: string) => void;
@@ -93,7 +93,7 @@ function buildUnavailableModelSelectionEvidence(
 }
 
 function isRequestedProBrowserRun(
-  runOptions: RunOracleOptions,
+  runOptions: RunVellumPixOptions,
   browserConfig: BrowserSessionConfig,
   evidence?: BrowserModelSelectionEvidence,
 ): boolean {
@@ -107,7 +107,7 @@ function isRequestedProBrowserRun(
 }
 
 export function buildBrowserRunWarningsForTest(args: {
-  runOptions: RunOracleOptions;
+  runOptions: RunVellumPixOptions;
   browserConfig: BrowserSessionConfig;
   inputTokens: number;
   elapsedMs: number;
@@ -117,7 +117,7 @@ export function buildBrowserRunWarningsForTest(args: {
 }
 
 function buildBrowserRunWarnings(args: {
-  runOptions: RunOracleOptions;
+  runOptions: RunVellumPixOptions;
   browserConfig: BrowserSessionConfig;
   inputTokens: number;
   elapsedMs: number;
@@ -225,7 +225,7 @@ async function executeAssembledBrowserSession({
   persistRuntimeHint,
   signal,
 }: {
-  runOptions: RunOracleOptions;
+  runOptions: RunVellumPixOptions;
   browserConfig: BrowserSessionConfig;
   log: (message?: string) => void;
   promptArtifacts: Awaited<ReturnType<typeof assembleBrowserPrompt>>;

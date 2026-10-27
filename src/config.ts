@@ -2,13 +2,13 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import JSON5 from "json5";
-import { getOracleHomeDir } from "./oracleHome.js";
+import { getVellumPixHomeDir } from "./vellumpixHome.js";
 import type {
   BrowserArchiveMode,
   BrowserModelStrategy,
   BrowserResearchMode,
 } from "./browser/types.js";
-import type { ThinkingTimeLevel, ModelOverridesConfig } from "./oracle/types.js";
+import type { ThinkingTimeLevel, ModelOverridesConfig } from "./vellumpix/types.js";
 import type { BrowserProvider, ConcreteBrowserProvider } from "./browser/browserProvider.js";
 
 export type EnginePreference = "api" | "browser";
@@ -31,9 +31,9 @@ export interface BrowserConfigDefaults {
   attachRunning?: boolean;
   chatgptUrl?: string | null;
   url?: string;
-  /** Delegate browser automation to a remote `oracle serve` instance (host:port). */
+  /** Delegate browser automation to a remote `vellumpix serve` instance (host:port). */
   remoteHost?: string | null;
-  /** Access token clients must provide to the remote `oracle serve` instance. */
+  /** Access token clients must provide to the remote `vellumpix serve` instance. */
   remoteToken?: string | null;
   /** Optional metadata for the SSH reverse-tunnel that makes remoteHost reachable. */
   remoteViaSshReverseTunnel?: RemoteViaSshReverseTunnelConfig | null;
@@ -77,7 +77,7 @@ export interface BrowserConfigDefaults {
   archiveConversations?: BrowserArchiveMode;
   /** Skip cookie sync and reuse a persistent automation profile (waits for manual ChatGPT login). */
   manualLogin?: boolean;
-  /** Manual-login profile directory override (also available via ORACLE_BROWSER_PROFILE_DIR). */
+  /** Manual-login profile directory override (also available via VELLUMPIX_BROWSER_PROFILE_DIR). */
   manualLoginProfileDir?: string | null;
   /** Seed a manual-login profile from configured Chrome/inline cookies. */
   manualLoginCookieSync?: boolean;
@@ -127,10 +127,10 @@ export interface UserConfig {
   modelOverrides?: ModelOverridesConfig;
 }
 
-export const PROJECT_CONFIG_RELATIVE_PATH = path.join(".oracle", "config.json");
+export const PROJECT_CONFIG_RELATIVE_PATH = path.join(".vellumpix", "config.json");
 
 function resolveUserConfigPath(): string {
-  return path.join(getOracleHomeDir(), "config.json");
+  return path.join(getVellumPixHomeDir(), "config.json");
 }
 
 export interface LoadConfigResult {

@@ -90,7 +90,7 @@ export function defaultBrowserProfileDir(
   provider: ConcreteBrowserProvider,
   homeDir: string = os.homedir(),
 ): string {
-  return path.join(homeDir, ".oracle", "browser-profiles", provider);
+  return path.join(homeDir, ".vellumpix", "browser-profiles", provider);
 }
 
 export function findBrowserExecutable(

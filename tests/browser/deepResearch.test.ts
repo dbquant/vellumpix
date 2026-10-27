@@ -660,7 +660,7 @@ describe("waitForResearchPlanAutoConfirm", () => {
     const deepResearchUrl =
       "https://connector_openai_deep_research.web-sandbox.oaiusercontent.com/";
     const mockClient = {
-      oraclePageSessionId: "page-session",
+      vellumpixPageSessionId: "page-session",
       on: vi.fn((event: string, listener: (params: unknown, sessionId?: string) => void) => {
         listeners.set(event, listener);
       }),
@@ -788,7 +788,7 @@ describe("waitForDeepResearchCompletion", () => {
     const deepResearchUrl =
       "https://connector_openai_deep_research.web-sandbox.oaiusercontent.com/";
     const mockClient = {
-      oraclePageSessionId: "page-session",
+      vellumpixPageSessionId: "page-session",
       on: vi.fn((event: string, listener: (params: unknown, sessionId?: string) => void) => {
         listeners.set(event, listener);
       }),
@@ -1142,7 +1142,7 @@ describe("waitForDeepResearchCompletion", () => {
   it("does not return a foreign completed Deep Research report from another tab", async () => {
     // Cross-tab isolation: a shared/persistent Chrome profile can hold another
     // tab's COMPLETED Deep Research report. Target discovery must be scoped to the
-    // current Oracle-controlled page (via page-session auto-attach), so the
+    // current VellumPix-controlled page (via page-session auto-attach), so the
     // foreign report is never read into this session — even though a browser-wide
     // Target.getTargets scan would surface it.
     mockRuntime.evaluate.mockResolvedValue({
@@ -1249,7 +1249,7 @@ describe("waitForDeepResearchCompletion", () => {
     // raw `send` is browser-level (only domain methods are session-bound). If
     // auto-attach is issued without the page session id, it attaches browser-wide
     // and a foreign completed Deep Research tab leaks into this session. The fix
-    // passes `oraclePageSessionId`; this test asserts every setAutoAttach call is
+    // passes `vellumpixPageSessionId`; this test asserts every setAutoAttach call is
     // bound to that page session.
     mockRuntime.evaluate.mockResolvedValue({
       result: {
@@ -1270,7 +1270,7 @@ describe("waitForDeepResearchCompletion", () => {
 
     const mockClient = {
       // Marks the session-bound wrapper (createSessionBoundChromeClient).
-      oraclePageSessionId: "page-session",
+      vellumpixPageSessionId: "page-session",
       on: vi.fn((event: string, listener: (params: unknown, sessionId?: string) => void) => {
         listeners.set(event, listener);
       }),
@@ -1363,7 +1363,7 @@ describe("waitForDeepResearchCompletion", () => {
       "https://connector_openai_deep_research.web-sandbox.oaiusercontent.com/";
 
     const mockClient = {
-      oraclePageSessionId: "page-session",
+      vellumpixPageSessionId: "page-session",
       on: vi.fn((event: string, listener: (params: unknown, sessionId?: string) => void) => {
         listeners.set(event, listener);
       }),
@@ -1463,7 +1463,7 @@ describe("waitForDeepResearchCompletion", () => {
     const deepResearchUrl =
       "https://connector_openai_deep_research.web-sandbox.oaiusercontent.com/";
     const mockClient = {
-      oraclePageSessionId: "page-session",
+      vellumpixPageSessionId: "page-session",
       on: vi.fn((event: string, listener: (params: unknown, sessionId?: string) => void) => {
         listeners.set(event, listener);
       }),
@@ -1565,7 +1565,7 @@ describe("waitForDeepResearchCompletion", () => {
     const deepResearchUrl =
       "https://connector_openai_deep_research.web-sandbox.oaiusercontent.com/";
     const mockClient = {
-      oraclePageSessionId: "page-session",
+      vellumpixPageSessionId: "page-session",
       on: vi.fn((event: string, listener: (params: unknown, sessionId?: string) => void) => {
         listeners.set(event, listener);
       }),
@@ -1662,7 +1662,7 @@ describe("waitForDeepResearchCompletion", () => {
       "https://connector_openai_deep_research.web-sandbox.oaiusercontent.com/";
     const foreignReport = "FOREIGN_REPORT https://example.com/other";
     const mockClient = {
-      oraclePageSessionId: "page-session",
+      vellumpixPageSessionId: "page-session",
       on: vi.fn((event: string, listener: (params: unknown, sessionId?: string) => void) => {
         listeners.set(event, listener);
       }),

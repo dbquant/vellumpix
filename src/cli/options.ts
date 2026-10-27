@@ -3,10 +3,10 @@ import { InvalidArgumentError, type Command } from "commander";
 import { parseDuration } from "../duration.js";
 import path from "node:path";
 import fg from "fast-glob";
-import type { ModelName, PreviewMode } from "../oracle.js";
-import { DEFAULT_MODEL, MODEL_CONFIGS } from "../oracle/config.js";
-import { normalizeThinkingTimeLevel } from "../oracle/thinkingTime.js";
-import type { ThinkingTimeLevel } from "../oracle/types.js";
+import type { ModelName, PreviewMode } from "../vellumpix.js";
+import { DEFAULT_MODEL, MODEL_CONFIGS } from "../vellumpix/config.js";
+import { normalizeThinkingTimeLevel } from "../vellumpix/thinkingTime.js";
+import type { ThinkingTimeLevel } from "../vellumpix/types.js";
 
 export function collectPaths(
   value: string | string[] | undefined,

@@ -43,7 +43,8 @@ export async function openGeminiBrowserSession(
     keepBrowser: browserConfig?.keepBrowser ?? keepBrowserDefault,
   });
   const profileDir =
-    resolvedConfig.manualLoginProfileDir ?? path.join(os.homedir(), ".oracle", "browser-profile");
+    resolvedConfig.manualLoginProfileDir ??
+    path.join(os.homedir(), ".vellumpix", "browser-profile");
   const keepBrowser = Boolean(resolvedConfig.keepBrowser);
 
   if (resolvedConfig.attachRunning || resolvedConfig.remoteChrome) {
@@ -76,7 +77,7 @@ export async function openGeminiBrowserSession(
     const probe = await verifyDevToolsReachable({ port });
     if (!probe.ok) {
       log?.(`[gemini-web] Stale DevTools port ${port}; launching fresh Chrome for ${purpose}.`);
-      await cleanupStaleProfileState(profileDir, log, { lockRemovalMode: "if_oracle_pid_dead" });
+      await cleanupStaleProfileState(profileDir, log, { lockRemovalMode: "if_vellumpix_pid_dead" });
       port = null;
     }
   }

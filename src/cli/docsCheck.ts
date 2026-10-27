@@ -104,7 +104,10 @@ export function collectCommanderFlags(
   return flags;
 }
 
-function collectCommandFlags(command: Command, pathParts = ["oracle"]): Map<string, Set<string>> {
+function collectCommandFlags(
+  command: Command,
+  pathParts = ["vellumpix"],
+): Map<string, Set<string>> {
   const flags = new Map<string, Set<string>>();
   flags.set(pathParts.join(" "), collectCommanderFlags(command, { recursive: false }));
   for (const subcommand of command.commands) {
@@ -138,7 +141,7 @@ function extractMarkdownFlagReferences(markdown: string): MarkdownFlagReference[
     if (heading) {
       section = heading[1];
     }
-    const commandPath = extractOracleCommandPath(line);
+    const commandPath = extractVellumPixCommandPath(line);
     const lineFlags = new Set<string>();
     for (const match of line.matchAll(FLAG_RE)) {
       const flag = match[2];
@@ -159,21 +162,21 @@ function extractMarkdownFlagReferences(markdown: string): MarkdownFlagReference[
   );
 }
 
-function extractOracleCommandPath(line: string): string | undefined {
+function extractVellumPixCommandPath(line: string): string | undefined {
   const trimmed = line.trim().replace(/^[$>]\s+/, "");
-  if (!trimmed.startsWith("oracle ") && !trimmed.startsWith("npx ")) {
+  if (!trimmed.startsWith("vellumpix ") && !trimmed.startsWith("npx ")) {
     return undefined;
   }
   const tokens = trimmed.split(/\s+/);
-  let oracleIndex = tokens[0] === "oracle" ? 0 : -1;
-  if (oracleIndex === -1) {
-    oracleIndex = tokens.findIndex((token) => token === "@steipete/oracle");
+  let vellumpixIndex = tokens[0] === "vellumpix" ? 0 : -1;
+  if (vellumpixIndex === -1) {
+    vellumpixIndex = tokens.findIndex((token) => token === "@dbquant/vellumpix");
   }
-  if (oracleIndex === -1) {
+  if (vellumpixIndex === -1) {
     return undefined;
   }
-  const pathParts = ["oracle"];
-  for (const token of tokens.slice(oracleIndex + 1)) {
+  const pathParts = ["vellumpix"];
+  for (const token of tokens.slice(vellumpixIndex + 1)) {
     if (token.startsWith("-") || !/^[a-z][a-z0-9-]*$/.test(token)) {
       break;
     }

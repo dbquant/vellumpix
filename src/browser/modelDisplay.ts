@@ -41,7 +41,7 @@ export function formatBrowserModelTarget({
 }
 
 /**
- * Prefer picker evidence only when Oracle verified it. Otherwise retain the requested CLI key.
+ * Prefer picker evidence only when VellumPix verified it. Otherwise retain the requested CLI key.
  * In particular, a bare `Pro` picker label must not be expanded to a server-side model version.
  */
 export function resolveBrowserModelDisplayName({

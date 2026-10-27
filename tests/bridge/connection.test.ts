@@ -11,13 +11,13 @@ describe("bridge connection parsing", () => {
     expect(parsed).toEqual({ remoteHost: "127.0.0.1:9473", remoteToken: "abc" });
   });
 
-  it("parses oracle+tcp://host:port?token=...", () => {
-    const parsed = parseBridgeConnectionString("oracle+tcp://example.com:1234?token=secret");
+  it("parses vellumpix+tcp://host:port?token=...", () => {
+    const parsed = parseBridgeConnectionString("vellumpix+tcp://example.com:1234?token=secret");
     expect(parsed).toEqual({ remoteHost: "example.com:1234", remoteToken: "secret" });
   });
 
   it("parses IPv6 hosts with brackets", () => {
-    const parsed = parseBridgeConnectionString("oracle+tcp://[2001:db8::1]:9473?token=abc");
+    const parsed = parseBridgeConnectionString("vellumpix+tcp://[2001:db8::1]:9473?token=abc");
     expect(parsed).toEqual({ remoteHost: "[2001:db8::1]:9473", remoteToken: "abc" });
   });
 
@@ -26,13 +26,13 @@ describe("bridge connection parsing", () => {
       { remoteHost: "127.0.0.1:9473", remoteToken: "abc" },
       { includeToken: true },
     );
-    expect(withToken).toBe("oracle+tcp://127.0.0.1:9473?token=abc");
+    expect(withToken).toBe("vellumpix+tcp://127.0.0.1:9473?token=abc");
 
     const withoutToken = formatBridgeConnectionString(
       { remoteHost: "127.0.0.1:9473", remoteToken: "abc" },
       { includeToken: false },
     );
-    expect(withoutToken).toBe("oracle+tcp://127.0.0.1:9473");
+    expect(withoutToken).toBe("vellumpix+tcp://127.0.0.1:9473");
   });
 
   it("rejects unbracketed IPv6 in host:port parsing", () => {

@@ -28,7 +28,7 @@ const chromePath = [
   "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
 ].find((p) => p && existsSync(p));
 assert.ok(chromePath, "Chrome/Chromium is required");
-const root = await fs.mkdtemp(path.join(os.homedir(), "oracle-shared-chrome-proof-"));
+const root = await fs.mkdtemp(path.join(os.homedir(), "vellumpix-shared-chrome-proof-"));
 const profile = path.join(root, "shared profile");
 const release = new Set();
 const submitted = new Map();
@@ -50,9 +50,9 @@ const windowsConsoleIds = async () => {
 const consoleIdsBefore = await windowsConsoleIds();
 const html = (
   name,
-) => `<!doctype html><meta charset="utf-8"><title>Oracle shared Chrome fixture</title>
+) => `<!doctype html><meta charset="utf-8"><title>VellumPix shared Chrome fixture</title>
 <style>body{font:18px system-ui;margin:30px}textarea{width:600px;height:100px}article{padding:12px}</style>
-<h1>Oracle shared Chrome fixture</h1><p>Synthetic ${name} controller; no provider account.</p><span id="run-name">${name}</span>
+<h1>VellumPix shared Chrome fixture</h1><p>Synthetic ${name} controller; no provider account.</p><span id="run-name">${name}</span>
 <button data-testid="profile-button">Synthetic profile</button><button data-testid="model-switcher-dropdown-button">GPT-5.5</button>
 <main><div id="turns"></div><form><textarea id="prompt-textarea" name="prompt-textarea" placeholder="Ask anything"></textarea><button data-testid="send-button" type="button">Send</button></form></main>
 <script>
@@ -66,8 +66,8 @@ function send(){
  const poll=setInterval(async()=>{
   const state=await fetch('/release/'+name).then(r=>r.json());if(!state.ready)return;clearInterval(poll);stop.remove();
   const answer=document.createElement('article');answer.dataset.testid='conversation-turn-1';answer.dataset.turn='assistant';
-  answer.innerHTML='<div data-message-author-role="assistant" data-message-id="message-'+name+'"><div class="markdown"><p>ORACLE_SHARED_'+name.toUpperCase()+'_OK</p></div></div><button data-testid="copy-turn-action-button" type="button">Copy</button>';
-  answer.querySelector('button').onclick=()=>navigator.clipboard.writeText('ORACLE_SHARED_'+name.toUpperCase()+'_OK');document.querySelector('#turns').append(answer);
+  answer.innerHTML='<div data-message-author-role="assistant" data-message-id="message-'+name+'"><div class="markdown"><p>VELLUMPIX_SHARED_'+name.toUpperCase()+'_OK</p></div></div><button data-testid="copy-turn-action-button" type="button">Copy</button>';
+  answer.querySelector('button').onclick=()=>navigator.clipboard.writeText('VELLUMPIX_SHARED_'+name.toUpperCase()+'_OK');document.querySelector('#turns').append(answer);
  },100);
 }
 document.querySelector('[data-testid=send-button]').onclick=send;
@@ -180,7 +180,7 @@ const start = async (name) => {
   const home = path.join(root, name);
   await fs.mkdir(home);
   const args = [
-    path.join(repo, "dist/bin/oracle-cli.js"),
+    path.join(repo, "dist/bin/vellumpix-cli.js"),
     "--engine",
     "browser",
     "--model",
@@ -217,7 +217,7 @@ const start = async (name) => {
   ];
   const child = spawn(process.execPath, args, {
     cwd: repo,
-    env: { ...process.env, ORACLE_HOME_DIR: home, ORACLE_CHROME_NO_SANDBOX: "1" },
+    env: { ...process.env, VELLUMPIX_HOME_DIR: home, VELLUMPIX_CHROME_NO_SANDBOX: "1" },
     windowsHide: true,
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -260,7 +260,7 @@ const waitUntil = async (predicate, label, timeout = 30000) => {
   throw new Error(`Timed out: ${label}`);
 };
 const readRegistry = async () =>
-  JSON.parse(await fs.readFile(path.join(profile, "oracle-tab-leases.json"), "utf8"));
+  JSON.parse(await fs.readFile(path.join(profile, "vellumpix-tab-leases.json"), "utf8"));
 try {
   // Initialize an empty real Chrome profile, then stop it. The owner CLI must
   // launch the shared process itself; priming does not supply provider login.
@@ -352,7 +352,7 @@ try {
   assert.equal(peer.exit, 0, peer.output);
   assert.match(peer.output, /isLastLease=true/);
   assert.equal((await readRegistry()).leases.length, 0);
-  await assert.rejects(fs.access(path.join(profile, "oracle-tab-leases.lock")));
+  await assert.rejects(fs.access(path.join(profile, "vellumpix-tab-leases.lock")));
   await waitUntil(
     () => {
       try {
@@ -375,10 +375,13 @@ try {
     const meta = JSON.parse(await fs.readFile(path.join(sessionDir, "meta.json"), "utf8"));
     assert.equal(meta.status, "completed");
     const transcript = await fs.readFile(path.join(sessionDir, "artifacts", "transcript.md"));
-    assert.match(transcript.toString(), new RegExp(`ORACLE_SHARED_${run.name.toUpperCase()}_OK`));
+    assert.match(
+      transcript.toString(),
+      new RegExp(`VELLUMPIX_SHARED_${run.name.toUpperCase()}_OK`),
+    );
     assert.doesNotMatch(
       transcript.toString(),
-      new RegExp(`ORACLE_SHARED_${run.name === "owner" ? "PEER" : "OWNER"}_OK`),
+      new RegExp(`VELLUMPIX_SHARED_${run.name === "owner" ? "PEER" : "OWNER"}_OK`),
     );
     transcripts.push({
       name: run.name,

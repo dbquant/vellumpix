@@ -24,7 +24,7 @@ import {
 import { buildComposerNavigationValidationExpression } from "./attachmentContext.js";
 import { buildClickDispatcher } from "./domEvents.js";
 import { stageAttachmentPrompt } from "./attachmentPrompt.js";
-import { BrowserAutomationError } from "../../oracle/errors.js";
+import { BrowserAutomationError } from "../../vellumpix/errors.js";
 import { buildAttachmentEvidenceExpression } from "./attachmentEvidence.js";
 import { buildAttachmentProgressExpression } from "./attachmentProgress.js";
 import { buildActiveComposerRootExpression } from "./composerRoot.js";
@@ -84,7 +84,7 @@ export async function submitPrompt(
   const hasAttachments = Array.isArray(deps.attachmentNames) && deps.attachmentNames.length > 0;
   if (hasAttachments && !deps.attachmentNavigationUrl) {
     throw new BrowserAutomationError(
-      "Oracle cannot safely submit attachments without the pre-upload ChatGPT page identity.",
+      "VellumPix cannot safely submit attachments without the pre-upload ChatGPT page identity.",
       {
         stage: "submit-prompt",
         code: "attachment-navigation-identity-unavailable",
@@ -711,7 +711,7 @@ async function attemptSendButton(
   const needAttachment = Array.isArray(attachmentNames) && attachmentNames.length > 0;
   if (needAttachment && !attachmentNavigationUrl) {
     throw new BrowserAutomationError(
-      "Oracle cannot safely submit attachments without the pre-upload ChatGPT page identity.",
+      "VellumPix cannot safely submit attachments without the pre-upload ChatGPT page identity.",
       {
         stage: "submit-prompt",
         code: "attachment-navigation-identity-unavailable",
@@ -913,7 +913,7 @@ async function activateExactAttachmentSendButton(
   }
   if (!Input || typeof Input.dispatchKeyEvent !== "function") {
     throw new BrowserAutomationError(
-      "ChatGPT's attachment send button is ready but Oracle cannot activate it safely.",
+      "ChatGPT's attachment send button is ready but VellumPix cannot activate it safely.",
       {
         stage: "submit-prompt",
         code: "attachment-send-keyboard-unavailable",
@@ -955,7 +955,7 @@ async function activateExactAttachmentSendButton(
         };
         const snapshot = safeCheck();
         if (!snapshot.contextMatches || !snapshot.focused || !snapshot.attachmentsReady) return snapshot;
-        const existing = window.__oracleAttachmentDispatchGuard;
+        const existing = window.__vellumpixAttachmentDispatchGuard;
         if (existing && !existing.finished) return { ...snapshot, focused: false };
         existing?.cleanup?.();
         const guard = { id: ${JSON.stringify(guardId)}, sawKeyDown: false, blocked: null, finished: false };
@@ -985,8 +985,8 @@ async function activateExactAttachmentSendButton(
           if (guard.blocked || !state.contextMatches || !state.focused || !state.attachmentsReady) cancel(event, guard.blocked ?? state);
           detach();
         };
-        guard.cleanup = () => { detach(); if (window.__oracleAttachmentDispatchGuard === guard) delete window.__oracleAttachmentDispatchGuard; };
-        window.__oracleAttachmentDispatchGuard = guard;
+        guard.cleanup = () => { detach(); if (window.__vellumpixAttachmentDispatchGuard === guard) delete window.__vellumpixAttachmentDispatchGuard; };
+        window.__vellumpixAttachmentDispatchGuard = guard;
         window.addEventListener('keydown', onKeyDown, true);
         window.addEventListener('keyup', onKeyUp, true);
         window.addEventListener('click', onClick, true);
@@ -1010,7 +1010,7 @@ async function activateExactAttachmentSendButton(
     const result = await withoutBrowserCancellation(() =>
       Runtime.evaluate({
         expression: `(() => {
-        const guard = window.__oracleAttachmentDispatchGuard;
+        const guard = window.__vellumpixAttachmentDispatchGuard;
         if (guard?.id !== ${JSON.stringify(guardId)}) return null;
         const summary = { sawKeyDown: guard.sawKeyDown, blocked: guard.blocked };
         guard.cleanup(); return summary;
@@ -1067,7 +1067,7 @@ async function dismissOpenComposerPlusMenu(
   }
   if (!Input || typeof Input.dispatchKeyEvent !== "function") {
     throw new BrowserAutomationError(
-      "ChatGPT's attachment menu is still open and Oracle cannot dismiss it safely before sending.",
+      "ChatGPT's attachment menu is still open and VellumPix cannot dismiss it safely before sending.",
       {
         stage: "submit-prompt",
         code: "attachment-menu-dismiss-unavailable",

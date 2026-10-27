@@ -9,7 +9,7 @@ import {
   saveChatGptGeneratedImages,
 } from "../../src/browser/chatgptImages.js";
 import type { ChromeClient } from "../../src/browser/types.js";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 
 describe("readAssistantGeneratedImages", () => {
   class FakeElement {
@@ -353,7 +353,7 @@ describe("saveChatGptGeneratedImages", () => {
   });
 
   test("saves generated blob bytes through the page without cookies or Node fetch", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-blob-image-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-blob-image-"));
     const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10, 0]);
     const blobUrl = "blob:https://chatgpt.com/00000000-0000-4000-8000-000000000001";
     const network = { getCookies: vi.fn() } as unknown as ChromeClient["Network"];
@@ -387,7 +387,7 @@ describe("saveChatGptGeneratedImages", () => {
   });
 
   test("saves multiple generated images as real files with ChatGPT cookies", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-images-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-images-"));
     const network = {
       getCookies: vi.fn().mockResolvedValue({
         cookies: [
@@ -441,7 +441,7 @@ describe("saveChatGptGeneratedImages", () => {
   });
 
   test("falls back to browser-context fetch when Node fetch cannot download the image", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-images-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-images-"));
     const network = {
       getCookies: vi.fn().mockResolvedValue({
         cookies: [{ name: "__Secure-next-auth.session-token", value: "abc" }],
@@ -489,7 +489,7 @@ describe("saveChatGptGeneratedImages", () => {
   });
 
   test("rejects non-ChatGPT image URLs before attaching cookies", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-images-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-images-"));
     const network = {
       getCookies: vi.fn().mockResolvedValue({
         cookies: [{ name: "__Secure-next-auth.session-token", value: "abc" }],
@@ -531,11 +531,11 @@ describe("collectGeneratedImageArtifacts", () => {
     globalThis.fetch = originalFetch;
     vi.restoreAllMocks();
     vi.useRealTimers();
-    setOracleHomeDirOverrideForTest(null);
+    setVellumPixHomeDirOverrideForTest(null);
   });
 
   test("saves current-turn ChatGPT behavior button image downloads", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-image-button-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-image-button-"));
     const outputPath = path.join(tmpDir, "generated.png");
     const downloadedPath = path.join(tmpDir, "blue-circle.png");
     const png = Buffer.from([
@@ -648,7 +648,7 @@ describe("collectGeneratedImageArtifacts", () => {
   test("retries behavior button downloads after waiting for delayed image generation", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-12T00:00:00Z"));
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-image-delayed-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-image-delayed-"));
     const outputPath = path.join(tmpDir, "generated.png");
     const downloadedPath = path.join(tmpDir, "delayed.png");
     const png = Buffer.from([
@@ -725,7 +725,7 @@ describe("collectGeneratedImageArtifacts", () => {
   }, 10_000);
 
   test("falls back to a behavior button when the rendered image URL fails", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chatgpt-image-404-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-image-404-"));
     const outputPath = path.join(tmpDir, "generated.png");
     const downloadedPath = path.join(tmpDir, "downloaded.png");
     const png = Buffer.from([
@@ -806,8 +806,8 @@ describe("collectGeneratedImageArtifacts", () => {
   });
 
   test("auto-saves generated images to the session artifacts directory when no explicit path is provided", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const runtime = {
       evaluate: vi.fn(async ({ expression }: { expression: string }) => {
         if (expression.includes("/backend-api/estuary/content")) {
@@ -861,8 +861,8 @@ describe("collectGeneratedImageArtifacts", () => {
   });
 
   test("uses unique paths for concurrent sessionless images with the same metadata", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
     const runtime = {
       evaluate: vi.fn(async ({ expression }: { expression: string }) => {
         if (expression.includes("/backend-api/estuary/content")) {

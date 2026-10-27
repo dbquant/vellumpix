@@ -86,13 +86,13 @@ export function resolveBrowserConfig(
   config: BrowserAutomationConfig | undefined,
 ): ResolvedBrowserConfig {
   const debugPortEnv = parseDebugPort(
-    process.env.ORACLE_BROWSER_PORT ?? process.env.ORACLE_BROWSER_DEBUG_PORT,
+    process.env.VELLUMPIX_BROWSER_PORT ?? process.env.VELLUMPIX_BROWSER_DEBUG_PORT,
   );
   const envAllowCookieErrors =
-    (process.env.ORACLE_BROWSER_ALLOW_COOKIE_ERRORS ?? "").trim().toLowerCase() === "true" ||
-    (process.env.ORACLE_BROWSER_ALLOW_COOKIE_ERRORS ?? "").trim() === "1";
+    (process.env.VELLUMPIX_BROWSER_ALLOW_COOKIE_ERRORS ?? "").trim().toLowerCase() === "true" ||
+    (process.env.VELLUMPIX_BROWSER_ALLOW_COOKIE_ERRORS ?? "").trim() === "1";
   const envMaxConcurrentTabs = parseMaxConcurrentTabs(
-    process.env.ORACLE_BROWSER_MAX_CONCURRENT_TABS,
+    process.env.VELLUMPIX_BROWSER_MAX_CONCURRENT_TABS,
   );
   const rawUrl = config?.chatgptUrl ?? config?.url ?? DEFAULT_BROWSER_CONFIG.url;
   const normalizedUrl = normalizeChatgptUrl(
@@ -109,12 +109,12 @@ export function resolveBrowserConfig(
   const manualLogin =
     config?.manualLogin ?? (isWindows ? true : DEFAULT_BROWSER_CONFIG.manualLogin);
   const requestedProvider =
-    normalizeBrowserProvider(config?.browserProvider ?? process.env.ORACLE_BROWSER_PROVIDER) ??
+    normalizeBrowserProvider(config?.browserProvider ?? process.env.VELLUMPIX_BROWSER_PROVIDER) ??
     DEFAULT_BROWSER_CONFIG.browserProvider;
   const configuredFallbackProvider = normalizeBrowserFallbackProvider(
     config?.browserFallbackProvider !== undefined
       ? config.browserFallbackProvider
-      : process.env.ORACLE_BROWSER_FALLBACK_PROVIDER,
+      : process.env.VELLUMPIX_BROWSER_FALLBACK_PROVIDER,
   );
   const fallbackProvider =
     configuredFallbackProvider === undefined
@@ -131,7 +131,7 @@ export function resolveBrowserConfig(
   });
   const resolvedProfileDir = resolveManualLoginProfileDir(
     config?.manualLoginProfileDir,
-    process.env.ORACLE_BROWSER_PROFILE_DIR,
+    process.env.VELLUMPIX_BROWSER_PROFILE_DIR,
     defaultBrowserProfileDir(provider.selected),
   );
   const researchMode = normalizeResearchMode(config?.researchMode);
@@ -236,7 +236,7 @@ function resolveManualLoginProfileDir(...candidates: Array<string | null | undef
     const profileDir = candidate?.trim();
     if (profileDir) return profileDir;
   }
-  return path.join(os.homedir(), ".oracle", "browser-profile");
+  return path.join(os.homedir(), ".vellumpix", "browser-profile");
 }
 
 /**
@@ -248,12 +248,12 @@ export function resolveBrowserNoFocus(config?: { noFocus?: boolean } | null): bo
 }
 
 export function resolveBrowserApprovalWait(value?: string | number): number {
-  const raw = value ?? process.env.ORACLE_BROWSER_APPROVAL_WAIT?.trim();
+  const raw = value ?? process.env.VELLUMPIX_BROWSER_APPROVAL_WAIT?.trim();
   if (raw === undefined || raw === "") return DEFAULT_BROWSER_CONFIG.approvalWaitMs;
   const parsed = typeof raw === "number" ? raw : parseDuration(raw, Number.NaN);
   if (!Number.isSafeInteger(parsed) || parsed <= 0 || parsed > 2_147_483_647) {
     throw new Error(
-      "Invalid browser approval wait: use a positive duration up to 2147483647ms (for example --browser-approval-wait 5m, browser.approvalWaitMs: 300000, or ORACLE_BROWSER_APPROVAL_WAIT=5m).",
+      "Invalid browser approval wait: use a positive duration up to 2147483647ms (for example --browser-approval-wait 5m, browser.approvalWaitMs: 300000, or VELLUMPIX_BROWSER_APPROVAL_WAIT=5m).",
     );
   }
   return parsed;

@@ -80,7 +80,7 @@ describe("prompt composer attachment expressions", () => {
   );
 
   test("attachment ready check does not match prompt text", () => {
-    const expression = buildAttachmentReadyExpressionForTest(["oracle-attach-verify.txt"]);
+    const expression = buildAttachmentReadyExpressionForTest(["vellumpix-attach-verify.txt"]);
     expect(expression).not.toContain("document.querySelector('[data-testid*=\"composer\"]') ||");
     expect(expression).toContain("attachmentRoots");
     expect(expression).toContain('input[type="file"]');
@@ -99,7 +99,7 @@ describe("prompt composer attachment expressions", () => {
     // Walks into ancestor and descendant text so filenames buried in nested spans are still found.
     expect(expression).toContain("collectLabelHaystack");
     expect(expression).toContain("parentElement");
-    expect(expression).toContain("__oracleAttachmentEvidence");
+    expect(expression).toContain("__vellumpixAttachmentEvidence");
     expect(expression).not.toContain("countReady");
   });
 
@@ -111,7 +111,7 @@ describe("prompt composer attachment expressions", () => {
   });
 
   test("attachment ready check ignores a composer-plus button before the real form", () => {
-    const fileName = "oracle-diagnostic-unique-20260521.txt";
+    const fileName = "vellumpix-diagnostic-unique-20260521.txt";
     const document = new FakeDocument([
       new FakeElement("form", {}, [
         new FakeElement("textarea", { id: "prompt-textarea" }),
@@ -137,7 +137,7 @@ describe("prompt composer attachment expressions", () => {
   });
 
   test("attachment ready check prefers composer roots over unrelated forms", () => {
-    const fileName = "oracle-diagnostic-unique-20260521.txt";
+    const fileName = "vellumpix-diagnostic-unique-20260521.txt";
     const document = new FakeDocument([
       new FakeElement("form", {}, [], "Search chats"),
       new FakeElement("div", { "data-testid": "unified-composer" }, [
@@ -153,7 +153,7 @@ describe("prompt composer attachment expressions", () => {
   });
 
   test("attachment ready check uses send button composer wrapper before its form", () => {
-    const fileName = "oracle-diagnostic-unique-20260521.txt";
+    const fileName = "vellumpix-diagnostic-unique-20260521.txt";
     const document = new FakeDocument([
       new FakeElement("div", { "data-testid": "unified-composer" }, [
         new FakeElement("textarea", { id: "prompt-textarea" }),
@@ -175,7 +175,7 @@ describe("prompt composer attachment expressions", () => {
   });
 
   test("attachment ready check skips footer action wrappers around send button", () => {
-    const fileName = "oracle-diagnostic-unique-20260521.txt";
+    const fileName = "vellumpix-diagnostic-unique-20260521.txt";
     const document = new FakeDocument([
       new FakeElement("div", { "data-testid": "unified-composer" }, [
         new FakeElement("textarea", { id: "prompt-textarea" }),
@@ -654,7 +654,7 @@ describe("prompt composer attachment expressions", () => {
   });
 
   test("attachment ready check still rejects prompt-only filename matches", () => {
-    const fileName = "oracle-diagnostic-unique-20260521.txt";
+    const fileName = "vellumpix-diagnostic-unique-20260521.txt";
     const document = new FakeDocument([
       new FakeElement("form", {}, [
         new FakeElement("textarea", { id: "prompt-textarea" }),

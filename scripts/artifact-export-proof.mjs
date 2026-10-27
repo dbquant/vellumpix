@@ -12,8 +12,8 @@ import { Launcher } from "chrome-launcher";
 import CDP from "chrome-remote-interface";
 
 const repo = fileURLToPath(new URL("..", import.meta.url));
-const cli = path.join(repo, "dist/bin/oracle-cli.js");
-const root = await fs.mkdtemp(path.join(os.homedir(), "oracle-artifact-export-proof-"));
+const cli = path.join(repo, "dist/bin/vellumpix-cli.js");
+const root = await fs.mkdtemp(path.join(os.homedir(), "vellumpix-artifact-export-proof-"));
 const captureIndex = process.argv.indexOf("--captures");
 const captures = captureIndex < 0 ? undefined : process.argv[captureIndex + 1];
 const chromePath = [
@@ -31,9 +31,9 @@ const answer = "sandbox:/mnt/data/report.dat";
 let downloads = 0;
 let sends = 0;
 let interceptionError;
-const html = `<!doctype html><meta charset="utf-8"><title>Oracle artifact export fixture</title>
+const html = `<!doctype html><meta charset="utf-8"><title>VellumPix artifact export fixture</title>
 <style>body{font:18px system-ui;margin:30px}textarea{width:600px;height:100px}button{padding:8px}article{padding:12px}</style>
-<h1>Oracle artifact export fixture</h1><p>Synthetic response and binary; no provider account.</p>
+<h1>VellumPix artifact export fixture</h1><p>Synthetic response and binary; no provider account.</p>
 <button data-testid="profile-button">Synthetic profile</button><button data-testid="model-switcher-dropdown-button">GPT-5.5</button>
 <button type="button" role="radio" aria-checked="true">Chat</button><button type="button" role="radio" aria-checked="false">Work</button>
 <main><div id="turns"></div><form><textarea id="prompt-textarea" name="prompt-textarea" placeholder="Ask anything"></textarea><button type="button" data-testid="send-button">Send</button></form></main>
@@ -65,7 +65,7 @@ async function run(args, home) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [cli, ...args], {
       cwd: repo,
-      env: { ...process.env, ORACLE_HOME_DIR: home },
+      env: { ...process.env, VELLUMPIX_HOME_DIR: home },
       stdio: ["ignore", "pipe", "pipe"],
     });
     let output = "";

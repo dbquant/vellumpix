@@ -84,7 +84,7 @@ const run = async (
   if (signIn)
     vi.mocked(pageActions.ensureLoggedIn).mockRejectedValueOnce(new Error("Login button detected"));
   const profile = signIn
-    ? await mkdtemp(path.join(os.tmpdir(), "oracle-sources-signin-"))
+    ? await mkdtemp(path.join(os.tmpdir(), "vellumpix-sources-signin-"))
     : undefined;
   try {
     await expect(
@@ -134,7 +134,7 @@ describe("runBrowserProjectSources no-focus setup", () => {
 
     expect(events).toEqual(["focusEmulation", "bringToFront", "firstTrustedClick"]);
     expect(logs).toContain(
-      "[browser] Focus emulation is unavailable; no-focus fallback: Oracle will bring Chrome to the front before trusted clicks.",
+      "[browser] Focus emulation is unavailable; no-focus fallback: VellumPix will bring Chrome to the front before trusted clicks.",
     );
   });
 

@@ -1,8 +1,8 @@
 import { describe, expect, test, vi } from "vitest";
 import { runDryRunSummary } from "../../src/cli/dryRun.js";
-import type { RunOracleOptions } from "../../src/oracle.js";
+import type { RunVellumPixOptions } from "../../src/vellumpix.js";
 
-const baseRunOptions: RunOracleOptions = {
+const baseRunOptions: RunVellumPixOptions = {
   prompt: "Explain the issue",
   model: "gpt-5.2-pro",
   file: [],

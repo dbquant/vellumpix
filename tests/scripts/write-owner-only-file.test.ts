@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 function makeTempDir(): string {
-  const dir = mkdtempSync(path.join(tmpdir(), "oracle-owner-only-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "vellumpix-owner-only-"));
   tempDirs.push(dir);
   return dir;
 }

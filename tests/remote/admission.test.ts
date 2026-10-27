@@ -127,9 +127,9 @@ test("queue capacity is reserved before concurrent request bodies are buffered",
 });
 
 test("host configuration and environment resolve capacity with browser precedence", async () => {
-  const home = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-admission-config-"));
-  vi.stubEnv("ORACLE_HOME_DIR", home);
-  vi.stubEnv("ORACLE_BROWSER_MAX_CONCURRENT_TABS", "1");
+  const home = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-admission-config-"));
+  vi.stubEnv("VELLUMPIX_HOME_DIR", home);
+  vi.stubEnv("VELLUMPIX_BROWSER_MAX_CONCURRENT_TABS", "1");
   await fs.writeFile(
     path.join(home, "config.json"),
     JSON.stringify({ browser: { maxConcurrentTabs: 2 } }),

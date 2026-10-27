@@ -5,7 +5,7 @@ import type { BrowserSessionConfig } from "../sessionStore.js";
 import type { BrowserAttachment } from "../browser/types.js";
 import type { BrowserFlagOptions } from "./browserConfig.js";
 import { buildBrowserConfig } from "./browserConfig.js";
-import { readFiles } from "../oracle/files.js";
+import { readFiles } from "../vellumpix/files.js";
 import { mergePathLikeOptions } from "./options.js";
 import { loadUserConfig } from "../config.js";
 import { resolveConfiguredMaxFileSizeBytes } from "./fileSize.js";
@@ -110,7 +110,7 @@ export async function buildProjectSourcesBrowserConfig({
       chatgptUrl: projectUrl,
     }),
   );
-  const envProfileDir = process.env.ORACLE_BROWSER_PROFILE_DIR?.trim();
+  const envProfileDir = process.env.VELLUMPIX_BROWSER_PROFILE_DIR?.trim();
   const manualLogin =
     flagConfig.manualLogin ?? configuredBrowser.manualLogin ?? (envProfileDir ? true : undefined);
   const manualLoginProfileDir =

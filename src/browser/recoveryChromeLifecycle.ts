@@ -8,7 +8,8 @@ import {
 } from "./profileState.js";
 import type { BrowserLogger } from "./types.js";
 
-const ownershipPath = (profileDir: string) => path.join(profileDir, "oracle-recovery-chrome.json");
+const ownershipPath = (profileDir: string) =>
+  path.join(profileDir, "vellumpix-recovery-chrome.json");
 
 export async function recordRecoveryChromeOwnership(
   profileDir: string,
@@ -31,7 +32,7 @@ export async function preserveRecoveryChrome(profileDir: string): Promise<void> 
   // Separate from ownership publication: a keep request may finish while the
   // launching recovery is still waiting for process identity.
   await writeFile(
-    path.join(profileDir, "oracle-recovery-preserved.json"),
+    path.join(profileDir, "vellumpix-recovery-preserved.json"),
     JSON.stringify({ preservedAt: Date.now() }),
     { mode: 0o600 },
   );
@@ -59,7 +60,7 @@ export async function terminateRecoveryChrome(
     return false;
   try {
     const preserved = JSON.parse(
-      await readFile(path.join(profileDir, "oracle-recovery-preserved.json"), "utf8"),
+      await readFile(path.join(profileDir, "vellumpix-recovery-preserved.json"), "utf8"),
     );
     if (!Number.isFinite(preserved?.preservedAt) || preserved.preservedAt >= owner.launchedAt!)
       return false;

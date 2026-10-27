@@ -16,8 +16,8 @@ if [[ -z "${OPENAI_API_KEY}" ]]; then
   exit 1
 fi
 tmux kill-session -t "$SESSION_NAME" >/dev/null 2>&1 || true
-tmux new-session -d -s "$SESSION_NAME" "cd $(pwd) && OPENAI_API_KEY=$OPENAI_API_KEY claude --permission-mode bypassPermissions --mcp-config ~/.mcp/oracle.json"
+tmux new-session -d -s "$SESSION_NAME" "cd $(pwd) && OPENAI_API_KEY=$OPENAI_API_KEY claude --permission-mode bypassPermissions --mcp-config ~/.mcp/vellumpix.json"
 # give claude a moment to start
 sleep 1
-bun scripts/agent-send.ts --session "$SESSION_NAME" --wait-ms 800 --entry double -- 'Call the oracle sessions MCP tool with {"limit":1,"detail":true} and show the result'
+bun scripts/agent-send.ts --session "$SESSION_NAME" --wait-ms 800 --entry double -- 'Call the vellumpix sessions MCP tool with {"limit":1,"detail":true} and show the result'
  tmux attach -t "$SESSION_NAME"

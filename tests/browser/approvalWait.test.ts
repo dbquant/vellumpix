@@ -10,7 +10,7 @@ afterEach(() => vi.unstubAllEnvs());
 
 describe("browser approval wait", () => {
   test("preserves the 20-second default", () => {
-    vi.stubEnv("ORACLE_BROWSER_APPROVAL_WAIT", "");
+    vi.stubEnv("VELLUMPIX_BROWSER_APPROVAL_WAIT", "");
     expect(resolveBrowserConfig(undefined).approvalWaitMs).toBe(20_000);
   });
 
@@ -20,7 +20,7 @@ describe("browser approval wait", () => {
     ["5m", 300_000],
     ["1m15s", 75_000],
   ])("accepts %s from the environment and CLI", async (value, expected) => {
-    vi.stubEnv("ORACLE_BROWSER_APPROVAL_WAIT", value);
+    vi.stubEnv("VELLUMPIX_BROWSER_APPROVAL_WAIT", value);
     expect(resolveBrowserConfig(undefined).approvalWaitMs).toBe(expected);
     expect(
       (await buildBrowserConfig({ model: "gpt-5.5", browserApprovalWait: value })).approvalWaitMs,
@@ -36,7 +36,7 @@ describe("browser approval wait", () => {
   );
 
   test("maps saved configuration without overriding CLI or environment options", async () => {
-    vi.stubEnv("ORACLE_BROWSER_APPROVAL_WAIT", "");
+    vi.stubEnv("VELLUMPIX_BROWSER_APPROVAL_WAIT", "");
     const config = { browser: { approvalWaitMs: 300_000 } };
     const options: BrowserDefaultsOptions = {};
     applyBrowserDefaultsFromConfig(options, config, () => undefined);

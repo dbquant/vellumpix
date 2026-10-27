@@ -2,13 +2,13 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CMD=(node "$ROOT/dist/bin/oracle-cli.js" --engine browser --wait --heartbeat 0 --timeout 900 --browser-input-timeout 120000)
-FAST_MODEL="${ORACLE_BROWSER_SMOKE_FAST_MODEL:-gpt-5.5}"
-PRO_MODEL="${ORACLE_BROWSER_SMOKE_PRO_MODEL:-gpt-5.5-pro}"
+CMD=(node "$ROOT/dist/bin/vellumpix-cli.js" --engine browser --wait --heartbeat 0 --timeout 900 --browser-input-timeout 120000)
+FAST_MODEL="${VELLUMPIX_BROWSER_SMOKE_FAST_MODEL:-gpt-5.5}"
+PRO_MODEL="${VELLUMPIX_BROWSER_SMOKE_PRO_MODEL:-gpt-5.5-pro}"
 
-tmpdir="$(mktemp -d -t oracle-browser-smoke)"
+tmpdir="$(mktemp -d -t vellumpix-browser-smoke)"
 tmpfile="$tmpdir/smoke-attachment.txt"
-upload_log="$(mktemp -t oracle-browser-smoke-upload-log)"
+upload_log="$(mktemp -t vellumpix-browser-smoke-upload-log)"
 trap 'rm -rf "$tmpdir" "$upload_log"' EXIT
 echo "smoke-attachment" >"$tmpfile"
 
@@ -33,9 +33,9 @@ echo "[browser-smoke] pro standard markdown check"
 
 echo "[browser-smoke] reattach flow after controller loss"
 slug="browser-reattach-smoke"
-meta="$HOME/.oracle/sessions/$slug/meta.json"
-logfile="$(mktemp -t oracle-browser-reattach)"
-rm -rf "$HOME/.oracle/sessions/$slug"
+meta="$HOME/.vellumpix/sessions/$slug/meta.json"
+logfile="$(mktemp -t vellumpix-browser-reattach)"
+rm -rf "$HOME/.vellumpix/sessions/$slug"
 
 # Start a browser run in the background and wait until the prompt is submitted.
 "${CMD[@]}" --model "$PRO_MODEL" --prompt "Return exactly 'reattach-ok'." --slug "$slug" --browser-keep-browser --heartbeat 0 --timeout 900 --force >"$logfile" 2>&1 &
@@ -72,8 +72,8 @@ if node -e "const fs=require('fs');const j=JSON.parse(fs.readFileSync(process.ar
   exit 1
 fi
 
-reattach_log="$(mktemp -t oracle-browser-reattach-log)"
-if ! node "$ROOT/dist/bin/oracle-cli.js" session "$slug" --render-plain >"$reattach_log" 2>&1; then
+reattach_log="$(mktemp -t vellumpix-browser-reattach-log)"
+if ! node "$ROOT/dist/bin/vellumpix-cli.js" session "$slug" --render-plain >"$reattach_log" 2>&1; then
   echo "[browser-smoke] reattach: session command failed"
   cat "$reattach_log"
   exit 1
@@ -95,4 +95,4 @@ chrome_pid=$(node -e "const fs=require('fs');try{const j=JSON.parse(fs.readFileS
 if [ -n "${chrome_pid:-}" ]; then
   kill "$chrome_pid" 2>/dev/null || true
 fi
-rm -rf "$HOME/.oracle/sessions/$slug" "$logfile" "$reattach_log"
+rm -rf "$HOME/.vellumpix/sessions/$slug" "$logfile" "$reattach_log"

@@ -1,11 +1,11 @@
-import type { RunOracleOptions } from "../oracle/types.js";
+import type { RunVellumPixOptions } from "../vellumpix/types.js";
 import type { BrowserRunOptions, BrowserRunResult } from "./types.js";
 import { resolveBrowserProvider } from "./provider.js";
 
 export type BrowserExecutor = (options: BrowserRunOptions) => Promise<BrowserRunResult>;
 
 export type BrowserExecutorOptions = Pick<
-  RunOracleOptions,
+  RunVellumPixOptions,
   | "model"
   | "youtube"
   | "generateImage"

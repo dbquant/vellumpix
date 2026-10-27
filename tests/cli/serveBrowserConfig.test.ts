@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { buildServeBrowserConfig } from "../../src/cli/serveBrowserConfig.js";
 
-beforeEach(() => vi.stubEnv("ORACLE_BROWSER_APPROVAL_WAIT", ""));
+beforeEach(() => vi.stubEnv("VELLUMPIX_BROWSER_APPROVAL_WAIT", ""));
 afterEach(() => vi.unstubAllEnvs());
 
 // No-focus is off by default.
@@ -65,7 +65,7 @@ describe("service host browser routing", () => {
     });
   });
   test("applies environment wait above config and below the explicit flag", () => {
-    vi.stubEnv("ORACLE_BROWSER_APPROVAL_WAIT", "55s");
+    vi.stubEnv("VELLUMPIX_BROWSER_APPROVAL_WAIT", "55s");
     const config = { browser: { approvalWaitMs: 10 } };
     expect(buildServeBrowserConfig({}, config).approvalWaitMs).toBe(55_000);
     expect(buildServeBrowserConfig({ browserApprovalWait: "5m" }, config).approvalWaitMs).toBe(

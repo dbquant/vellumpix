@@ -15,7 +15,7 @@ import {
 import { delay } from "./utils.js";
 import { readAssistantSnapshot } from "./pageActions.js";
 import { throwIfAssistantUiError } from "./actions/assistantResponse.js";
-import { getOracleHomeDir } from "../oracleHome.js";
+import { getVellumPixHomeDir } from "../vellumpixHome.js";
 import { resolveSessionArtifactsDir } from "./artifacts.js";
 import { saveAssistantDownloadButtonArtifacts } from "./chatgptFiles.js";
 
@@ -318,7 +318,7 @@ function resolveDefaultGeneratedImagePath(
   const stem = sanitizeGeneratedImageStem(stemSource) || "generated";
   const baseDir = sessionId
     ? resolveSessionArtifactsDir(sessionId)
-    : path.join(getOracleHomeDir(), ".temp");
+    : path.join(getVellumPixHomeDir(), ".temp");
   const uniqueSuffix = sessionId ? "" : `-${Date.now().toString(36)}-${randomUUID().slice(0, 8)}`;
   return path.join(baseDir, `${stem}${uniqueSuffix}.png`);
 }

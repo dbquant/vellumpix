@@ -1,4 +1,4 @@
-import { formatFileSections } from "../oracle/markdown.js";
+import { formatFileSections } from "../vellumpix/markdown.js";
 import type { BrowserAttachment, ResolvedBrowserConfig } from "./types.js";
 import type { BrowserSessionConfig } from "../sessionManager.js";
 

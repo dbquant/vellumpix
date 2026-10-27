@@ -15,10 +15,10 @@ import {
 } from "../dist/src/browser/targetClaim.js";
 const repo = fileURLToPath(new URL("..", import.meta.url));
 const baselineCli = process.argv[2] === "--baseline-cli" ? process.argv[3] : undefined;
-const root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-retirement-proof-"));
-process.env.ORACLE_HOME_DIR = path.join(root, "home");
+const root = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-retirement-proof-"));
+process.env.VELLUMPIX_HOME_DIR = path.join(root, "home");
 const { sessionStore } = await import("../dist/src/sessionStore.js");
-const answer = "ORACLE_RECOVERY_SAVED";
+const answer = "VELLUMPIX_RECOVERY_SAVED";
 const server = http.createServer((req, res) => {
   res.setHeader("content-type", "text/html");
   res.end(`<!doctype html><title>ChatGPT synthetic recovery</title>
@@ -93,14 +93,14 @@ try {
       const child = spawn(
         process.execPath,
         [
-          baselineCli ?? path.join(repo, "dist/bin/oracle-cli.js"),
+          baselineCli ?? path.join(repo, "dist/bin/vellumpix-cli.js"),
           "session",
           record.id,
           "--harvest",
         ],
         {
           cwd: root,
-          env: { ...process.env, ORACLE_NO_DETACH: "1" },
+          env: { ...process.env, VELLUMPIX_NO_DETACH: "1" },
           stdio: ["ignore", "pipe", "pipe"],
         },
       );
@@ -125,7 +125,7 @@ try {
       result.output,
     );
     if (!baselineCli && mode === "owned")
-      assert.match(await sessionStore.readLog(record.id), /ORACLE_RECOVERY_SAVED/);
+      assert.match(await sessionStore.readLog(record.id), /VELLUMPIX_RECOVERY_SAVED/);
     if (mode === "generating") assert.match(result.output, /state|State/);
     results.push({ mode, status: after.status, targetRetained: retained, peerRetained: true });
     if (retained) await CDP.Close({ port: chrome.port, id: target.id });

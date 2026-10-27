@@ -1,8 +1,8 @@
 # Transport-explicit advisory consultations
 
-The optional `oracle-advisor` skill separates the advisory request from the
-transport used to execute it. It reuses Oracle's current CLI/MCP integration;
-the existing `oracle` skill remains available unchanged.
+The optional `vellumpix-advisor` skill separates the advisory request from the
+transport used to execute it. It reuses VellumPix's current CLI/MCP integration;
+the existing `vellumpix` skill remains available unchanged.
 
 | Transport      | Execution today                                            | Evidence and recovery                                                                              |
 | -------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
@@ -27,6 +27,6 @@ references. No private desktop protocol or native adapter is part of this
 skill. HTTP protocols, new MCP tools, and core backend abstractions are also
 outside this change.
 
-Copy `skills/oracle-advisor` from the source repository into the host's skill
+Copy `skills/vellumpix-advisor` from the source repository into the host's skill
 directory, just as for the existing skill. See [Coding Agents](agents.md) for
 host setup and [MCP](mcp.md) for the current tools.

@@ -1,14 +1,14 @@
 # Browser Mode
 
-Oracle’s `--engine browser` supports three different execution paths:
+VellumPix’s `--engine browser` supports three different execution paths:
 
-- **ChatGPT launcher mode** (GPT-\* models): Oracle launches Chrome itself and drives the ChatGPT web UI over CDP.
-- **ChatGPT attach-running mode** (GPT-\* models): Oracle attaches to your already-running local Chrome session through Chrome’s local remote-debugging toggle, opens a dedicated tab, and leaves the browser process/profile alone.
+- **ChatGPT launcher mode** (GPT-\* models): VellumPix launches Chrome itself and drives the ChatGPT web UI over CDP.
+- **ChatGPT attach-running mode** (GPT-\* models): VellumPix attaches to your already-running local Chrome session through Chrome’s local remote-debugging toggle, opens a dedicated tab, and leaves the browser process/profile alone.
 - **Gemini web mode** (Gemini models): talks directly to `gemini.google.com` using your signed-in Chrome cookies (no ChatGPT automation).
 
 If you’re running Gemini, also see `docs/gemini.md`.
 
-`oracle --engine browser` routes the assembled prompt bundle through the ChatGPT web UI instead of the Responses API. (Legacy `--browser` still maps to `--engine browser`, but it will be removed.) If you omit `--engine`, Oracle first honors `ORACLE_ENGINE`, then any `engine` value in the effective config, including project `.oracle/config.json` files layered over `~/.oracle/config.json`. It auto-picks API when `OPENAI_API_KEY` is available and falls back to browser otherwise. The CLI writes the same session metadata/logs as API runs. Use `--browser-manual-login` for the recommended persistent automation profile, or supply inline cookies. A plain launcher run still uses a temporary Chrome profile, but it no longer copies cookies from your live Chrome profile unless you explicitly opt in.
+`vellumpix --engine browser` routes the assembled prompt bundle through the ChatGPT web UI instead of the Responses API. (Legacy `--browser` still maps to `--engine browser`, but it will be removed.) If you omit `--engine`, VellumPix first honors `VELLUMPIX_ENGINE`, then any `engine` value in the effective config, including project `.vellumpix/config.json` files layered over `~/.vellumpix/config.json`. It auto-picks API when `OPENAI_API_KEY` is available and falls back to browser otherwise. The CLI writes the same session metadata/logs as API runs. Use `--browser-manual-login` for the recommended persistent automation profile, or supply inline cookies. A plain launcher run still uses a temporary Chrome profile, but it no longer copies cookies from your live Chrome profile unless you explicitly opt in.
 
 `--preview` now works with `--engine browser`: it renders the composed prompt, lists which files would be uploaded vs inlined, and shows the bundle location when bundling is enabled, without launching Chrome.
 
@@ -16,16 +16,16 @@ If you’re running Gemini, also see `docs/gemini.md`.
 
 ```bash
 # Minimal inline-cookies flow: keep ChatGPT logged in without Keychain
-jq '.' ~/.oracle/cookies.json  # file must contain CookieParam[]
-oracle --engine browser \
-  --browser-inline-cookies-file ~/.oracle/cookies.json \
+jq '.' ~/.vellumpix/cookies.json  # file must contain CookieParam[]
+vellumpix --engine browser \
+  --browser-inline-cookies-file ~/.vellumpix/cookies.json \
   --model gpt-5.5 \
   --browser-thinking-time pro \
   -p "Run the UI smoke" \
   --file "src/**/*.ts" --file "!src/**/*.test.ts"
 ```
 
-`~/.oracle/cookies.json` should be a JSON array shaped like:
+`~/.vellumpix/cookies.json` should be a JSON array shaped like:
 
 ```json
 [
@@ -41,23 +41,23 @@ oracle --engine browser \
 ]
 ```
 
-You can pass the same payload inline (`--browser-inline-cookies '<json or base64>'`) or via env (`ORACLE_BROWSER_COOKIES_JSON`, `ORACLE_BROWSER_COOKIES_FILE`). Cloudflare cookies (`cf_clearance`, `__cf_bm`, etc.) are only needed when you hit a challenge.
+You can pass the same payload inline (`--browser-inline-cookies '<json or base64>'`) or via env (`VELLUMPIX_BROWSER_COOKIES_JSON`, `VELLUMPIX_BROWSER_COOKIES_FILE`). Cloudflare cookies (`cf_clearance`, `__cf_bm`, etc.) are only needed when you hit a challenge.
 
-When no model is supplied on the command line or in configuration, Oracle keeps
+When no model is supplied on the command line or in configuration, VellumPix keeps
 its existing browser default. If the visible ChatGPT selection is a newer model,
-Oracle prints a model-selection warning before switching and submitting the
+VellumPix prints a model-selection warning before switching and submitting the
 prompt. Pass `--model` to choose explicitly, or `--browser-model-strategy current`
 to retain ChatGPT's selection. Explicit models, saved model preferences, and
 `current`/`ignore` strategies do not produce this warning.
 
 ## Quick example: attach to your running Chrome
 
-Use this when you already have a signed-in Chrome session running with DevTools access enabled and want Oracle to reuse that browser instead of launching its own copy.
+Use this when you already have a signed-in Chrome session running with DevTools access enabled and want VellumPix to reuse that browser instead of launching its own copy.
 
 Existing-tab selection and harvesting accept only HTTPS URLs on `chatgpt.com` or `chat.openai.com`. A page title mentioning ChatGPT or a hostname that only begins with a ChatGPT hostname does not qualify.
 
 ```bash
-oracle --engine browser \
+vellumpix --engine browser \
   --browser-attach-running \
   --model gpt-5.5 \
   --browser-thinking-time pro \
@@ -67,19 +67,19 @@ oracle --engine browser \
 Notes:
 
 - `--browser-attach-running` defaults to local attach discovery at `127.0.0.1:9222`.
-- If the browser UI shows a different local endpoint, you can point Oracle at it explicitly:
+- If the browser UI shows a different local endpoint, you can point VellumPix at it explicitly:
   ```bash
-  oracle --engine browser \
+  vellumpix --engine browser \
     --browser-attach-running \
     --remote-chrome 127.0.0.1:63332 \
     --model gpt-5.5 \
     --browser-thinking-time pro \
     -p "Summarize the last assistant response in one paragraph"
   ```
-- Oracle reads local `DevToolsActivePort` metadata and probes the selected local endpoint's `/json/version` (including IPv6). A live endpoint takes precedence over stale metadata; profile metadata is retained only when its endpoint matches. If HTTP discovery is unavailable, Oracle retains metadata-only Chrome support. Each of two probe attempts has a one-second deadline covering headers and the complete response body, with a 500 ms pause before retrying. Discovery does not open an extra WebSocket or take ownership of the browser profile.
-- Chrome 144+ can show an **Allow remote debugging?** prompt for each browser WebSocket. Oracle shares one connection to the same browser endpoint for its process lifetime, including target discovery, page sessions, and successive `oracle serve` requests. Completing or cancelling a request detaches its page session while retaining the connection. An actual browser disconnect permits a new connection. Separate CLI processes still need separate approval; use one long-running `oracle serve` host to share approval across client commands. Keep **at least one Chrome window open** so Chrome can display the approval sheet.
-- Oracle waits 20 seconds per approval by default. Use `--browser-approval-wait 5m` to allow five minutes, `ORACLE_BROWSER_APPROVAL_WAIT=5m`, or `browser.approvalWaitMs: 300000` in configuration. Durations accept milliseconds or `ms`/`s`/`m`/`h` units; they must be positive. CLI flags override the environment, which overrides saved CLI configuration. Session reattach uses the saved wait (or the environment/default for older sessions). The service host controls its own approval wait. Oracle logs when each connection starts waiting and every 15 seconds until it connects or fails; click Allow for each prompt. It keeps a pending connection open rather than issuing parallel approval requests.
-- Attach mode always opens a fresh Oracle-owned tab and closes only that tab after a successful run.
+- VellumPix reads local `DevToolsActivePort` metadata and probes the selected local endpoint's `/json/version` (including IPv6). A live endpoint takes precedence over stale metadata; profile metadata is retained only when its endpoint matches. If HTTP discovery is unavailable, VellumPix retains metadata-only Chrome support. Each of two probe attempts has a one-second deadline covering headers and the complete response body, with a 500 ms pause before retrying. Discovery does not open an extra WebSocket or take ownership of the browser profile.
+- Chrome 144+ can show an **Allow remote debugging?** prompt for each browser WebSocket. VellumPix shares one connection to the same browser endpoint for its process lifetime, including target discovery, page sessions, and successive `vellumpix serve` requests. Completing or cancelling a request detaches its page session while retaining the connection. An actual browser disconnect permits a new connection. Separate CLI processes still need separate approval; use one long-running `vellumpix serve` host to share approval across client commands. Keep **at least one Chrome window open** so Chrome can display the approval sheet.
+- VellumPix waits 20 seconds per approval by default. Use `--browser-approval-wait 5m` to allow five minutes, `VELLUMPIX_BROWSER_APPROVAL_WAIT=5m`, or `browser.approvalWaitMs: 300000` in configuration. Durations accept milliseconds or `ms`/`s`/`m`/`h` units; they must be positive. CLI flags override the environment, which overrides saved CLI configuration. Session reattach uses the saved wait (or the environment/default for older sessions). The service host controls its own approval wait. VellumPix logs when each connection starts waiting and every 15 seconds until it connects or fails; click Allow for each prompt. It keeps a pending connection open rather than issuing parallel approval requests.
+- Attach mode always opens a fresh VellumPix-owned tab and closes only that tab after a successful run.
 - Cookie sync, Chrome launch flags, and profile lifecycle flags are skipped because the browser is already running.
 - If Chrome is not exposing a classic `/json/version` endpoint, use `--browser-attach-running` instead of standalone `--remote-chrome`.
 
@@ -89,87 +89,87 @@ Notes:
 2. **Automation stack** – code lives under `src/browser/`:
    - Launcher mode starts Chrome via `chrome-launcher` and connects with `chrome-remote-interface`.
    - Attach-running mode refreshes local `DevToolsActivePort` metadata through `/json/version` when available, connects to the browser websocket, opens a dedicated tab, and reuses the same DOM automation/capture flow against that attached browser.
-   - Launcher mode can optionally copy cookies from the requested browser profile via Oracle’s built-in cookie reader (Keychain/DPAPI aware), but this requires `--browser-cookie-sync` or `browser.cookieSync=true`.
+   - Launcher mode can optionally copy cookies from the requested browser profile via VellumPix’s built-in cookie reader (Keychain/DPAPI aware), but this requires `--browser-cookie-sync` or `browser.cookieSync=true`.
    - Navigates to `chatgpt.com`, switches the model to the requested GPT-5.5 / GPT-5.4 / GPT-5.2 variant (including `Advanced` → `Model` in the unified picker), optionally activates Deep Research, pastes the prompt, waits for completion, and copies the markdown via the built-in “copy turn” button.
-   - Each ChatGPT navigation waits for a ready web document. If `Page.navigate` reports an error, or the tab is still on `about:blank`, a Chrome error page, or a loading document after 45 seconds, Oracle logs `[browser] Page did not load (...)` and navigates once more before failing. `net::ERR_ABORTED` is not retried at once, because Chrome also reports it when a newer navigation (an auth hop, for example) replaced the requested one; the tab gets the 45-second readiness window first. A failing load can take up to two 45-second readiness windows plus the time Chrome takes to answer each DevTools command. Readiness means a ready web document in the tab, not proof that this navigation committed, so an already-loaded web page can satisfy it.
-   - Immediately probes the cookie-authenticated `/api/auth/session` endpoint in the ChatGPT tab and checks only whether it contains a user; returned tokens are never logged. If that endpoint is unavailable, Oracle falls back to the legacy `/backend-api/me` probe and a visible composer plus profile or chat-history authentication signals. An unrelated login control does not override a confirmed session user together with a visible composer and profile/history controls. Auth pages, resolved sessions without a user, and login controls without both forms of authentication evidence still fail with login guidance. Composer-only shells do not establish authentication. A probe from a tab that is still on a non-web page (`about:blank` or a Chrome error page), first or after a Welcome-back account click, fails at once with `ChatGPT page did not load`, without the manual-login wait, because it says nothing about the sign-in. Failed requests on a rendered web page still take the sign-in path. The latest failed probe prints as `[browser] Login probe failed (...)` without `--verbose`; its URLs keep only scheme, host and path.
+   - Each ChatGPT navigation waits for a ready web document. If `Page.navigate` reports an error, or the tab is still on `about:blank`, a Chrome error page, or a loading document after 45 seconds, VellumPix logs `[browser] Page did not load (...)` and navigates once more before failing. `net::ERR_ABORTED` is not retried at once, because Chrome also reports it when a newer navigation (an auth hop, for example) replaced the requested one; the tab gets the 45-second readiness window first. A failing load can take up to two 45-second readiness windows plus the time Chrome takes to answer each DevTools command. Readiness means a ready web document in the tab, not proof that this navigation committed, so an already-loaded web page can satisfy it.
+   - Immediately probes the cookie-authenticated `/api/auth/session` endpoint in the ChatGPT tab and checks only whether it contains a user; returned tokens are never logged. If that endpoint is unavailable, VellumPix falls back to the legacy `/backend-api/me` probe and a visible composer plus profile or chat-history authentication signals. An unrelated login control does not override a confirmed session user together with a visible composer and profile/history controls. Auth pages, resolved sessions without a user, and login controls without both forms of authentication evidence still fail with login guidance. Composer-only shells do not establish authentication. A probe from a tab that is still on a non-web page (`about:blank` or a Chrome error page), first or after a Welcome-back account click, fails at once with `ChatGPT page did not load`, without the manual-login wait, because it says nothing about the sign-in. Failed requests on a rendered web page still take the sign-in path. The latest failed probe prints as `[browser] Login probe failed (...)` without `--verbose`; its URLs keep only scheme, host and path.
    - When `--file` inputs would push the pasted composer content over ~60k characters, we switch to uploads and wait for ChatGPT to re-enable the send button before submitting the combined system+user prompt. A single text/source file is uploaded directly; multiple text/source files are packed into one bundle. Text-only `auto` bundles stay flattened text; ZIP is used when raw files are present or `--browser-bundle-format zip` is set.
    - Launcher mode cleans up the temporary profile unless `--browser-keep-browser` is passed.
 
-3. **Session integration** – browser sessions use the normal log writer, add `mode: "browser"` plus `browser.config/runtime` metadata, and persist Chrome pid/port or websocket attach metadata plus the Oracle-owned target/tab URL for reattach.
-4. **Usage accounting** – we estimate input tokens with the same tokenizer used for API runs and estimate output tokens via `estimateTokenCount`. `oracle status` therefore shows comparable cost/timing info even though the call ran through the browser.
+3. **Session integration** – browser sessions use the normal log writer, add `mode: "browser"` plus `browser.config/runtime` metadata, and persist Chrome pid/port or websocket attach metadata plus the VellumPix-owned target/tab URL for reattach.
+4. **Usage accounting** – we estimate input tokens with the same tokenizer used for API runs and estimate output tokens via `estimateTokenCount`. `vellumpix status` therefore shows comparable cost/timing info even though the call ran through the browser.
 
 ### Current ChatGPT layouts
 
 Browser mode recognizes the Chat/Work layout as well as the older conversation markup, including Japanese effort triggers, assistant copy/regenerate controls, and completion announcements. New chats switch to Chat when necessary; an existing Work conversation is still rejected during follow-up. Submitted prompt identity and Markdown capture use the same conversation markers across initial capture and recovery.
 
-Project navigation dismisses controls only inside visible dialogs. Sidebar conversation titles are never treated as dismiss buttons; if a project has no usable composer, Oracle retries at the configured ChatGPT homepage.
+Project navigation dismisses controls only inside visible dialogs. Sidebar conversation titles are never treated as dismiss buttons; if a project has no usable composer, VellumPix retries at the configured ChatGPT homepage.
 
-Multiline prompts are pasted into contenteditable composers in small chunks and checked for complete content before Send. If a paste is truncated or converted into a file, Oracle stops with `prompt-paste-incomplete`. Remote attachments wait for the file input to mount and require a visible attachment or acceptance receipt; a missing chip fails without automatically repeating an upload that might still be processing.
+Multiline prompts are pasted into contenteditable composers in small chunks and checked for complete content before Send. If a paste is truncated or converted into a file, VellumPix stops with `prompt-paste-incomplete`. Remote attachments wait for the file input to mount and require a visible attachment or acceptance receipt; a missing chip fails without automatically repeating an upload that might still be processing.
 
 ### CLI Options
 
-- `--engine browser`: enables browser mode (legacy `--browser` remains as an alias for now). Without `--engine`, Oracle chooses API when `OPENAI_API_KEY` exists, otherwise browser.
+- `--engine browser`: enables browser mode (legacy `--browser` remains as an alias for now). Without `--engine`, VellumPix chooses API when `OPENAI_API_KEY` exists, otherwise browser.
 - `--browser-chrome-profile`: selects the cookie source profile when copying is explicitly enabled. `--browser-chrome-path` overrides the launched Chrome/Chromium binary.
-- Chrome channel selection follows `chrome-launcher` discovery, which may select Canary when several channels are installed. Set `--browser-chrome-path` (or `browser.chromePath`) to pin stable Chrome. This controls new launches only: a reachable manual-login profile keeps using its existing browser. Oracle warns when an explicit executable accompanies reuse; finish active runs and close that profile’s Chrome, or choose a different `--browser-manual-login-profile-dir`, to apply the new executable.
+- Chrome channel selection follows `chrome-launcher` discovery, which may select Canary when several channels are installed. Set `--browser-chrome-path` (or `browser.chromePath`) to pin stable Chrome. This controls new launches only: a reachable manual-login profile keeps using its existing browser. VellumPix warns when an explicit executable accompanies reuse; finish active runs and close that profile’s Chrome, or choose a different `--browser-manual-login-profile-dir`, to apply the new executable.
 
 - `--browser-cookie-path`: explicit path to the Chrome/Chromium/Edge `Cookies` SQLite DB. Handy when you launch a fork via `--browser-chrome-path` and want to copy its session cookies; see [docs/chromium-forks.md](chromium-forks.md) for examples.
-- `--browser-approval-wait <duration>`: time to allow each Chrome remote-debugging connection (default `20s`); also `browser.approvalWaitMs` or `ORACLE_BROWSER_APPROVAL_WAIT`.
+- `--browser-approval-wait <duration>`: time to allow each Chrome remote-debugging connection (default `20s`); also `browser.approvalWaitMs` or `VELLUMPIX_BROWSER_APPROVAL_WAIT`.
 - Browser WebSocket handshake responses of HTTP 403 or 404 stay within the configured approval wait. Other connection failures still fail promptly. Cold launches choose a fresh port when no fixed port is configured, so old entries in a persistent profile's stderr log cannot select a previous browser's port.
 - `--browser-attach-running`: attach to a local already-running browser instead of launching Chrome directly. Defaults to `127.0.0.1:9222`; combine with `--remote-chrome <host:port>` to use a different local attach hint.
 - `--chatgpt-url`: override the ChatGPT base URL. Works with the root homepage (`https://chatgpt.com/`), Temporary Chat (`https://chatgpt.com/?temporary-chat=true`), **or** a specific workspace/folder link such as `https://chatgpt.com/g/.../project`. `--browser-url` stays as a hidden alias.
-- `--browser-timeout`, `--browser-input-timeout`, `--browser-attachment-timeout`: `1200s (20m)`/`60s`/`45s` defaults. The input timeout bounds local prompt/file preparation and browser-input readiness; it does not shorten attachment uploads or assistant-response waits. The attachment timeout controls upload/readiness before clicking Send and can also be set with `ORACLE_BROWSER_ATTACHMENT_TIMEOUT` or `browser.attachmentTimeoutMs`. Durations accept `ms`, `s`, `m`, or `h` and can be chained (`1h2m10s`).
+- `--browser-timeout`, `--browser-input-timeout`, `--browser-attachment-timeout`: `1200s (20m)`/`60s`/`45s` defaults. The input timeout bounds local prompt/file preparation and browser-input readiness; it does not shorten attachment uploads or assistant-response waits. The attachment timeout controls upload/readiness before clicking Send and can also be set with `VELLUMPIX_BROWSER_ATTACHMENT_TIMEOUT` or `browser.attachmentTimeoutMs`. Durations accept `ms`, `s`, `m`, or `h` and can be chained (`1h2m10s`).
 - `--browser-recheck-delay`, `--browser-recheck-timeout`: after an assistant timeout, wait the delay, revisit the conversation, and retry capture (default recheck timeout 120s). Useful for Pro runs that finish later.
 - `--browser-reuse-wait`: wait for a shared Chrome profile (DevToolsActivePort) to appear before launching a new Chrome. Helps multiple parallel runs reuse the same Chromium instance.
 - `--browser-profile-lock-timeout`: wait for the shared manual-login profile lock before sending, serializing parallel runs that share a Chrome profile.
-- `--browser-max-concurrent-tabs`: soft limit for simultaneous ChatGPT tabs sharing one manual-login profile (default `3`). Set `ORACLE_BROWSER_MAX_CONCURRENT_TABS` for a per-host default; explicit CLI/config values win. Additional runs wait up to the browser timeout for a slot and log `[browser] Waiting for ChatGPT browser slot...`.
-- `--browser-auto-reattach-delay`, `--browser-auto-reattach-interval`, `--browser-auto-reattach-timeout`: after a timeout, start periodic auto-reattach attempts (delay before first attempt, repeat interval, per-attempt timeout). This lets Oracle keep polling a finished Pro response without manual `oracle session` runs.
-- `--heartbeat`: browser mode uses this interval to emit long-run ChatGPT status. When ChatGPT exposes a Thinking/Reasoning disclosure, Oracle opens it and logs only liveness metadata such as sidecar presence, UI progress percentage, elapsed time, and last-change age. It does not log the reasoning text.
+- `--browser-max-concurrent-tabs`: soft limit for simultaneous ChatGPT tabs sharing one manual-login profile (default `3`). Set `VELLUMPIX_BROWSER_MAX_CONCURRENT_TABS` for a per-host default; explicit CLI/config values win. Additional runs wait up to the browser timeout for a slot and log `[browser] Waiting for ChatGPT browser slot...`.
+- `--browser-auto-reattach-delay`, `--browser-auto-reattach-interval`, `--browser-auto-reattach-timeout`: after a timeout, start periodic auto-reattach attempts (delay before first attempt, repeat interval, per-attempt timeout). This lets VellumPix keep polling a finished Pro response without manual `vellumpix session` runs.
+- `--heartbeat`: browser mode uses this interval to emit long-run ChatGPT status. When ChatGPT exposes a Thinking/Reasoning disclosure, VellumPix opens it and logs only liveness metadata such as sidecar presence, UI progress percentage, elapsed time, and last-change age. It does not log the reasoning text.
 - Warning diagnostics recognize underscore- and hyphen-separated codes such as `cloudflare_challenge`, `rate_limit_exceeded`, and `too-many-requests`; they retain the existing timeout and recovery behavior.
-- If an assistant response still times out (common with long Pro runs), Oracle marks the session as an incomplete capture, stores reattach/runtime diagnostics, and keeps enough browser metadata for `oracle session <id>` to recover the final answer. Visible ChatGPT rate-limit, temporary-unavailable, and authentication/challenge warnings are included in the error and session metadata instead of being reduced to a generic timeout. Increase `--browser-timeout` only when the browser session is truly unrecoverable.
-- When the new assistant turn reports a known English generation failure with a visible Retry control and generation has stopped, Oracle reports `chatgpt-ui-warning` immediately. The standalone terminal “Thinking failed” state, optionally followed by feedback controls, is also rejected without requiring Retry; it is never saved as a successful answer. Ordinary answer prose discussing the phrase remains valid. Unrecognized or localized failure states retain the configured timeout. Oracle never clicks Retry or resubmits. Headful runs retain the browser for manual recovery; copied-profile runs still clean up because they cannot be reattached.
-- Successful reattach or harvest saves the full recovered answer and completed session before retiring an explicitly recorded Oracle-created tab. Existing tabs selected with `--browser-tab`, explicit `--browser-keep-browser` tabs, older sessions without ownership evidence, fallback targets, and tabs still used by another controller remain open. Recovery failures preserve the tab; there is no automatic retention deadline for unharvested runs.
+- If an assistant response still times out (common with long Pro runs), VellumPix marks the session as an incomplete capture, stores reattach/runtime diagnostics, and keeps enough browser metadata for `vellumpix session <id>` to recover the final answer. Visible ChatGPT rate-limit, temporary-unavailable, and authentication/challenge warnings are included in the error and session metadata instead of being reduced to a generic timeout. Increase `--browser-timeout` only when the browser session is truly unrecoverable.
+- When the new assistant turn reports a known English generation failure with a visible Retry control and generation has stopped, VellumPix reports `chatgpt-ui-warning` immediately. The standalone terminal “Thinking failed” state, optionally followed by feedback controls, is also rejected without requiring Retry; it is never saved as a successful answer. Ordinary answer prose discussing the phrase remains valid. Unrecognized or localized failure states retain the configured timeout. VellumPix never clicks Retry or resubmits. Headful runs retain the browser for manual recovery; copied-profile runs still clean up because they cannot be reattached.
+- Successful reattach or harvest saves the full recovered answer and completed session before retiring an explicitly recorded VellumPix-created tab. Existing tabs selected with `--browser-tab`, explicit `--browser-keep-browser` tabs, older sessions without ownership evidence, fallback targets, and tabs still used by another controller remain open. Recovery failures preserve the tab; there is no automatic retention deadline for unharvested runs.
 - If a controller dies while reserving a tab for retirement, the reservation remains in place to prevent another run from racing a pending close. The saved answer remains available; choose a new tab instead of reusing the reserved target.
 - `--browser-model-strategy <select|current|ignore>`: control ChatGPT model selection. `select` (default) switches to the requested model; `current` keeps the active model and logs its label; `ignore` skips the picker entirely. (Ignored for Gemini web runs.)
-- Temporary Chat can reduce account-sidebar clutter for one-shot browser consults, but it is a different ChatGPT workflow: Oracle skips archive attempts there and the local transcript/artifacts are the durable record. Verify live behavior before relying on Project Sources, Deep Research reports, or multi-turn persistence.
-- `--browser-thinking-time <light|standard|extended|extra-high|pro|heavy>`: set the ChatGPT thinking-time intensity (Thinking/Pro models only). On GPT-5.6 Sol, `extra-high` selects Extra High; a `heavy` request accepts an already-selected Pro pill but otherwise selects only a matching Heavy row. The generic current-Pro aliases (`gpt-5-pro`, `gpt-5.1-pro`, `gpt-5.2-pro`, and `gpt-5.4-pro`) follow ChatGPT's current Pro target and select GPT-5.6 Sol with Pro effort automatically. Use the explicit `--model gpt-5.5-pro` to pin the historical GPT-5.5 target, or pass another thinking-time value to override the alias default. The direct slider waits for its keyboard control to mount and become visible before sending a tier-changing keystroke. It supports both the five-tier layout and the quota-limited four-tier layout, whose maximum remains Extra High; requesting Pro on the four-tier layout reports it unavailable before sending input or submitting. Because Pro is expensive and rate-limited, `pro` fails closed: an unconfirmed selection aborts the run rather than quietly submitting at a cheaper tier. Effort rows are matched in English, German (`Sofort`/`Mittel`/`Hoch`/`Sehr hoch`), Japanese, Chinese, and Korean (`즉시`/`중간`/`높음`/`매우 높음`); when the requested tier has no row in the current UI language, Oracle keeps the effort already selected in the tab instead of switching the model. In ChatGPT's unified Intelligence picker Oracle opens `Advanced` → `Model` first, verifies the requested version, then opens `Advanced` → `Effort`; if either opener label is not recognized it declines to guess which control to use. You can also set a default in `~/.oracle/config.json` via `browser.thinkingTime`.
-- When a thinking tier is requested, `browser.thinkingSelection` records the requested level, observed selected label, verification status, strict-failure policy, and capture time. `oracle status <id>` displays this separately from model-selection evidence, and remote runs retain it in the structured result. An unverified result does not claim a selected tier; strict Pro requests still stop before submission when selection cannot be confirmed. This is UI evidence at `capturedAt`, not proof of backend effort or of later UI state.
+- Temporary Chat can reduce account-sidebar clutter for one-shot browser consults, but it is a different ChatGPT workflow: VellumPix skips archive attempts there and the local transcript/artifacts are the durable record. Verify live behavior before relying on Project Sources, Deep Research reports, or multi-turn persistence.
+- `--browser-thinking-time <light|standard|extended|extra-high|pro|heavy>`: set the ChatGPT thinking-time intensity (Thinking/Pro models only). On GPT-5.6 Sol, `extra-high` selects Extra High; a `heavy` request accepts an already-selected Pro pill but otherwise selects only a matching Heavy row. The generic current-Pro aliases (`gpt-5-pro`, `gpt-5.1-pro`, `gpt-5.2-pro`, and `gpt-5.4-pro`) follow ChatGPT's current Pro target and select GPT-5.6 Sol with Pro effort automatically. Use the explicit `--model gpt-5.5-pro` to pin the historical GPT-5.5 target, or pass another thinking-time value to override the alias default. The direct slider waits for its keyboard control to mount and become visible before sending a tier-changing keystroke. It supports both the five-tier layout and the quota-limited four-tier layout, whose maximum remains Extra High; requesting Pro on the four-tier layout reports it unavailable before sending input or submitting. Because Pro is expensive and rate-limited, `pro` fails closed: an unconfirmed selection aborts the run rather than quietly submitting at a cheaper tier. Effort rows are matched in English, German (`Sofort`/`Mittel`/`Hoch`/`Sehr hoch`), Japanese, Chinese, and Korean (`즉시`/`중간`/`높음`/`매우 높음`); when the requested tier has no row in the current UI language, VellumPix keeps the effort already selected in the tab instead of switching the model. In ChatGPT's unified Intelligence picker VellumPix opens `Advanced` → `Model` first, verifies the requested version, then opens `Advanced` → `Effort`; if either opener label is not recognized it declines to guess which control to use. You can also set a default in `~/.vellumpix/config.json` via `browser.thinkingTime`.
+- When a thinking tier is requested, `browser.thinkingSelection` records the requested level, observed selected label, verification status, strict-failure policy, and capture time. `vellumpix status <id>` displays this separately from model-selection evidence, and remote runs retain it in the structured result. An unverified result does not claim a selected tier; strict Pro requests still stop before submission when selection cannot be confirmed. This is UI evidence at `capturedAt`, not proof of backend effort or of later UI state.
 - GPT-5.5 Pro Extended is verified from the selected item in ChatGPT's standalone Pro/Thinking effort pill or compatible Intelligence/model-picker menu. A run **fails closed** if Extended cannot be confirmed rather than silently submitting at a weaker effort. Detection failures write a bounded, redacted model-picker diagnostic to the normal session log.
-- In the direct-slider picker without an Advanced → Effort submenu, Oracle adjusts the five-tier slider with arrow keys and verifies its associated tier announcement and numeric value together. A rightmost thumb without a confirmed `Pro` label never satisfies a Pro request; unknown ranges or inconsistent feedback fail verification.
+- In the direct-slider picker without an Advanced → Effort submenu, VellumPix adjusts the five-tier slider with arrow keys and verifies its associated tier announcement and numeric value together. A rightmost thumb without a confirmed `Pro` label never satisfies a Pro request; unknown ranges or inconsistent feedback fail verification.
 - `--browser-research search`: explicitly select Web Search for a normal ChatGPT answer. The pilot supports English ChatGPT with local Chrome, attach-running, or direct remote Chrome; `--remote-host` is not supported yet.
 - `--browser-research deep`: activate ChatGPT Deep Research before submitting the prompt. Use this for broad public-web research and final cited reports, not as a replacement for GPT-5.x Pro Heavy code review or pure reasoning.
 - `--browser-follow-up <prompt>`: submit another prompt in the same ChatGPT conversation after the initial answer. Repeat the flag for multi-turn reviews such as “challenge your recommendation”, “compare against this constraint”, then “give the final decision”. Deep Research has its own report lifecycle, so browser follow-ups are rejected when `--browser-research deep` is enabled.
-- `--followup <session-id>`: reopen the exact saved ChatGPT conversation from a completed browser session. Oracle inherits the parent browser profile, configuration, and model, then verifies the thread and prior turns before submitting.
+- `--followup <session-id>`: reopen the exact saved ChatGPT conversation from a completed browser session. VellumPix inherits the parent browser profile, configuration, and model, then verifies the thread and prior turns before submitting.
 - `--browser-archive <auto|always|never>`: archive completed ChatGPT conversations after local artifacts are saved. The default `auto` archives only successful one-shot chats and skips project, Deep Research, multi-turn, failed, and incomplete sessions.
-- `--browser-port <port>` (alias: `--browser-debug-port`; env: `ORACLE_BROWSER_PORT`/`ORACLE_BROWSER_DEBUG_PORT`): pin the DevTools port (handy on WSL/Windows firewalls). When omitted, a random open port is chosen.
-- `ORACLE_CHATGPT_ACCOUNT_EMAIL`: exact saved-account email to select if ChatGPT shows its “Welcome back” account picker. Set it on the machine running browser automation. Oracle never logs the address; without it, Oracle selects only a single unambiguous saved account and fails closed when several are present.
+- `--browser-port <port>` (alias: `--browser-debug-port`; env: `VELLUMPIX_BROWSER_PORT`/`VELLUMPIX_BROWSER_DEBUG_PORT`): pin the DevTools port (handy on WSL/Windows firewalls). When omitted, a random open port is chosen.
+- `VELLUMPIX_CHATGPT_ACCOUNT_EMAIL`: exact saved-account email to select if ChatGPT shows its “Welcome back” account picker. Set it on the machine running browser automation. VellumPix never logs the address; without it, VellumPix selects only a single unambiguous saved account and fails closed when several are present.
 - `--browser-cookie-sync` explicitly copies cookies from live Chrome into the temporary automation profile. Prefer `--browser-manual-login` (persistent automation profile + user-driven login), inline cookies, or attach-running mode; copied ChatGPT session tokens may rotate in the automation browser and invalidate the live Chrome session. `--browser-no-cookie-sync` remains as a compatibility override for configurations that enabled copying.
-- `--browser-headless`, `--browser-hide-window`, `--browser-keep-browser`, and the global `-v/--verbose` flag control the launcher and diagnostics. On macOS, Oracle records a locally launched window before positioning it off-screen, then restores that recorded placement on a later visible run. Windows without Oracle's saved marker—including valid negative-coordinate placements on another display—remain untouched; attach-running and remote Chrome windows are never repositioned by this policy.
-- `--browser-no-focus` (config `browser.noFocus`; off by default; `--no-browser-no-focus` turns it off for one run when config turns it on): keep Chrome in the background during ordinary runs. Three things activate Chrome during a normal run: the startup window of a cold launch, opening the run tab through `/json/new`, and `Page.bringToFront` before the trusted send click. On macOS each one makes Chrome the frontmost app, takes keystrokes the user is typing elsewhere, and can switch Spaces to the one holding Chrome's window. With it on, Oracle launches Chrome with `--no-startup-window`, opens run tabs with `Target.createTarget({ background: true, newWindow: true })`, and skips `Page.bringToFront`; focus emulation keeps the page painting and accepting trusted input while the window stays behind other apps. If focus emulation cannot be enabled, Oracle tries `Page.bringToFront` as soon as the tab is set up and again before the send, rather than risk a lost click. That fallback triggers only on a failure to enable emulation; a Chrome build where emulation is enabled but the background window stops compositing is not detected. If the background tab cannot be opened through a `host:port` DevTools endpoint (a launched Chrome, or `--remote-chrome host:port`), Oracle opens it through `/json/new` instead, which brings Chrome forward, and logs `no-focus fallback`; if that fails too, the run fails rather than attaching to a default page that a no-focus launch does not have. On a browser WebSocket endpoint (attach-running) there is no such retry, and a failed open fails the run. It applies to launched, `--remote-chrome`, attach-running, and Project Sources runs, to `oracle serve` and `oracle bridge host` hosts (the host's flag or config decides; clients cannot change it), and to session recovery and harvest, which reopen the saved conversation in a background window. Each run records the setting it ran with, and recovery uses it; a remote run records the host's setting once it completes; a session saved before this setting existed follows the current default. Known exceptions: when a reattach falls back to relaunching Chrome (Chrome has closed, or reattaching to the running Chrome failed), it launches with a startup window because it attaches to Chrome's default page, so it can bring Chrome forward; `--followup` inherits the parent session's browser settings (including this one), and Gemini runs keep their startup window and still open their tab in the foreground. When a run needs you, for the manual-login sign-in wait or a Cloudflare check, Oracle brings Chrome to the front once and logs `no-focus fallback`.
+- `--browser-headless`, `--browser-hide-window`, `--browser-keep-browser`, and the global `-v/--verbose` flag control the launcher and diagnostics. On macOS, VellumPix records a locally launched window before positioning it off-screen, then restores that recorded placement on a later visible run. Windows without VellumPix's saved marker—including valid negative-coordinate placements on another display—remain untouched; attach-running and remote Chrome windows are never repositioned by this policy.
+- `--browser-no-focus` (config `browser.noFocus`; off by default; `--no-browser-no-focus` turns it off for one run when config turns it on): keep Chrome in the background during ordinary runs. Three things activate Chrome during a normal run: the startup window of a cold launch, opening the run tab through `/json/new`, and `Page.bringToFront` before the trusted send click. On macOS each one makes Chrome the frontmost app, takes keystrokes the user is typing elsewhere, and can switch Spaces to the one holding Chrome's window. With it on, VellumPix launches Chrome with `--no-startup-window`, opens run tabs with `Target.createTarget({ background: true, newWindow: true })`, and skips `Page.bringToFront`; focus emulation keeps the page painting and accepting trusted input while the window stays behind other apps. If focus emulation cannot be enabled, VellumPix tries `Page.bringToFront` as soon as the tab is set up and again before the send, rather than risk a lost click. That fallback triggers only on a failure to enable emulation; a Chrome build where emulation is enabled but the background window stops compositing is not detected. If the background tab cannot be opened through a `host:port` DevTools endpoint (a launched Chrome, or `--remote-chrome host:port`), VellumPix opens it through `/json/new` instead, which brings Chrome forward, and logs `no-focus fallback`; if that fails too, the run fails rather than attaching to a default page that a no-focus launch does not have. On a browser WebSocket endpoint (attach-running) there is no such retry, and a failed open fails the run. It applies to launched, `--remote-chrome`, attach-running, and Project Sources runs, to `vellumpix serve` and `vellumpix bridge host` hosts (the host's flag or config decides; clients cannot change it), and to session recovery and harvest, which reopen the saved conversation in a background window. Each run records the setting it ran with, and recovery uses it; a remote run records the host's setting once it completes; a session saved before this setting existed follows the current default. Known exceptions: when a reattach falls back to relaunching Chrome (Chrome has closed, or reattaching to the running Chrome failed), it launches with a startup window because it attaches to Chrome's default page, so it can bring Chrome forward; `--followup` inherits the parent session's browser settings (including this one), and Gemini runs keep their startup window and still open their tab in the foreground. When a run needs you, for the manual-login sign-in wait or a Cloudflare check, VellumPix brings Chrome to the front once and logs `no-focus fallback`.
 - Verbose browser diagnostics replace inline cookie payloads with a cookie count, including the saved session log.
-- `--copy-profile <dir>`: copy a signed-in Chrome user-data directory (e.g. `"$HOME/Library/Application Support/Google/Chrome"`) to a throwaway profile and run against it, reusing your live ChatGPT session with no manual sign-in. Oracle copies the profile recorded as active in `Local State`; pass `--browser-chrome-profile <name>` to select another direct child profile. The copy is launched with the real Keychain (not mocked) so its encrypted cookies decrypt, and is always deleted afterward—including setup/launch failures, incomplete captures, Cloudflare challenges, and interrupts. Copied-profile runs cannot be kept or reattached. Not compatible with `--browser-keep-browser`, `--browser-manual-login`, `--browser-attach-running`, `--remote-chrome`, or `--remote-host`, and fails fast if the required `Local State` cannot be copied. macOS/Linux; requires `rsync`.
+- `--copy-profile <dir>`: copy a signed-in Chrome user-data directory (e.g. `"$HOME/Library/Application Support/Google/Chrome"`) to a throwaway profile and run against it, reusing your live ChatGPT session with no manual sign-in. VellumPix copies the profile recorded as active in `Local State`; pass `--browser-chrome-profile <name>` to select another direct child profile. The copy is launched with the real Keychain (not mocked) so its encrypted cookies decrypt, and is always deleted afterward—including setup/launch failures, incomplete captures, Cloudflare challenges, and interrupts. Copied-profile runs cannot be kept or reattached. Not compatible with `--browser-keep-browser`, `--browser-manual-login`, `--browser-attach-running`, `--remote-chrome`, or `--remote-host`, and fails fast if the required `Local State` cannot be copied. macOS/Linux; requires `rsync`.
   Volatile tab/session directories (`Sessions`, `Sessions_Encrypted`, and `Session Storage`) are excluded. Cookies, `Local State`, `Local Storage`, and `IndexedDB` remain included. A genuine partial copy (rsync exit 23) still fails and removes the incomplete destination.
 - `--browser-url`: override ChatGPT base URL if needed.
 - `--browser-attachments <auto|never|always>`: control how `--file` inputs are delivered in browser mode. Default `auto` pastes text contents inline up to ~60k characters and uploads larger or raw files. `never` requires inline-compatible text inputs and rejects raw/binary files.
 - Attachment name checks accept ChatGPT's collision suffixes (for example, `01.jpg` → `01(5).jpg` or `document.md` → `document(20260818-145702).md`) in chip text and accessible labels. Unicode letters, numbers, and combining marks remain part of the filename: `가01(5).jpg` cannot satisfy a request for `01.jpg`, and a visible different extension cannot satisfy a name match.
-- Filename-less attachment previews are accepted only when that file's assignment creates a distinct removal control in the active composer. Oracle retains that per-file evidence through local/remote upload, completion, and send readiness; removing or replacing the control invalidates it. A generic file count or an old attachment is not proof of a new upload.
+- Filename-less attachment previews are accepted only when that file's assignment creates a distinct removal control in the active composer. VellumPix retains that per-file evidence through local/remote upload, completion, and send readiness; removing or replacing the control invalidates it. A generic file count or an old attachment is not proof of a new upload.
 - Attachment context checks recognize Work conversation IDs (`WEB:`), selected controls with a `work` machine value, and known Work labels on composer controls/placeholders. Unknown localized labels alone are not classified as modes; unrelated selected controls do not block valid chats. Fresh signed-in DOM variants need live validation. Plus activation revalidates the original exact button, focus, and page identity at key/click delivery. Attachment prompt staging also binds browser editing commands and fallback writes to the original renderer/editor, with guarded input events, with no retry after ambiguous transport acknowledgement.
-- Before sending an attachment prompt, Oracle rechecks the pre-upload Chat/Work and page identity, closes the exact plus menu if needed, focuses the exact enabled send button, and activates only that button with one trusted keyboard action. If the exact button is unavailable, or delayed navigation enters Work, another conversation, or a different non-conversation landing/project path, the attachment flow fails closed instead of using broad selectors or coordinates. Query, hash, and trailing-slash rewrites are ignored, and a project-scoped rewrite remains allowed when it preserves the conversation id. Plain-text sends retain the stable-coordinate path: Oracle activates the target (skipped with `--browser-no-focus` when focus emulation is available), scrolls only when the button is offscreen, then remeasures before its one click. Once either action is dispatched, Oracle waits for the original turn to commit and never retries with another send or an upload fallback merely because the prompt remains staged. An ambiguous commit timeout preserves diagnostics for inspection; do not blindly rerun it. Truncation detected before dispatch can still use the normal upload fallback.
+- Before sending an attachment prompt, VellumPix rechecks the pre-upload Chat/Work and page identity, closes the exact plus menu if needed, focuses the exact enabled send button, and activates only that button with one trusted keyboard action. If the exact button is unavailable, or delayed navigation enters Work, another conversation, or a different non-conversation landing/project path, the attachment flow fails closed instead of using broad selectors or coordinates. Query, hash, and trailing-slash rewrites are ignored, and a project-scoped rewrite remains allowed when it preserves the conversation id. Plain-text sends retain the stable-coordinate path: VellumPix activates the target (skipped with `--browser-no-focus` when focus emulation is available), scrolls only when the button is offscreen, then remeasures before its one click. Once either action is dispatched, VellumPix waits for the original turn to commit and never retries with another send or an upload fallback merely because the prompt remains staged. An ambiguous commit timeout preserves diagnostics for inspection; do not blindly rerun it. Truncation detected before dispatch can still use the normal upload fallback.
 - `--browser-inline-files`: alias for `--browser-attachments never` (forces inline paste; never uploads attachments).
-- `--browser-bundle-files`: force one browser upload bundle, including when `auto` would otherwise paste small files inline. With `auto` or `zip`, it contains all resolved attachments. Explicit `text` can flatten only text/source files, leaving native attachments separate. Without this flag, Oracle already bundles multiple text/source uploads while leaving images, PDFs, archives, and other native attachments separate when the 10-attachment limit permits. Generated `oracle-browser-bundle-*` directories are deleted after the run or dry-run.
-- `--browser-bundle-format <auto|text|zip>`: choose the bundle format. `auto` keeps the established flattened-text bundle for text-only uploads and uses a byte-preserving ZIP when raw/native files are present; `text` always flattens; `zip` always archives. ZIP inputs are capped at 128 MiB because bundle creation is in-memory. Oracle adds a short composer instruction telling ChatGPT to extract ZIP bundles into its sandbox before inspection.
-- sqlite bindings: automatic rebuilds now require `ORACLE_ALLOW_SQLITE_REBUILD=1`. Without it, the CLI logs instructions instead of running `pnpm rebuild` on your behalf.
-- `--model gpt-6-pro` (or `gpt-6`, `gpt-6-astra`, `latest`): GPT-6 Astra. Oracle targets the **GPT-6** model radio and also accepts the legacy **Latest**, Japanese **最新**, and Korean **최신** labels on older layouts. `gpt-6-pro` also selects the Pro power tier by default (composer pill "6 Pro"), and Oracle only reports it as selected when that radio is checked or the pill reads "6 …" (never "5.6 …"). An explicit CLI `--model gpt-6-pro` keeps its Pro effort even when saved browser settings specify another tier; an explicit `--browser-thinking-time` still wins, and config-only model/effort preferences remain unchanged.
+- `--browser-bundle-files`: force one browser upload bundle, including when `auto` would otherwise paste small files inline. With `auto` or `zip`, it contains all resolved attachments. Explicit `text` can flatten only text/source files, leaving native attachments separate. Without this flag, VellumPix already bundles multiple text/source uploads while leaving images, PDFs, archives, and other native attachments separate when the 10-attachment limit permits. Generated `vellumpix-browser-bundle-*` directories are deleted after the run or dry-run.
+- `--browser-bundle-format <auto|text|zip>`: choose the bundle format. `auto` keeps the established flattened-text bundle for text-only uploads and uses a byte-preserving ZIP when raw/native files are present; `text` always flattens; `zip` always archives. ZIP inputs are capped at 128 MiB because bundle creation is in-memory. VellumPix adds a short composer instruction telling ChatGPT to extract ZIP bundles into its sandbox before inspection.
+- sqlite bindings: automatic rebuilds now require `VELLUMPIX_ALLOW_SQLITE_REBUILD=1`. Without it, the CLI logs instructions instead of running `pnpm rebuild` on your behalf.
+- `--model gpt-6-pro` (or `gpt-6`, `gpt-6-astra`, `latest`): GPT-6 Astra. VellumPix targets the **GPT-6** model radio and also accepts the legacy **Latest**, Japanese **最新**, and Korean **최신** labels on older layouts. `gpt-6-pro` also selects the Pro power tier by default (composer pill "6 Pro"), and VellumPix only reports it as selected when that radio is checked or the pill reads "6 …" (never "5.6 …"). An explicit CLI `--model gpt-6-pro` keeps its Pro effort even when saved browser settings specify another tier; an explicit `--browser-thinking-time` still wins, and config-only model/effort preferences remain unchanged.
 - `--model`: the same GPT-5.6 aliases work in API and browser mode. Use `gpt-5.6` for the current GPT-5.6 default or `gpt-5.6-sol` to pin Sol; browser mode maps either alias to the `GPT-5.6 Sol` picker entry, while API mode sends the corresponding first-party OpenAI model ID. GPT-5.2 base, Instant, and Thinking aliases remain available through the API but browser mode rejects them because ChatGPT retired those picker entries. Legacy Pro aliases (`gpt-5-pro`, etc.) still resolve to the GPT-5.6 Sol target.
-- Live Chrome cookie copying is disabled by default. The recommended migration is `--browser-manual-login`, which keeps token rotation inside a dedicated persistent automation profile. To retain the old launcher behavior, pass `--browser-cookie-sync` or set `browser.cookieSync=true` in the user config; Oracle warns about the live-session invalidation risk. When enabled, cookie copy is mandatory—if Oracle cannot copy cookies, the run exits early. Oracle copies a small ChatGPT auth/Cloudflare allowlist to avoid oversized request headers; use `--browser-cookie-names` only when you need to override that set.
+- Live Chrome cookie copying is disabled by default. The recommended migration is `--browser-manual-login`, which keeps token rotation inside a dedicated persistent automation profile. To retain the old launcher behavior, pass `--browser-cookie-sync` or set `browser.cookieSync=true` in the user config; VellumPix warns about the live-session invalidation risk. When enabled, cookie copy is mandatory—if VellumPix cannot copy cookies, the run exits early. VellumPix copies a small ChatGPT auth/Cloudflare allowlist to avoid oversized request headers; use `--browser-cookie-names` only when you need to override that set.
   Cookie sync reports accepted/attempted counts, including zero and rejected transfers, and reports reader warnings without requiring debug logging. Normal transfer diagnostics omit cookie values and raw CDP errors. An accepted cookie count confirms transfer to Chrome, not successful site authentication; use a dedicated manual-login profile if copied cookies do not sign you in.
 - Attach-running mode is mutually exclusive with launcher-owned flags such as `--browser-manual-login`, `--browser-chrome-profile`, `--browser-cookie-path`, `--browser-hide-window`, `--browser-keep-browser`, and `--browser-port`. `--remote-chrome` is allowed in attach-running mode, but only as the local host:port hint used for metadata discovery and the endpoint fallback. `--browser-chrome-path` is accepted but ignored.
 - Cookie controls:
   - `--browser-cookie-sync` or user config `browser.cookieSync=true`: opt in to copying cookies from a live Chrome profile. Project config cannot enable this machine-local authentication behavior.
-  - `--browser-cookie-names <comma-list>` or `ORACLE_BROWSER_COOKIE_NAMES`: override the default allowlist of cookies to sync. Useful when ChatGPT changes auth cookie names.
+  - `--browser-cookie-names <comma-list>` or `VELLUMPIX_BROWSER_COOKIE_NAMES`: override the default allowlist of cookies to sync. Useful when ChatGPT changes auth cookie names.
   - `--browser-cookie-wait <ms|s|m>`: if cookie sync fails or returns no cookies, wait once and retry (helps when macOS Keychain prompts are slow).
-  - `--browser-inline-cookies <jsonOrBase64>` or `ORACLE_BROWSER_COOKIES_JSON`: skip Chrome/keychain and set cookies directly. Payload is a JSON array of DevTools `CookieParam` objects (or the same, base64-encoded). At minimum you need `name`, `value`, and either `url` or `domain`; we infer `path=/`, `secure=true`, `httpOnly=false`.
-  - `--browser-inline-cookies-file <path>` or `ORACLE_BROWSER_COOKIES_FILE`: load the same payload from disk (JSON or base64 JSON). If no args/env are provided, Oracle also auto-loads `~/.oracle/cookies.json` or `~/.oracle/cookies.base64` when present.
+  - `--browser-inline-cookies <jsonOrBase64>` or `VELLUMPIX_BROWSER_COOKIES_JSON`: skip Chrome/keychain and set cookies directly. Payload is a JSON array of DevTools `CookieParam` objects (or the same, base64-encoded). At minimum you need `name`, `value`, and either `url` or `domain`; we infer `path=/`, `secure=true`, `httpOnly=false`.
+  - `--browser-inline-cookies-file <path>` or `VELLUMPIX_BROWSER_COOKIES_FILE`: load the same payload from disk (JSON or base64 JSON). If no args/env are provided, VellumPix also auto-loads `~/.vellumpix/cookies.json` or `~/.vellumpix/cookies.base64` when present.
   - Practical minimal set that keeps ChatGPT logged in and avoids the workspace picker: `__Secure-next-auth.session-token` (include `.0`/`.1` variants) and `_account` (active workspace/account). Cloudflare proofs (`cf_clearance`, `__cf_bm`/`_cfuvid`/`CF_Authorization`/`__cflb`) are only needed when a challenge is active. In practice our allowlist pulls just two cookies (session token + `_account`) and works; add the Cloudflare names if you hit a challenge.
   - Inline payload shape example (we ignore extra fields like `expirationDate`, `sameSite`, `hostOnly`):
     ```json
@@ -195,68 +195,68 @@ Multiline prompts are pasted into contenteditable composers in small chunks and 
     ]
     ```
 
-All options are persisted with the session so restarts (`oracle restart <id>`) reuse the same automation settings.
+All options are persisted with the session so restarts (`vellumpix restart <id>`) reuse the same automation settings.
 
-For the direct five-tier effort slider, Oracle verifies the leading effort label and the numeric slider position independently. Localized punctuation and ordinal wording, including Japanese `Pro、5件中5件目。`, do not affect selection. The label must end or be followed by whitespace or punctuation; word continuations such as `Professional` or `Proé`, missing labels, and contradictory positions cannot verify Pro.
+For the direct five-tier effort slider, VellumPix verifies the leading effort label and the numeric slider position independently. Localized punctuation and ordinal wording, including Japanese `Pro、5件中5件目。`, do not affect selection. The label must end or be followed by whitespace or punctuation; word continuations such as `Professional` or `Proé`, missing labels, and contradictory positions cannot verify Pro.
 
 ### Web Search
 
-Use `oracle --engine browser --browser-research search -p "Find the current Node.js LTS releases and cite official sources"` to explicitly select ChatGPT's Web Search tool. Oracle verifies the selected search hint and the complete staged prompt before sending. Missing or changed controls stop the run before submission. Answers and citations use the normal browser transcript and output paths; search activation is UI evidence, not independent attestation of a provider's internal tool execution. The API `--search on/off` setting retains its existing meaning.
+Use `vellumpix --engine browser --browser-research search -p "Find the current Node.js LTS releases and cite official sources"` to explicitly select ChatGPT's Web Search tool. VellumPix verifies the selected search hint and the complete staged prompt before sending. Missing or changed controls stop the run before submission. Answers and citations use the normal browser transcript and output paths; search activation is UI evidence, not independent attestation of a provider's internal tool execution. The API `--search on/off` setting retains its existing meaning.
 
 ### Deep Research mode
 
 Use `--browser-research deep` when the task needs broad web discovery, source comparison, or a cited report:
 
 ```bash
-oracle --engine browser \
+vellumpix --engine browser \
   --browser-manual-login \
   --browser-research deep \
   -p "Research the current browser support for WebGPU in enterprise-managed Chrome and cite sources."
 ```
 
-Oracle activates ChatGPT Deep Research through the composer tools menu, recognizing the English `Deep research` / `Get a detailed report` labels and the Chinese `深度研究` / `获取详细报告` variants. It waits for the research plan to auto-confirm, logs high-level progress, then captures the final report from the Deep Research report surface instead of trusting the assistant tool-call wrapper.
+VellumPix activates ChatGPT Deep Research through the composer tools menu, recognizing the English `Deep research` / `Get a detailed report` labels and the Chinese `深度研究` / `获取详细报告` variants. It waits for the research plan to auto-confirm, logs high-level progress, then captures the final report from the Deep Research report surface instead of trusting the assistant tool-call wrapper.
 
-When the research frame exposes a plan, Oracle logs its visible title and steps and saves its latest planning/researching phase and Edit/Update action under `browser.runtime.researchPlan` in the session metadata. It begins monitoring as soon as the frame reports researching, without waiting out a fixed plan countdown. This optional observation does not change terminal session status or retry a submitted prompt.
+When the research frame exposes a plan, VellumPix logs its visible title and steps and saves its latest planning/researching phase and Edit/Update action under `browser.runtime.researchPlan` in the session metadata. It begins monitoring as soon as the frame reports researching, without waiting out a fixed plan countdown. This optional observation does not change terminal session status or retry a submitted prompt.
 
 Remote-service results carry the optional plan with the completed answer. Plan log lines are available while the remote run is in progress; no new MCP wait event or terminal-status policy is introduced.
 
-If ChatGPT initially exposes only `Called tool` / `Used tool`, Oracle treats that as an incomplete capture for Deep Research rather than a final answer. Reattach the existing session with `oracle session <id> --render` so Oracle can recover the lazy-loaded report from the existing Chrome tab; do not rerun the research unless the browser session is unrecoverable.
+If ChatGPT initially exposes only `Called tool` / `Used tool`, VellumPix treats that as an incomplete capture for Deep Research rather than a final answer. Reattach the existing session with `vellumpix session <id> --render` so VellumPix can recover the lazy-loaded report from the existing Chrome tab; do not rerun the research unless the browser session is unrecoverable.
 
 Deep Research is browser-only. It does not use connected apps in v1; give it public-web scope, uploaded files, and any domain/source guidance in the prompt. For deep thinking over code or architecture without web search, prefer a normal browser run with GPT-5.6 Sol and `--browser-thinking-time extra-high`, or a Pro model with `--browser-thinking-time extended`.
 
-Completed browser sessions also save durable artifacts under `~/.oracle/sessions/<id>/artifacts/`. Deep Research writes the extracted report to `deep-research-report.md`, and every browser run writes `transcript.md` with the prompt, final answer, conversation URL, and saved artifact references. Use `--write-output <path>` when you also need a copy of just the final answer at a specific path.
+Completed browser sessions also save durable artifacts under `~/.vellumpix/sessions/<id>/artifacts/`. Deep Research writes the extracted report to `deep-research-report.md`, and every browser run writes `transcript.md` with the prompt, final answer, conversation URL, and saved artifact references. Use `--write-output <path>` when you also need a copy of just the final answer at a specific path.
 
 For a new browser run, add `--write-artifacts` with `--write-output <path>` to copy captured files beside the written answer. This is opt-in; plain `--write-output` still writes only the answer. Canonical session files stay intact, binary copies are checked against their recorded size and SHA-256, and existing files are preserved using numbered names such as `report-2.csv`. Copy failures are logged and saved in session warnings while the answer remains successful. Files that could not be captured or transferred from a remote host cannot be exported; the existing manual-copy guidance still applies.
 
-When ChatGPT generates downloadable files in the assistant response (for example a ZIP, wheel, source distribution, CSV, or PDF), Oracle saves those files beside the transcript before any archive attempt. The downloader is intentionally narrow: it only follows ChatGPT-owned file/download URLs from the assistant response and uses `sandbox:/mnt/data/...` links as source metadata and filename hints, not as arbitrary fetch targets. External links in the response are left in the transcript but are not downloaded. In bridge mode, a patched Windows host advertises artifact-transfer capability through `/health`; the Linux client then pulls each saved file over the authenticated bridge endpoint, stores it under the Linux session `artifacts/` directory, and verifies safe filename, byte size, SHA-256, and ZIP structure where applicable. If either side is older or transfer validation fails, the text response still completes and Oracle prints a manual-copy fallback instead of leaking host paths or signed download URLs.
+When ChatGPT generates downloadable files in the assistant response (for example a ZIP, wheel, source distribution, CSV, or PDF), VellumPix saves those files beside the transcript before any archive attempt. The downloader is intentionally narrow: it only follows ChatGPT-owned file/download URLs from the assistant response and uses `sandbox:/mnt/data/...` links as source metadata and filename hints, not as arbitrary fetch targets. External links in the response are left in the transcript but are not downloaded. In bridge mode, a patched Windows host advertises artifact-transfer capability through `/health`; the Linux client then pulls each saved file over the authenticated bridge endpoint, stores it under the Linux session `artifacts/` directory, and verifies safe filename, byte size, SHA-256, and ZIP structure where applicable. If either side is older or transfer validation fails, the text response still completes and VellumPix prints a manual-copy fallback instead of leaking host paths or signed download URLs.
 
 ### Conversation archiving
 
-Browser mode keeps the local session as the source of truth, so Oracle can optionally archive the ChatGPT conversation after a successful run. The default `--browser-archive auto` archives only successful non-project, non-Deep-Research, non-multi-turn one-shot chats after `transcript.md`, generated artifacts, the final answer, and the conversation URL are saved locally.
+Browser mode keeps the local session as the source of truth, so VellumPix can optionally archive the ChatGPT conversation after a successful run. The default `--browser-archive auto` archives only successful non-project, non-Deep-Research, non-multi-turn one-shot chats after `transcript.md`, generated artifacts, the final answer, and the conversation URL are saved locally.
 
-Oracle does not auto-archive failed, incomplete, running, project, Deep Research, or multi-turn sessions. Use `--browser-archive never` to disable archiving, or `--browser-archive always` when you explicitly want a successful browser conversation archived even outside the default one-shot policy. Archived chats are still visible and manageable from ChatGPT's own archive UI.
+VellumPix does not auto-archive failed, incomplete, running, project, Deep Research, or multi-turn sessions. Use `--browser-archive never` to disable archiving, or `--browser-archive always` when you explicitly want a successful browser conversation archived even outside the default one-shot policy. Archived chats are still visible and manageable from ChatGPT's own archive UI.
 
 ### ChatGPT Project Sources
 
 ChatGPT Project Sources can act as explicit shared context for project workflows where chats should not implicitly share memory. This is especially useful with Developer Mode / Memory Off: separate chats do not see each other's conversation history, but they can read files attached to the Project Sources tab.
 
-Oracle exposes a narrow, non-destructive v1:
+VellumPix exposes a narrow, non-destructive v1:
 
 ```bash
 # Preview the upload plan without touching ChatGPT
-oracle project-sources add \
+vellumpix project-sources add \
   --chatgpt-url "https://chatgpt.com/g/g-p-example/project" \
   --browser-manual-login \
   --file docs/architecture.md \
   --dry-run
 
 # List current sources
-oracle project-sources list \
+vellumpix project-sources list \
   --chatgpt-url "https://chatgpt.com/g/g-p-example/project" \
   --browser-manual-login
 
 # Append files to the Sources tab
-oracle project-sources add \
+vellumpix project-sources add \
   --chatgpt-url "https://chatgpt.com/g/g-p-example/project" \
   --browser-manual-login \
   --file docs/architecture.md docs/decisions.md
@@ -266,10 +266,10 @@ This command uses browser automation but does not select a model, start a consul
 
 ### Multi-turn browser consults
 
-Use browser follow-ups when a one-shot review would be too easy for the model to answer shallowly. Oracle keeps the same ChatGPT conversation open, waits for each answer, then submits the next follow-up:
+Use browser follow-ups when a one-shot review would be too easy for the model to answer shallowly. VellumPix keeps the same ChatGPT conversation open, waits for each answer, then submits the next follow-up:
 
 ```bash
-oracle --engine browser \
+vellumpix --engine browser \
   --model gpt-5.5-pro \
   --browser-thinking-time extended \
   -p "Review this migration plan and identify the top risks." \
@@ -285,56 +285,56 @@ Guardrails for agents:
 - Use one-shot browser runs for narrow bugs, exact file sets, quick code review, or when the expected answer is a short decision.
 - Use explicit follow-ups for ambiguous architecture, competing options, product tradeoffs, or review flows where a challenge pass and final recommendation are useful.
 - Use Deep Research for broad public-web research that needs citations; Deep Research has its own lifecycle and is not combined with browser follow-ups.
-- Oracle never invents follow-ups automatically. Agents may suggest a short follow-up sequence, but the caller must pass each prompt explicitly with `--browser-follow-up` or `browserFollowUps`.
+- VellumPix never invents follow-ups automatically. Agents may suggest a short follow-up sequence, but the caller must pass each prompt explicitly with `--browser-follow-up` or `browserFollowUps`.
 
 ### ChatGPT generated images
 
-When ChatGPT returns downloadable generated images in browser mode, Oracle downloads them using the active browser cookies and records them as session artifacts. To choose an output path, pass `--generate-image <file>`:
+When ChatGPT returns downloadable generated images in browser mode, VellumPix downloads them using the active browser cookies and records them as session artifacts. To choose an output path, pass `--generate-image <file>`:
 
 ```bash
-oracle --engine browser \
+vellumpix --engine browser \
   --browser-manual-login \
   --model "GPT-5.5 Pro" \
-  --generate-image /tmp/oracle-image.png \
+  --generate-image /tmp/vellumpix-image.png \
   -p "Create a simple product icon on a transparent background."
 ```
 
-If ChatGPT returns multiple images, the first image saves to the requested path and the rest save as numbered siblings. Without `--generate-image`, Oracle writes images to the session `artifacts/` directory.
+If ChatGPT returns multiple images, the first image saves to the requested path and the rest save as numbered siblings. Without `--generate-image`, VellumPix writes images to the session `artifacts/` directory.
 
 MCP agents should prefer the `chatgpt_image` tool. It wraps the same behavior with a smaller input shape, uploads reference files by default, and returns saved files in `structuredContent.images`. Advanced callers can still pass `generateImage` to `consult` directly.
 
 ### Manual login mode (persistent profile, no cookie copy)
 
-Use `--browser-manual-login` when cookie decrypt is blocked (e.g., Windows app-bound cookies) or you prefer to sign in explicitly. You can also make it the default via `browser.manualLogin` in `~/.oracle/config.json`.
+Use `--browser-manual-login` when cookie decrypt is blocked (e.g., Windows app-bound cookies) or you prefer to sign in explicitly. You can also make it the default via `browser.manualLogin` in `~/.vellumpix/config.json`.
 
 ```bash
-oracle --engine browser \
+vellumpix --engine browser \
   --browser-manual-login \
   --browser-keep-browser \
   --model "GPT-5.5 Pro" \
   -p "Say hi"
 ```
 
-- Oracle launches Chrome headful with a persistent automation profile at `~/.oracle/browser-profile` (override with `ORACLE_BROWSER_PROFILE_DIR` or `browser.manualLoginProfileDir` in `~/.oracle/config.json`).
-- Log into chatgpt.com in that window the first time; Oracle polls until the session is active, then proceeds.
+- VellumPix launches Chrome headful with a persistent automation profile at `~/.vellumpix/browser-profile` (override with `VELLUMPIX_BROWSER_PROFILE_DIR` or `browser.manualLoginProfileDir` in `~/.vellumpix/config.json`).
+- Log into chatgpt.com in that window the first time; VellumPix polls until the session is active, then proceeds.
 - Reuse the same profile on subsequent runs (no re-login unless the session expires).
-- On macOS, newly created manual-login profiles use the native Keychain so a fresh sign-in can survive a Chrome restart. Existing profiles keep their previous cookie-encryption mode and saved login. To switch an existing profile, close its Chrome after active runs finish, choose a new directory with `--browser-manual-login-profile-dir <new-dir>`, and sign in once there. Keep the old directory until the new login has survived a restart; Oracle never deletes it during this transition.
-- Add `--browser-keep-browser` (or config `browser.keepBrowser=true`) when doing the initial login/setup or debugging so the Chrome window stays open after the run. When omitted, Oracle closes Chrome but preserves the profile on disk.
-- Cookie copy is skipped by default in this mode. To seed the persistent profile from your existing Chrome cookies despite the token-rotation risk, set `browser.manualLoginCookieSync=true` in `~/.oracle/config.json`; explicit inline cookies can also seed it without reading live Chrome.
-- If Chrome is already running with that profile and DevTools remote debugging enabled (see `DevToolsActivePort` in the profile dir), you can reuse it instead of relaunching by pointing Oracle at it with `--remote-chrome <host:port>`.
+- On macOS, newly created manual-login profiles use the native Keychain so a fresh sign-in can survive a Chrome restart. Existing profiles keep their previous cookie-encryption mode and saved login. To switch an existing profile, close its Chrome after active runs finish, choose a new directory with `--browser-manual-login-profile-dir <new-dir>`, and sign in once there. Keep the old directory until the new login has survived a restart; VellumPix never deletes it during this transition.
+- Add `--browser-keep-browser` (or config `browser.keepBrowser=true`) when doing the initial login/setup or debugging so the Chrome window stays open after the run. When omitted, VellumPix closes Chrome but preserves the profile on disk.
+- Cookie copy is skipped by default in this mode. To seed the persistent profile from your existing Chrome cookies despite the token-rotation risk, set `browser.manualLoginCookieSync=true` in `~/.vellumpix/config.json`; explicit inline cookies can also seed it without reading live Chrome.
+- If Chrome is already running with that profile and DevTools remote debugging enabled (see `DevToolsActivePort` in the profile dir), you can reuse it instead of relaunching by pointing VellumPix at it with `--remote-chrome <host:port>`.
 - Remote Chrome runs also participate in tab-slot coordination when paired with `--browser-manual-login` and a shared manual-login profile.
 
 ### Concurrent agents and long Pro runs
 
-When Codex, Claude Code, or another Oracle caller share the same manual-login profile, each browser run now acquires a tab slot before opening a ChatGPT tab. The default allows three simultaneous ChatGPT tabs; the fourth caller waits instead of failing because another agent is already using the browser. This is most useful for long Pro/Thinking runs where one agent may wait for a response while another agent needs to start a separate consult.
+When Codex, Claude Code, or another VellumPix caller share the same manual-login profile, each browser run now acquires a tab slot before opening a ChatGPT tab. The default allows three simultaneous ChatGPT tabs; the fourth caller waits instead of failing because another agent is already using the browser. This is most useful for long Pro/Thinking runs where one agent may wait for a response while another agent needs to start a separate consult.
 
-Use `--browser-max-concurrent-tabs <n>`, `browser.maxConcurrentTabs`, or `ORACLE_BROWSER_MAX_CONCURRENT_TABS` to tune the soft limit. Precedence is explicit CLI/config value, then environment, then the default of `3`; invalid or non-positive environment values fall back instead of disabling the cap. Keep the value modest: too many concurrent ChatGPT tabs can make the UI unstable or trigger account-side throttling. Oracle also serializes manual-login Chrome startup for the shared profile, then reuses the first reachable DevTools session instead of racing multiple Chrome launches against the same `user-data-dir`. The short profile lock still serializes the send/upload moment so separate agents do not type into the same composer.
+Use `--browser-max-concurrent-tabs <n>`, `browser.maxConcurrentTabs`, or `VELLUMPIX_BROWSER_MAX_CONCURRENT_TABS` to tune the soft limit. Precedence is explicit CLI/config value, then environment, then the default of `3`; invalid or non-positive environment values fall back instead of disabling the cap. Keep the value modest: too many concurrent ChatGPT tabs can make the UI unstable or trigger account-side throttling. VellumPix also serializes manual-login Chrome startup for the shared profile, then reuses the first reachable DevTools session instead of racing multiple Chrome launches against the same `user-data-dir`. The short profile lock still serializes the send/upload moment so separate agents do not type into the same composer.
 
 For live concurrency smoke, the most stable path is one already-running signed-in Chrome with remote debugging enabled, plus `--remote-chrome <host:port>`. Direct parallel launch is supported defensively, but a persistent shared Chrome gives clearer ownership and avoids account/login churn across agents.
 
 ## Remote Chrome Sessions (headless/server workflows)
 
-Oracle can reuse an already-running Chrome/Edge instance on another machine by tunneling over the Chrome DevTools Protocol. This is handy when:
+VellumPix can reuse an already-running Chrome/Edge instance on another machine by tunneling over the Chrome DevTools Protocol. This is handy when:
 
 - Your CLI runs on a headless server (Linux/macOS CI, remote mac minis, etc.) but you want the browser UI to live on a desktop where you can see uploads or respond to Captcha challenges.
 - You want to keep a single signed-in profile open (e.g., Windows VM with company SSO) while sending prompts from other hosts.
@@ -355,14 +355,14 @@ Notes:
 
 - Any Chromium flavor works (Chrome, Edge, Vivaldi, etc.)—just ensure CDP is exposed on a reachable host:port. Linux distributions often call the binary `google-chrome-stable`. On macOS you can run `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`.
 - `--remote-debugging-address=0.0.0.0` is required if the CLI connects from another machine. Lock it down behind a VPN or SSH tunnel if the network is untrusted.
-- Keep this browser window open and signed into ChatGPT; Oracle will reuse that session and **will not** copy cookies over the wire.
+- Keep this browser window open and signed into ChatGPT; VellumPix will reuse that session and **will not** copy cookies over the wire.
 
-### 2. Point Oracle at the remote browser
+### 2. Point VellumPix at the remote browser
 
-From the machine running `oracle`:
+From the machine running `vellumpix`:
 
 ```bash
-oracle --engine browser \
+vellumpix --engine browser \
   --remote-chrome 192.168.1.10:9222 \
   --prompt "Summarize the latest incident doc" \
   --file docs/incidents/latest.md
@@ -371,12 +371,12 @@ oracle --engine browser \
 Key behavior:
 
 - Use IPv6 by wrapping the host in brackets, e.g. `--remote-chrome "[2001:db8::1]:9222"`.
-- Local-only flags like `--browser-headless`, `--browser-hide-window`, `--browser-keep-browser`, and `--browser-chrome-path` are ignored because Oracle no longer launches Chrome. You still get verbose logging, model switching, attachment uploads, and markdown capture.
+- Local-only flags like `--browser-headless`, `--browser-hide-window`, `--browser-keep-browser`, and `--browser-chrome-path` are ignored because VellumPix no longer launches Chrome. You still get verbose logging, model switching, attachment uploads, and markdown capture.
 - Cookie sync is skipped automatically (the remote browser already has cookies). If you need inline cookies, use them on the machine that’s actually running Chrome.
-- Oracle opens a dedicated CDP target (new tab) for each run and closes it afterward so your existing tabs stay untouched.
-- When remote runs are served by an Oracle host with a manual-login profile, the host-side tab lease registry applies the same concurrent tab limit.
-- Attachments are transferred via CDP: Oracle reads each file locally, base64-encodes it, and uses `DataTransfer` inside the remote browser to populate the upload field. Files larger than 20 MB are rejected to keep CDP messages reasonable.
-- When the remote WebSocket disconnects, Oracle errors with “Remote Chrome connection lost…” so you can re-run after restarting the browser.
+- VellumPix opens a dedicated CDP target (new tab) for each run and closes it afterward so your existing tabs stay untouched.
+- When remote runs are served by an VellumPix host with a manual-login profile, the host-side tab lease registry applies the same concurrent tab limit.
+- Attachments are transferred via CDP: VellumPix reads each file locally, base64-encodes it, and uses `DataTransfer` inside the remote browser to populate the upload field. Files larger than 20 MB are rejected to keep CDP messages reasonable.
+- When the remote WebSocket disconnects, VellumPix errors with “Remote Chrome connection lost…” so you can re-run after restarting the browser.
 
 ### 3. Troubleshooting
 
@@ -385,25 +385,25 @@ Key behavior:
 - Ensure firewalls allow inbound TCP to the debugging port and that you’re not behind a captive proxy stripping WebSocket upgrades.
 - Because we do not control the remote lifecycle, Chrome stays running after the session. Shut it down manually when you’re done or remove `--remote-debugging-port` to stop exposing CDP.
 
-### Remote Service Mode (`oracle serve`)
+### Remote Service Mode (`vellumpix serve`)
 
 To host requests through an already-running signed-in Chrome, start the service with:
 
 ```bash
-oracle serve --host 127.0.0.1 --browser-attach-running --remote-chrome 127.0.0.1:9222 --browser-approval-wait 5m
+vellumpix serve --host 127.0.0.1 --browser-attach-running --remote-chrome 127.0.0.1:9222 --browser-approval-wait 5m
 ```
 
-These are **host settings**: `browser.attachRunning`, `browser.remoteChrome`, and `browser.approvalWaitMs` in the service host configuration also apply. Explicit flags override configuration; `ORACLE_BROWSER_APPROVAL_WAIT` overrides the configured wait unless the flag is supplied. Attach-running mode (or a standalone `--remote-chrome` endpoint for classic DevTools HTTP) skips cookie extraction and manual-login Chrome startup. Each run uses the selected browser; service shutdown leaves that browser running. With no attachment settings, the existing dedicated manual-login default remains. Clients cannot override the host endpoint, attach mode, or approval wait. Add `--max-concurrent-runs 2 --max-queued-runs 8` to opt into bounded admission.
+These are **host settings**: `browser.attachRunning`, `browser.remoteChrome`, and `browser.approvalWaitMs` in the service host configuration also apply. Explicit flags override configuration; `VELLUMPIX_BROWSER_APPROVAL_WAIT` overrides the configured wait unless the flag is supplied. Attach-running mode (or a standalone `--remote-chrome` endpoint for classic DevTools HTTP) skips cookie extraction and manual-login Chrome startup. Each run uses the selected browser; service shutdown leaves that browser running. With no attachment settings, the existing dedicated manual-login default remains. Clients cannot override the host endpoint, attach mode, or approval wait. Add `--max-concurrent-runs 2 --max-queued-runs 8` to opt into bounded admission.
 
 Prefer to keep Chrome entirely on the remote Mac (no DevTools tunneling, no manual cookie shuffling)? Use the built-in service:
 
 1. **Start the host**
 
    ```bash
-   oracle serve
+   vellumpix serve
    ```
 
-   Oracle picks a free port, launches Chrome, starts an HTTP/SSE API, and prints:
+   VellumPix picks a free port, launches Chrome, starts an HTTP/SSE API, and prints:
 
    ```
    Listening at 0.0.0.0:9473
@@ -416,7 +416,7 @@ Prefer to keep Chrome entirely on the remote Mac (no DevTools tunneling, no manu
 2. **Run from your laptop**
 
    ```bash
-   oracle --engine browser \
+   vellumpix --engine browser \
      --remote-host 192.168.64.2:9473 \
      --remote-token c4e5f9... \
    --prompt "Summarize the incident doc" \
@@ -425,25 +425,25 @@ Prefer to keep Chrome entirely on the remote Mac (no DevTools tunneling, no manu
 
    - `--remote-host` points the CLI at the VM.
    - `--model gemini-3.5-flash` (or another supported Gemini browser model) selects the Gemini web executor on the host. Upgrade both endpoints for remote Gemini; see [Gemini](gemini.md) for supported options. GPT models keep the ChatGPT browser path.
-   - `--remote-token` matches the token printed by `oracle serve` (set `ORACLE_REMOTE_TOKEN` to avoid repeating it).
-   - You can also set defaults in `~/.oracle/config.json` (`browser.remoteHost`, `browser.remoteToken`) so you don’t need the flags; env vars still override those when present.
+   - `--remote-token` matches the token printed by `vellumpix serve` (set `VELLUMPIX_REMOTE_TOKEN` to avoid repeating it).
+   - You can also set defaults in `~/.vellumpix/config.json` (`browser.remoteHost`, `browser.remoteToken`) so you don’t need the flags; env vars still override those when present.
    - Cookies are **not** transferred from your laptop. The service reuses the dedicated automation profile on the host.
 
 3. **What happens**
    - The CLI assembles the composed prompt + file bundle locally, sends them to the VM, and streams log lines/answer text back through the same HTTP connection.
    - The remote host uses a dedicated persistent automation profile by default. Sign in once in the Chrome window it opens, then leave that profile isolated from your interactive Chrome session.
-   - `oracle serve --browser-cookie-sync` restores the old behavior of copying cookies from the host's live Chrome profile. This is an explicit fallback: ChatGPT token rotation in the service browser can invalidate the host's interactive session.
+   - `vellumpix serve --browser-cookie-sync` restores the old behavior of copying cookies from the host's live Chrome profile. This is an explicit fallback: ChatGPT token rotation in the service browser can invalidate the host's interactive session.
    - Background/detached sessions (`--no-wait`) are disabled in remote mode so the CLI can keep streaming output.
-   - `oracle serve` logs the DevTools port of the manual-login Chrome (e.g., `Manual-login Chrome DevTools port: 54371`). Runs automatically attach to that logged-in Chrome; you can use the printed port/JSON URL for debugging if needed.
+   - `vellumpix serve` logs the DevTools port of the manual-login Chrome (e.g., `Manual-login Chrome DevTools port: 54371`). Runs automatically attach to that logged-in Chrome; you can use the printed port/JSON URL for debugging if needed.
 
 4. **Stop the host**
-   - `Ctrl+C` on the VM shuts down the HTTP server. Shared manual-login Chrome can remain available for reuse. Restart `oracle serve` whenever you need a new session; omit `--token` to let it rotate automatically.
+   - `Ctrl+C` on the VM shuts down the HTTP server. Shared manual-login Chrome can remain available for reuse. Restart `vellumpix serve` whenever you need a new session; omit `--token` to let it rotate automatically.
 
 This mode is ideal when you have a macOS VM (or spare Mac mini) logged into ChatGPT and you just want to run the CLI from another machine without ever copying profiles or keeping Chrome visible locally.
 
 #### Optional concurrent admission
 
-Plain `oracle serve` retains single-flight admission and HTTP 409 `busy`. To opt into FIFO queueing, use `oracle serve --max-concurrent-runs 2 --max-queued-runs 8`. The queue defaults to eight waiting requests; zero disables waiting. Active capacity is clamped to the host's browser tab limit, resolved from host configuration, then `ORACLE_BROWSER_MAX_CONCURRENT_TABS`, then the existing default of three. Client settings cannot raise that limit. `/health` reports the effective active/queued counts and limits. A full opt-in queue returns HTTP 503 `queue_full` with `Retry-After: 60`.
+Plain `vellumpix serve` retains single-flight admission and HTTP 409 `busy`. To opt into FIFO queueing, use `vellumpix serve --max-concurrent-runs 2 --max-queued-runs 8`. The queue defaults to eight waiting requests; zero disables waiting. Active capacity is clamped to the host's browser tab limit, resolved from host configuration, then `VELLUMPIX_BROWSER_MAX_CONCURRENT_TABS`, then the existing default of three. Client settings cannot raise that limit. `/health` reports the effective active/queued counts and limits. A full opt-in queue returns HTTP 503 `queue_full` with `Retry-After: 60`.
 
 In queue mode, a disconnected caller gives up its waiting position or cancels its active automation. Owned targets are closed unless the caller explicitly requested they remain open; borrowed tabs and the shared Chrome process are preserved. Cancellation stops further automation and cleans up resources that arrive late, but does not undo an already submitted prompt or attest that ChatGPT stopped backend generation. Host artifact sessions receive a sanitized per-run namespace, so clients with the same slug do not share files.
 
@@ -459,9 +459,9 @@ Programmatic `BrowserRunOptions.signal` requests cancellation explicitly even on
 ## Testing Notes
 
 - ChatGPT automation smoke: `pnpm test:browser`
-- Gemini web (cookie) smoke: `ORACLE_LIVE_TEST=1 pnpm vitest run tests/live/gemini-web-live.test.ts` (requires a signed-in Chrome profile at `gemini.google.com`)
+- Gemini web (cookie) smoke: `VELLUMPIX_LIVE_TEST=1 pnpm vitest run tests/live/gemini-web-live.test.ts` (requires a signed-in Chrome profile at `gemini.google.com`)
 - `pnpm test --filter browser` does not exist yet; manual runs with `--engine browser -v` are the current validation path.
-- Most of the heavy lifting lives in `src/browserMode.ts`. If you change selectors or the mutation observer logic, run a local `oracle --engine browser --browser-keep-browser` session so you can inspect DevTools before cleanup.
+- Most of the heavy lifting lives in `src/browserMode.ts`. If you change selectors or the mutation observer logic, run a local `vellumpix --engine browser --browser-keep-browser` session so you can inspect DevTools before cleanup.
 
 ### Shared-profile lifecycle
 
@@ -471,8 +471,8 @@ performs process cleanup while holding the registry lock. Unknown ownership,
 malformed owner records, and transient liveness failures preserve the browser.
 Owner records are published atomically, so a crash during initialization leaves
 an ownerless lock that can be reclaimed after five minutes. If external corruption
-leaves a malformed `oracle-tab-leases.lock/owner.json`, stop every Oracle controller
-using that profile before removing that profile's `oracle-tab-leases.lock` directory;
+leaves a malformed `vellumpix-tab-leases.lock/owner.json`, stop every VellumPix controller
+using that profile before removing that profile's `vellumpix-tab-leases.lock` directory;
 then restart the controllers. Do not remove the lock while any controller is active.
 Restart all browser controllers together after upgrading: older live controllers
 used a different lock-timeout recovery rule. Existing stored lease records remain
@@ -495,12 +495,12 @@ export them with other session artifacts; copies have their own retention.
 Treat the full raw record as conversation data when sharing it.
 
 Capture uses ChatGPT's undocumented conversation endpoint from the authenticated
-page and reuses Oracle's existing Chrome connection. Two independent fetches
+page and reuses VellumPix's existing Chrome connection. Two independent fetches
 produce the raw record and in-page SHA-256 digests. The second body never crosses
 the browser boundary. Document hashes may differ because provider metadata
 changes; this alone is not an answer-fidelity failure.
 
-The evidence format is `oracle.provider-native-capture-evidence/v1`, with
+The evidence format is `vellumpix.provider-native-capture-evidence/v1`, with
 `text-fields-v1` normalization: string-only text parts and thought contents join
 with two newlines; code/execution output use `text`; reasoning recaps use
 `content`. Mixed multimodal and unknown content have null digests, while their
@@ -509,7 +509,7 @@ with external Python JSON normalization.
 
 `browser.providerNativeCapture` in session metadata records `matched`, `divergent`,
 or `unknown`. A match requires the captured assistant's message ID on the active
-provider branch and exact UTF-8 text, optionally trimming Oracle's surrounding
+provider branch and exact UTF-8 text, optionally trimming VellumPix's surrounding
 whitespace. User turns, earlier answers, and alternate branches cannot substitute
 for that message. Deep Research reports without an assistant message ID, unsupported
 content, missing IDs, and failed evidence fetches report `unknown`.
@@ -522,5 +522,5 @@ logs and failure summaries contain fixed reasons rather than response bodies or
 exception details. The raw artifact is unchanged provider data, not a redacted transcript.
 
 When `--copy-profile` copies a running Chrome profile, vanished temporary files are tolerated with GNU rsync and macOS openrsync. Other transfer errors and missing authentication files stop the copy and remove the incomplete temporary profile.
-If a persistent manual-login profile is signed out, Oracle always prints login guidance and restores a hidden macOS window so you can sign in. The existing login wait limit still applies.
+If a persistent manual-login profile is signed out, VellumPix always prints login guidance and restores a hidden macOS window so you can sign in. The existing login wait limit still applies.
 Image generation supports both ChatGPT file URLs and page-local blob galleries. Blob images are saved while the originating tab is open; keep that tab alive until the download finishes.

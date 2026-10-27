@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createGeminiClient, resolveGeminiModelId } from "../src/oracle/gemini.js";
-import { runOracle, type OracleRequestBody } from "../src/oracle.js";
+import { createGeminiClient, resolveGeminiModelId } from "../src/vellumpix/gemini.js";
+import { runVellumPix, type VellumPixRequestBody } from "../src/vellumpix.js";
 import { GoogleGenAI } from "@google/genai";
 
 const { mockGenerateContent, mockGenerateContentStream } = vi.hoisted(() => {
@@ -82,7 +82,7 @@ describe("Gemini Client", () => {
     };
     mockGenerateContent.mockResolvedValue(mockResponse);
 
-    const requestBody: OracleRequestBody = {
+    const requestBody: VellumPixRequestBody = {
       model: "gemini-3-pro",
       instructions: "System prompt",
       input: [
@@ -139,7 +139,7 @@ describe("Gemini Client", () => {
 
     mockGenerateContentStream.mockResolvedValue(mockStream());
 
-    const requestBody: OracleRequestBody = {
+    const requestBody: VellumPixRequestBody = {
       model: "gemini-3-pro",
       instructions: "System",
       input: [
@@ -187,7 +187,7 @@ describe("Gemini Client", () => {
       usageMetadata: {},
     });
 
-    const requestBody: OracleRequestBody = {
+    const requestBody: VellumPixRequestBody = {
       model: "gemini-3-pro",
       instructions: "",
       input: [
@@ -244,7 +244,7 @@ describe("Gemini Client", () => {
 
     mockGenerateContentStream.mockResolvedValue(mockStream());
 
-    const requestBody: OracleRequestBody = {
+    const requestBody: VellumPixRequestBody = {
       model: "gemini-3-pro",
       instructions: "",
       input: [
@@ -276,7 +276,7 @@ describe("Gemini Client", () => {
       },
     });
 
-    const requestBody: OracleRequestBody = {
+    const requestBody: VellumPixRequestBody = {
       model: "gemini-3-pro",
       instructions: "Sys",
       input: [
@@ -311,7 +311,7 @@ describe("Gemini Client", () => {
     );
     const logs: string[] = [];
 
-    const result = await runOracle(
+    const result = await runVellumPix(
       { prompt: "usage check", model: "gemini-3.1-pro", background: false },
       {
         apiKey: "fake-key",

@@ -1,5 +1,10 @@
-import type { RunOracleOptions, ModelName, AzureOptions, ModelOverridesConfig } from "../oracle.js";
-import { DEFAULT_MODEL, MODEL_CONFIGS } from "../oracle.js";
+import type {
+  RunVellumPixOptions,
+  ModelName,
+  AzureOptions,
+  ModelOverridesConfig,
+} from "../vellumpix.js";
+import { DEFAULT_MODEL, MODEL_CONFIGS } from "../vellumpix.js";
 import type { UserConfig } from "../config.js";
 import type { EngineMode } from "./engine.js";
 import { resolveEngine } from "./engine.js";
@@ -9,13 +14,13 @@ import {
   resolveApiModel,
   normalizeBaseUrl,
 } from "./options.js";
-import { resolveGeminiModelId } from "../oracle/gemini.js";
+import { resolveGeminiModelId } from "../vellumpix/gemini.js";
 import { resolveBrowserProvider } from "../browser/provider.js";
-import { resolveOverriddenApiModel } from "../oracle/modelResolver.js";
-import { PromptValidationError } from "../oracle/errors.js";
+import { resolveOverriddenApiModel } from "../vellumpix/modelResolver.js";
+import { PromptValidationError } from "../vellumpix/errors.js";
 import { normalizeChatGptModelForBrowser, isGpt6ProAlias } from "./browserConfig.js";
 import { resolveConfiguredMaxFileSizeBytes } from "./fileSize.js";
-import { isAzureOpenAICandidateModel } from "../oracle/providerRouting.js";
+import { isAzureOpenAICandidateModel } from "../vellumpix/providerRouting.js";
 
 export interface ResolveRunOptionsInput {
   prompt: string;
@@ -28,7 +33,7 @@ export interface ResolveRunOptionsInput {
 }
 
 export interface ResolvedRunOptions {
-  runOptions: RunOracleOptions;
+  runOptions: RunVellumPixOptions;
   resolvedEngine: EngineMode;
   engineCoercedToApi?: boolean;
 }
@@ -47,7 +52,7 @@ export function resolveRunOptionsFromConfig({
     configEngine: userConfig?.engine,
     env,
   });
-  const envEnginePreference = (env.ORACLE_ENGINE ?? "").trim().toLowerCase();
+  const envEnginePreference = (env.VELLUMPIX_ENGINE ?? "").trim().toLowerCase();
   const browserRequested = engine === "browser";
   const explicitApiEngineRequested = engine === "api" || (!engine && envEnginePreference === "api");
   const browserConfigured = userConfig?.engine === "browser" && !explicitApiEngineRequested;
@@ -148,7 +153,7 @@ export function resolveRunOptionsFromConfig({
   const apiModelOverrides = fixedEngine === "api" ? userConfig?.modelOverrides : undefined;
   const effectiveModelId = resolveEffectiveModelId(chosenModel, apiModelOverrides);
 
-  const runOptions: RunOracleOptions = {
+  const runOptions: RunVellumPixOptions = {
     prompt: promptWithSuffix,
     model: chosenModel,
     models: uniqueMultiModels.length > 0 ? uniqueMultiModels : undefined,

@@ -6,7 +6,7 @@ import { INPUT_SELECTORS, SEND_BUTTON_SELECTORS, UPLOAD_STATUS_SELECTORS } from 
 import { buildConversationTurnListExpression } from "../conversationTurns.js";
 import { delay } from "../utils.js";
 import { logDomFailure } from "../domDebug.js";
-import { BrowserAutomationError } from "../../oracle/errors.js";
+import { BrowserAutomationError } from "../../vellumpix/errors.js";
 import { transferAttachmentViaDataTransfer } from "./attachmentDataTransfer.js";
 import { buildAttachmentProgressExpression } from "./attachmentProgress.js";
 import { buildActiveComposerRootExpression } from "./composerRoot.js";
@@ -91,7 +91,7 @@ export async function activateComposerPlus(
           if (!(node instanceof HTMLElement)) continue;
           const rect = node.getBoundingClientRect();
           if (rect.width <= 0 || rect.height <= 0) continue;
-          const nodes = window.__oracleAttachmentPlusNodes ??= Object.create(null);
+          const nodes = window.__vellumpixAttachmentPlusNodes ??= Object.create(null);
           nodes[${JSON.stringify(guardId)}] = node;
           node.focus({ preventScroll: true });
           return { status: 'focused', startUrl, focused: document.activeElement === node };
@@ -118,7 +118,7 @@ export async function activateComposerPlus(
   }
   if (probe?.status === "work-selected") {
     throw new BrowserAutomationError(
-      "Oracle refused to open the attachment menu because ChatGPT is in Work mode.",
+      "VellumPix refused to open the attachment menu because ChatGPT is in Work mode.",
       {
         stage: "upload-attachment",
         code: "attachment-control-work-mode",
@@ -135,7 +135,7 @@ export async function activateComposerPlus(
   try {
     const prepared = await runtime.evaluate({
       expression: `(() => {
-        const button = window.__oracleAttachmentPlusNodes?.[${JSON.stringify(guardId)}];
+        const button = window.__vellumpixAttachmentPlusNodes?.[${JSON.stringify(guardId)}];
         const check = () => {
           const navigation = ${buildComposerNavigationValidationExpression(startUrl)};
           const rect = button?.getBoundingClientRect();
@@ -165,7 +165,7 @@ export async function activateComposerPlus(
           window.removeEventListener('keyup', onKey, true);
           window.removeEventListener('click', onClick, true);
         };
-        const guards = window.__oracleAttachmentPlusGuards ??= Object.create(null);
+        const guards = window.__vellumpixAttachmentPlusGuards ??= Object.create(null);
         guards[${JSON.stringify(guardId)}] = guard;
         const state = safeCheck();
         if (!state.contextMatches || !state.focused) { guard.blocked = state; return state; }
@@ -200,9 +200,9 @@ export async function activateComposerPlus(
       runtime
         .evaluate({
           expression: `(() => {
-        const guards = window.__oracleAttachmentPlusGuards;
+        const guards = window.__vellumpixAttachmentPlusGuards;
         const guard = guards?.[${JSON.stringify(guardId)}];
-        const nodes = window.__oracleAttachmentPlusNodes;
+        const nodes = window.__vellumpixAttachmentPlusNodes;
         if (nodes) delete nodes[${JSON.stringify(guardId)}];
         if (!guard) return null;
         const summary = { sawKeyDown: guard.sawKeyDown, clicked: guard.clicked, blocked: guard.blocked };
@@ -765,8 +765,8 @@ export async function uploadAttachmentFile(
           (local ? 40 : 0) +
           (visible ? 30 : -200) +
           (!imageOnly ? 30 : isImageAttachment ? 20 : 5);
-        el.setAttribute('data-oracle-upload-candidate', 'true');
-        el.setAttribute('data-oracle-upload-idx', String(idx));
+        el.setAttribute('data-vellumpix-upload-candidate', 'true');
+        el.setAttribute('data-vellumpix-upload-idx', String(idx));
         return { idx: idx++, score, imageOnly };
       });
 
@@ -887,7 +887,7 @@ export async function uploadAttachmentFile(
   };
 
   const inputSnapshotFor = (idx: number) => `(() => {
-    const input = document.querySelector('input[type="file"][data-oracle-upload-idx="${idx}"]');
+    const input = document.querySelector('input[type="file"][data-vellumpix-upload-idx="${idx}"]');
     if (!(input instanceof HTMLInputElement)) {
       return { names: [], value: '', count: 0 };
     }
@@ -1023,7 +1023,7 @@ export async function uploadAttachmentFile(
         return /\\buploading\\b/.test(text) || /\\bprocessing\\b/.test(text);
       });
     });
-    const input = document.querySelector('input[type="file"][data-oracle-upload-idx="${idx}"]');
+    const input = document.querySelector('input[type="file"][data-vellumpix-upload-idx="${idx}"]');
     const inputNames =
       input instanceof HTMLInputElement
         ? Array.from(input.files || []).map((f) => f?.name ?? '').filter(Boolean)
@@ -1103,7 +1103,7 @@ export async function uploadAttachmentFile(
       }
       const resultNode = await dom.querySelector({
         nodeId: documentNode.root.nodeId,
-        selector: `input[type="file"][data-oracle-upload-idx="${idx}"]`,
+        selector: `input[type="file"][data-vellumpix-upload-idx="${idx}"]`,
       });
       if (!resultNode?.nodeId) {
         continue;
@@ -1182,13 +1182,13 @@ export async function uploadAttachmentFile(
           if (mode === "set") {
             await withGuardedFileInput(
               runtime,
-              `input[type="file"][data-oracle-upload-idx="${idx}"]`,
+              `input[type="file"][data-vellumpix-upload-idx="${idx}"]`,
               navigationUrl,
               () => dom.setFileInputFiles({ nodeId: resultNode.nodeId, files: [attachment.path] }),
             );
             attemptIssued = true;
           } else {
-            const selector = `input[type="file"][data-oracle-upload-idx="${idx}"]`;
+            const selector = `input[type="file"][data-vellumpix-upload-idx="${idx}"]`;
             try {
               await transferAttachmentViaDataTransfer(runtime, attachment, selector, navigationUrl);
               attemptIssued = true;
@@ -1230,7 +1230,7 @@ export async function uploadAttachmentFile(
       const dispatchInputEvents = async () => {
         await dispatchGuardedFileInputEvents(
           runtime,
-          `input[type="file"][data-oracle-upload-idx="${idx}"]`,
+          `input[type="file"][data-vellumpix-upload-idx="${idx}"]`,
           navigationUrl,
         );
       };
@@ -1262,7 +1262,7 @@ export async function uploadAttachmentFile(
         await assertNavigation();
         await clearGuardedFileInput(
           runtime,
-          `input[type="file"][data-oracle-upload-idx="${idx}"]`,
+          `input[type="file"][data-vellumpix-upload-idx="${idx}"]`,
           navigationUrl,
         );
         await delay(150);
@@ -1309,7 +1309,7 @@ export async function uploadAttachmentFile(
         await assertNavigation();
         await clearGuardedFileInput(
           runtime,
-          `input[type="file"][data-oracle-upload-idx="${idx}"]`,
+          `input[type="file"][data-vellumpix-upload-idx="${idx}"]`,
           navigationUrl,
         );
         await delay(150);
@@ -2042,7 +2042,7 @@ export function buildUserTurnAttachmentExpressionForTest(options?: {
 export interface AttachmentVisibleOptions {
   /**
    * Count a file input that still holds the file (default true). ChatGPT's change handler empties
-   * the input whenever it runs, whether it keeps the file or not, so after Oracle filled that
+   * the input whenever it runs, whether it keeps the file or not, so after VellumPix filled that
    * input itself the FileList shows only that the handler has not run; such callers pass false.
    */
   countFileInput?: boolean;

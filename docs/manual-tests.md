@@ -10,8 +10,8 @@ and run the live API suite before shipping major transport changes.
 - macOS with Chrome installed (default profile signed in to ChatGPT Pro).
 - Node 24+ and `pnpm install` already completed.
 - Headful display access (no `--browser-headless`).
-- When debugging, add `--browser-keep-browser` so Chrome stays open after Oracle exits, then connect with `pnpm exec tsx scripts/browser-tools.ts ...` (screenshot, eval, DOM picker, etc.).
-- Ensure no Chrome instances are force-terminated mid-run; let Oracle clean up once you’re done capturing state.
+- When debugging, add `--browser-keep-browser` so Chrome stays open after VellumPix exits, then connect with `pnpm exec tsx scripts/browser-tools.ts ...` (screenshot, eval, DOM picker, etc.).
+- Ensure no Chrome instances are force-terminated mid-run; let VellumPix clean up once you’re done capturing state.
 - Clipboard checks (`browser-tools.ts eval "navigator.clipboard.readText()"`) trigger a permission dialog in Chrome—approve it for debugging, but remember that we can’t rely on readText in unattended runs.
 
 ## Test Cases
@@ -24,7 +24,7 @@ Run `pnpm build && node scripts/assistant-runtime-proof.mjs` with Chrome install
 
 Run `pnpm build && node scripts/recovery-retirement-proof.mjs` for built-CLI harvests against isolated Chrome. The synthetic matrix checks full-answer persistence before owned-tab retirement and preservation of a peer, borrowed/kept targets, active controllers, and the current generation stop control.
 
-For signed-in proof, run a Pro consultation with a short response timeout and automatic reattach disabled, then let the controller exit. Confirm the tab remains available, reattach after completion, and verify the complete answer is saved before only that owned target closes. Use `ORACLE_NO_DETACH=1` when exercising the foreground controller. Never click **Answer now**.
+For signed-in proof, run a Pro consultation with a short response timeout and automatic reattach disabled, then let the controller exit. Confirm the tab remains available, reattach after completion, and verify the complete answer is saved before only that owned target closes. Use `VELLUMPIX_NO_DETACH=1` when exercising the foreground controller. Never click **Answer now**.
 
 ### Attachment evidence and single-send regression (no login)
 
@@ -47,12 +47,12 @@ Run this after changing attachment-menu activation or Chat/Work detection. Use a
 1. Record the newest sidebar Chat and Work entries, then start an attachment consultation from the Chat landing page.
 2. Verify the prompt becomes a committed user turn in an ordinary `/c/<id>` Chat conversation. A project rewrite such as `/c/<id>` to `/g/<project>/.../c/<id>` is allowed only when the conversation id is unchanged. A delayed Work/conversation navigation or switch between non-conversation landing/project paths injected after upload readiness but before final dispatch must fail without keyboard or mouse send events; query, hash, and trailing-slash-only rewrites remain allowed.
 3. Verify no new Work task was created, the session records `promptSubmitted=true`, and the attachment appears in the committed user turn.
-4. Repeat from an already selected Work composer. Oracle must fail before file assignment or prompt submission with an attachment Work-mode error.
+4. Repeat from an already selected Work composer. VellumPix must fail before file assignment or prompt submission with an attachment Work-mode error.
 5. For image generation, also require terminal completion and decode the downloaded image from the configured output path; `running`, a visible upload, or an enabled send button is not completion evidence.
 
 ### Quick browser port smoke
 
-- `pnpm test:browser` — launches headful Chrome and checks the DevTools endpoint is reachable. Set `ORACLE_BROWSER_PORT` (or `ORACLE_BROWSER_DEBUG_PORT`) to reuse a fixed port when you’ve already opened a firewall rule.
+- `pnpm test:browser` — launches headful Chrome and checks the DevTools endpoint is reachable. Set `VELLUMPIX_BROWSER_PORT` (or `VELLUMPIX_BROWSER_DEBUG_PORT`) to reuse a fixed port when you’ve already opened a firewall rule.
 
 ### Gemini browser mode (Gemini web / cookies)
 
@@ -63,10 +63,10 @@ Prereqs:
 - Chrome profile is signed into `gemini.google.com`.
 
 1. Generate an image:
-   `pnpm run oracle -- --engine browser --model gemini-3-pro --prompt "a cute robot holding a banana" --generate-image /tmp/gemini-gen.jpg --aspect 1:1 --wait --verbose`
+   `pnpm run vellumpix -- --engine browser --model gemini-3-pro --prompt "a cute robot holding a banana" --generate-image /tmp/gemini-gen.jpg --aspect 1:1 --wait --verbose`
    - Confirm the output file exists and is a real image (`file /tmp/gemini-gen.jpg`).
 2. Edit an image:
-   `pnpm run oracle -- --engine browser --model gemini-3-pro --prompt "add sunglasses" --edit-image /tmp/gemini-gen.jpg --output /tmp/gemini-edit.jpg --wait --verbose`
+   `pnpm run vellumpix -- --engine browser --model gemini-3-pro --prompt "add sunglasses" --edit-image /tmp/gemini-gen.jpg --output /tmp/gemini-edit.jpg --wait --verbose`
    - Confirm `/tmp/gemini-edit.jpg` exists.
 
 ### Multi-Model CLI fan-out
@@ -74,25 +74,25 @@ Prereqs:
 Run this whenever you touch the session store, CLI session views, or TUI wiring for multi-model runs.
 
 1. Kick off an API multi-run:
-   `pnpm run oracle -- --models "gpt-5.1-pro,gemini-3-pro" --prompt "Compare the moon & sun."`
+   `pnpm run vellumpix -- --models "gpt-5.1-pro,gemini-3-pro" --prompt "Compare the moon & sun."`
    - Expect stdout to print sequential sections, one per model (`[gpt-5.1-pro] …` followed by `[gemini-3-pro] …`). No interleaved tokens.
-2. Capture the session ID from the summary line. Run `oracle session --status --model gpt-5.1-pro`.
+2. Capture the session ID from the summary line. Run `vellumpix session --status --model gpt-5.1-pro`.
    - Table should collapse to sessions that include GPT-5.1 Pro and show status icons (✓/⌛/✖) per model.
-3. Inspect detailed logs: `oracle session <id>`
+3. Inspect detailed logs: `vellumpix session <id>`
    - The metadata header now includes a `Models:` block with one line per model plus token counts.
    - When prompted, pick `View gemini-3-pro log` and confirm only that model’s stream renders. Refresh should keep completed models intact even if others still run.
-4. Model filter path: `oracle session <id> --model gemini-3-pro`
+4. Model filter path: `vellumpix session <id> --model gemini-3-pro`
    - Attach mode should error if that model is missing (double-check by filtering for a bogus model), otherwise it should render the prompt + single-model log only.
 
 ### Write-output export (API)
 
 Run this when touching session serialization, file IO helpers, or CLI flag plumbing.
 
-1. `ORACLE_LIVE_TEST=1 OPENAI_API_KEY=<real key> pnpm vitest run tests/live/write-output-live.test.ts --runInBand`
+1. `VELLUMPIX_LIVE_TEST=1 OPENAI_API_KEY=<real key> pnpm vitest run tests/live/write-output-live.test.ts --runInBand`
    - Expect the test to create a temp `write-output-live.md` file containing `write-output e2e`.
-2. Manual spot-check: `oracle --prompt "answer file smoke" --write-output /tmp/out.md --wait`
+2. Manual spot-check: `vellumpix --prompt "answer file smoke" --write-output /tmp/out.md --wait`
    - Confirm `/tmp/out.md` exists with the answer text and a trailing newline.
-3. Multi-model spot-check: `oracle --models "gpt-5.1-pro,gemini-3-pro" --prompt "two files" --write-output /tmp/out.md --wait`
+3. Multi-model spot-check: `vellumpix --models "gpt-5.1-pro,gemini-3-pro" --prompt "two files" --write-output /tmp/out.md --wait`
    - Confirm `/tmp/out.gpt-5.1-pro.md` and `/tmp/out.gemini-3-pro.md` exist with distinct content.
 
 ### CLI guardrails and perf traces
@@ -100,13 +100,13 @@ Run this when touching session serialization, file IO helpers, or CLI flag plumb
 Run this when touching top-level CLI startup, option parsing, signal handling, or trace output.
 
 1. Missing prompt:
-   `pnpm run oracle -- --engine api`
+   `pnpm run vellumpix -- --engine api`
    - Expect help plus a nonzero exit code.
 2. Preview conflict:
-   `pnpm run oracle -- --dry-run summary --render --prompt "conflict"`
+   `pnpm run vellumpix -- --dry-run summary --render --prompt "conflict"`
    - Expect a clear conflict error and nonzero exit.
 3. Perf trace:
-   `pnpm run oracle -- --perf-trace --perf-trace-path /tmp/oracle-perf.json --dry-run summary --prompt "trace smoke"`
+   `pnpm run vellumpix -- --perf-trace --perf-trace-path /tmp/vellumpix-perf.json --dry-run summary --prompt "trace smoke"`
    - Confirm the JSON contains `cli-module-ready`, `root-command-start`, `first-output`, and `exit`, and prompt/key-like argv values are redacted.
 
 ### Thinking effort evidence
@@ -141,7 +141,7 @@ Debug note: when you have a live ChatGPT tab open under a DevTools port and need
 1. **Prompt Submission & Model Switching**
    - With Chrome signed in and cookie sync enabled, run
      ```bash
-     pnpm run oracle -- --engine browser --browser-cookie-sync --model gpt-5.5 \
+     pnpm run vellumpix -- --engine browser --browser-cookie-sync --model gpt-5.5 \
        --prompt "Line 1\nLine 2\nLine 3"
      ```
    - Observe logs for:
@@ -153,23 +153,23 @@ Debug note: when you have a live ChatGPT tab open under a DevTools port and need
 2. **Markdown Capture**
    - Prompt:
      ```bash
-     pnpm run oracle -- --engine browser --browser-cookie-sync --model gpt-5.5 \
+     pnpm run vellumpix -- --engine browser --browser-cookie-sync --model gpt-5.5 \
        --prompt "Produce a short bullet list with code fencing."
      ```
    - Expected CLI output:
      - `Answer:` section containing bullet list with Markdown preserved (e.g., `- item`, fenced code).
-     - Session log (`oracle session <id>`) should show the assistant markdown (confirm via `grep -n '```' ~/.oracle/sessions/<id>/output.log`).
+     - Session log (`vellumpix session <id>`) should show the assistant markdown (confirm via `grep -n '```' ~/.vellumpix/sessions/<id>/output.log`).
 
 3. **Stop Button Handling**
 
 - Start a long prompt (`"Write a detailed essay about browsers"`) and once ChatGPT responds, manually click “Stop generating” inside Chrome.
-- Oracle should detect the assistant message (partial) and still store the markdown.
+- VellumPix should detect the assistant message (partial) and still store the markdown.
 
 4. **Override Flag**
 
 - Run with `--browser-allow-cookie-errors` while intentionally breaking bindings.
 - Confirm log shows `Cookie sync failed (continuing with override)` and the run proceeds headless/logged-out.
-- Remember: the browser composer now pastes only the user prompt (plus any inline file blocks). If you see the default “You are Oracle…” text or other system-prefixed content in the ChatGPT composer, something regressed in `assembleBrowserPrompt` and you should stop and file a bug.
+- Remember: the browser composer now pastes only the user prompt (plus any inline file blocks). If you see the default “You are VellumPix…” text or other system-prefixed content in the ChatGPT composer, something regressed in `assembleBrowserPrompt` and you should stop and file a bug.
 - Heartbeats: Browser runs emit `--heartbeat` status while waiting. Long Thinking/Pro runs should show `[browser] ChatGPT thinking ...` or `[browser] Waiting for ChatGPT response ...`; the log must not include reasoning text from the side panel.
 
 ### Service admission and cancellation
@@ -178,8 +178,8 @@ For service admission and cancellation, run `pnpm build && node scripts/serve-qu
 
 ## Post-Run Validation
 
-- `oracle session <id>` should replay the transcript with markdown.
-- `~/.oracle/sessions/<id>/meta.json` must include `browser.config` metadata (model label, cookie settings) and `browser.runtime` (PID/port).
+- `vellumpix session <id>` should replay the transcript with markdown.
+- `~/.vellumpix/sessions/<id>/meta.json` must include `browser.config` metadata (model label, cookie settings) and `browser.runtime` (PID/port).
 
 Document results (pass/fail, session IDs) in PR descriptions so reviewers can audit real-world behavior.
 
@@ -191,61 +191,61 @@ Document results (pass/fail, session IDs) in PR descriptions so reviewers can au
 - 2025-11-18 — Browser gpt-5.1-pro (`browser-smoke-pro-three-words`): completed in ~1m33s; response noted “Search tool used.”.
 - 2025-11-18 (rerun) — API gpt-5.1 (`api-smoke-give-two-words`): reconfirmed OK; same answer + cost bracket.
 - 2025-11-18 (rerun) — Browser gpt-5.1-pro (`browser-smoke-pro-three-words`): reconfirmed OK; included heartbeat progress and search tool note.
-- 2025-11-20 — Browser gpt-5.1 via `oracle serve` (remote host on same Mac): fetched https://example.com; title “Example Domain”; first sentence “This domain is for use in documentation examples without needing permission.” (ran via tmux sessions `oracle-serve` and `oracle-client`).
+- 2025-11-20 — Browser gpt-5.1 via `vellumpix serve` (remote host on same Mac): fetched https://example.com; title “Example Domain”; first sentence “This domain is for use in documentation examples without needing permission.” (ran via tmux sessions `vellumpix-serve` and `vellumpix-client`).
 
 ## Browser Regression Checklist (manual)
 
 Run these four smoke tests whenever we touch browser automation:
 
 1. **GPT-5.5 simple prompt**
-   `pnpm run oracle -- --engine browser --browser-manual-login --model gpt-5.5 --prompt "Give me two short markdown bullet points about tables"`
+   `pnpm run vellumpix -- --engine browser --browser-manual-login --model gpt-5.5 --prompt "Give me two short markdown bullet points about tables"`
    Expect two markdown bullets, no files/search referenced. Note the session ID (e.g., `give-me-two-short-markdown`).
 
 2. **GPT-5.5 simple prompt**
-   `pnpm run oracle -- --engine browser --browser-manual-login --model gpt-5.5 --prompt "List two reasons Markdown is handy"`
+   `pnpm run vellumpix -- --engine browser --browser-manual-login --model gpt-5.5 --prompt "List two reasons Markdown is handy"`
    Confirm the answer arrives (and only once) even if it takes ~2–3 minutes.
 
 2b. **GPT-5.5 Instant smoke**
-`pnpm run oracle -- --engine browser --browser-manual-login --model gpt-5.5-instant --prompt "Give me two short markdown bullet points about tables"`
+`pnpm run vellumpix -- --engine browser --browser-manual-login --model gpt-5.5-instant --prompt "Give me two short markdown bullet points about tables"`
 Expect a near-instant response (no Thinking spinner) and confirm the composer pill shows the "Instant" row, not "Thinking 5.5" or "Pro". Run after any change to the 5.5 picker tokens.
 
 2c. **GPT-5.5 Pro effort through the unified picker**
-`pnpm run oracle -- --engine browser --browser-manual-login --model gpt-5.5-pro --write-output response.txt --prompt "Say Hi!"`
+`pnpm run vellumpix -- --engine browser --browser-manual-login --model gpt-5.5-pro --write-output response.txt --prompt "Say Hi!"`
 Confirm the logs report a verified GPT-5.5 model followed by `Thinking time: Pro`, and `response.txt` contains the captured answer. Exercise both a tab starting on another model and a retained tab where GPT-5.5 is already selected. Never click ChatGPT's "Answer now" shortcut while the Pro response is thinking.
 
 2d. **GPT-6 radio with Pro effort and legacy Latest compatibility**
-`pnpm run oracle -- --engine browser --browser-manual-login --model gpt-6-pro --prompt "Reply exactly CHECK_GPT6_PRO_OK."`
+`pnpm run vellumpix -- --engine browser --browser-manual-login --model gpt-6-pro --prompt "Reply exactly CHECK_GPT6_PRO_OK."`
 On an account whose model radio reads `GPT-6`, confirm the logs report `Model picker: GPT-6` followed by `Thinking time: Pro` before prompt submission. Before this fix, selection stops with `Unable to find model option matching "Latest"` even though `GPT-6` is listed among the available options. Exercise both an already-selected GPT-6 radio with a version-less `Pro` composer pill and a tab starting on GPT-5.6 Sol. Repeat with `--model latest --browser-thinking-time pro`: it must resolve to the same GPT-6 target. Existing `Latest`, Japanese `最新`, and Korean `최신` radios must remain supported when GPT-6 is absent. If Pro is unavailable, the run must fail before submission rather than downgrade. Never click "Answer now".
 
 3. **GPT-5.5 + attachment**
    Prepare `/tmp/browser-md.txt` with a short note, then run
-   `pnpm run oracle -- --engine browser --browser-manual-login --model gpt-5.5 --prompt "Summarize the key idea from the attached note" --file /tmp/browser-md.txt`
+   `pnpm run vellumpix -- --engine browser --browser-manual-login --model gpt-5.5 --prompt "Summarize the key idea from the attached note" --file /tmp/browser-md.txt`
    Ensure upload logs show “Attachment queued” and the answer references the file contents explicitly.
 
 3b. **GPT-5.5 + multi-file ZIP**
-Create `/tmp/oracle-zip-smoke/src/one.txt` and `/tmp/oracle-zip-smoke/src/two.txt` with distinct sentinel text, then run
-`pnpm run oracle -- --engine browser --browser-manual-login --model gpt-5.5 --browser-attachments always --browser-bundle-format zip --prompt "Extract the attached bundle, report both relative paths, and quote each sentinel." --file /tmp/oracle-zip-smoke/src`
-Confirm Oracle uploads one `attachments-bundle.zip`, the submitted composer text includes the extraction instruction, and the answer reports both paths and sentinels from the extracted tree.
+Create `/tmp/vellumpix-zip-smoke/src/one.txt` and `/tmp/vellumpix-zip-smoke/src/two.txt` with distinct sentinel text, then run
+`pnpm run vellumpix -- --engine browser --browser-manual-login --model gpt-5.5 --browser-attachments always --browser-bundle-format zip --prompt "Extract the attached bundle, report both relative paths, and quote each sentinel." --file /tmp/vellumpix-zip-smoke/src`
+Confirm VellumPix uploads one `attachments-bundle.zip`, the submitted composer text includes the extraction instruction, and the answer reports both paths and sentinels from the extracted tree.
 
 4. **GPT-5.5 + attachment (verbose)**
    Prepare `/tmp/browser-report.txt` with faux metrics, then run
-   `pnpm run oracle -- --engine browser --browser-manual-login --model gpt-5.5 --prompt "Use the attachment to report current CPU and memory figures" --file /tmp/browser-report.txt --verbose`
+   `pnpm run vellumpix -- --engine browser --browser-manual-login --model gpt-5.5 --prompt "Use the attachment to report current CPU and memory figures" --file /tmp/browser-report.txt --verbose`
    Verify verbose logs show attachment upload and the final answer matches the file data.
 
 5. **Deep Research smoke**
-   `pnpm run oracle -- --engine browser --browser-manual-login --browser-research deep --prompt "Research one current public source about WebGPU browser support and cite it"`
+   `pnpm run vellumpix -- --engine browser --browser-manual-login --browser-research deep --prompt "Research one current public source about WebGPU browser support and cite it"`
    Confirm the logs show Deep Research activation/progress and the final report includes citations or source links. Do not use connected apps or private data.
 
 6. **Multi-turn browser consult smoke**
-   `pnpm run oracle -- --engine browser --browser-manual-login --model gpt-5.5-pro --browser-thinking-time extended --prompt "Give one architectural recommendation for a tiny CLI cache." --browser-follow-up "Challenge your previous recommendation with one concrete failure mode." --browser-follow-up "Now return the final recommendation in one sentence, starting with CHECK_MULTI_TURN_OK."`
+   `pnpm run vellumpix -- --engine browser --browser-manual-login --model gpt-5.5-pro --browser-thinking-time extended --prompt "Give one architectural recommendation for a tiny CLI cache." --browser-follow-up "Challenge your previous recommendation with one concrete failure mode." --browser-follow-up "Now return the final recommendation in one sentence, starting with CHECK_MULTI_TURN_OK."`
    Confirm the output contains all captured turns, includes `CHECK_MULTI_TURN_OK`, and the saved `transcript.md` records both follow-up prompts.
 
 7. **Multi-turn value check**
    Run the same initial prompt once without follow-ups and once with the challenge/final-decision follow-ups above. In the PR notes, record concrete differences such as extra failure modes, sharper rollback steps, or test cases. Do not claim a fixed quality percentage.
 
 8. **Auto-archive smoke**
-   `pnpm run oracle -- --engine browser --browser-manual-login --model gpt-5.5-pro --browser-thinking-time extended --browser-archive always --prompt "Reply exactly CHECK_ARCHIVE_OK."`
-   Confirm the output contains `CHECK_ARCHIVE_OK`, `oracle session <id> --render` still shows the transcript, and ChatGPT shows the conversation under archived chats rather than the active sidebar. Also confirm a default `--browser-archive auto` run with Deep Research or follow-ups is not archived.
+   `pnpm run vellumpix -- --engine browser --browser-manual-login --model gpt-5.5-pro --browser-thinking-time extended --browser-archive always --prompt "Reply exactly CHECK_ARCHIVE_OK."`
+   Confirm the output contains `CHECK_ARCHIVE_OK`, `vellumpix session <id> --render` still shows the transcript, and ChatGPT shows the conversation under archived chats rather than the active sidebar. Also confirm a default `--browser-archive auto` run with Deep Research or follow-ups is not archived.
 
 Record session IDs and outcomes in the PR description (pass/fail, notable delays). This ensures reviewers can audit real runs.
 
@@ -255,7 +255,7 @@ Run this whenever you touch CDP connection logic (remote chrome lifecycle, attac
 
 1. Launch a throwaway Chrome instance with remote debugging enabled (adjust the path per OS):
    ```bash
-   REMOTE_PROFILE=/tmp/oracle-remote-test-profile
+   REMOTE_PROFILE=/tmp/vellumpix-remote-test-profile
    rm -rf "$REMOTE_PROFILE"
    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
      --headless=new \
@@ -263,7 +263,7 @@ Run this whenever you touch CDP connection logic (remote chrome lifecycle, attac
      --remote-debugging-port=9333 \
      --remote-allow-origins=* \
      --user-data-dir="$REMOTE_PROFILE" \
-     >/tmp/oracle-remote-chrome.log 2>&1 &
+     >/tmp/vellumpix-remote-chrome.log 2>&1 &
    export REMOTE_CHROME_PID=$!
    sleep 3
    ```
@@ -277,7 +277,7 @@ Run this whenever you touch CDP connection logic (remote chrome lifecycle, attac
    kill "$REMOTE_CHROME_PID"
    rm -rf "$REMOTE_PROFILE"
    ```
-   Use `pkill -f oracle-remote-test-profile` if Chrome refuses to exit cleanly.
+   Use `pkill -f vellumpix-remote-test-profile` if Chrome refuses to exit cleanly.
 
 Capture the pass/fail result (include the helper’s log snippet) in your PR description alongside other manual browser tests.
 
@@ -286,16 +286,16 @@ Capture the pass/fail result (include the helper’s log snippet) in your PR des
 Run this whenever you touch the local attach path (`--browser-attach-running`) or the direct browser websocket bootstrap.
 
 1. Start or reuse a local signed-in Chrome with DevTools access available. If you want an explicit local endpoint, launch Chrome with `--remote-debugging-port=9222`.
-2. Run Oracle against the running browser:
+2. Run VellumPix against the running browser:
    ```bash
-   pnpm run oracle -- --engine browser \
+   pnpm run vellumpix -- --engine browser \
      --browser-attach-running \
      --model gpt-5.5 \
      --prompt "Give me two short markdown bullets about browser tabs"
    ```
    If the browser’s remote-debugging UI shows a different local port, rerun with `--remote-chrome <host:port>` in addition to `--browser-attach-running`.
-3. Verify Oracle opens a fresh tab in the existing browser, returns the answer, and closes only that Oracle-owned tab afterward.
-4. Reattach sanity check: repeat with a very short timeout if needed, then run `oracle session <id>` and confirm Oracle can reconnect to the saved tab/conversation.
+3. Verify VellumPix opens a fresh tab in the existing browser, returns the answer, and closes only that VellumPix-owned tab afterward.
+4. Reattach sanity check: repeat with a very short timeout if needed, then run `vellumpix session <id>` and confirm VellumPix can reconnect to the saved tab/conversation.
 
 ## Chrome DevTools / MCP Debugging
 
@@ -304,15 +304,15 @@ Use this when you need to inspect the live ChatGPT composer (DOM state, markdown
 1. **Launch within tmux**
 
    ```bash
-   tmux new -d -s oracle-browser \\
-     "pnpm run oracle -- --engine browser --browser-manual-login --browser-keep-browser \\
+   tmux new -d -s vellumpix-browser \\
+     "pnpm run vellumpix -- --engine browser --browser-manual-login --browser-keep-browser \\
       --model gpt-5.5 --browser-thinking-time pro --prompt 'Debug via DevTools.'"
    ```
 
    Keeping the run in tmux prevents your shell from blocking and ensures Chrome stays open afterward.
 
 2. **Grab the DevTools port**
-   - `tmux capture-pane -pt oracle-browser` to read the logs (`Launched Chrome … on port 56663`).
+   - `tmux capture-pane -pt vellumpix-browser` to read the logs (`Launched Chrome … on port 56663`).
    - Verify the endpoint:
      ```bash
      curl http://127.0.0.1:<PORT>/json/version
@@ -331,15 +331,15 @@ Use this when you need to inspect the live ChatGPT composer (DOM state, markdown
      }
      ```
    - Once the server prints `chrome-devtools-mcp exposes…`, you can list/call tools via `mcporter`.
-   - Oracle’s attach-running mode no longer depends on MCP at runtime; `mcporter` remains useful here for manual inspection only.
+   - VellumPix’s attach-running mode no longer depends on MCP at runtime; `mcporter` remains useful here for manual inspection only.
 
 4. **Interact & capture**
    - Use MCP tools (`click`, `evaluate_js`, `screenshot`, etc.) to debug the composer contents.
    - Record any manual actions you take (e.g., “fired evaluate_js to dump #prompt-textarea.innerText”).
 
 5. **Cleanup**
-   - `tmux kill-session -t oracle-browser`
-   - `pkill -f oracle-browser-<slug>` if Chrome is still running.
+   - `tmux kill-session -t vellumpix-browser`
+   - `pkill -f vellumpix-browser-<slug>` if Chrome is still running.
 
 > **Tip:** Running `npx chrome-devtools-mcp@latest --help` lists additional switches (custom Chrome binary, headless, viewport, etc.).
 
@@ -350,7 +350,7 @@ These Vitest cases hit the real OpenAI API to exercise both transports:
 1. Export a real key and explicitly opt in (default runs stay fast):
    ```bash
    export OPENAI_API_KEY=sk-...
-   export ORACLE_LIVE_TEST=1
+   export VELLUMPIX_LIVE_TEST=1
    pnpm vitest run tests/live/openai-live.test.ts
    ```
 2. The first two tests target the standard GPT-5 (`gpt-5.1` / `gpt-5.2`) foreground
@@ -363,7 +363,7 @@ These Vitest cases hit the real OpenAI API to exercise both transports:
    smoke strings.
 
 Skip these unless you're intentionally validating the production API; they are
-fully gated behind `ORACLE_LIVE_TEST=1` to avoid accidental CI runs.
+fully gated behind `VELLUMPIX_LIVE_TEST=1` to avoid accidental CI runs.
 
 ### Opt-in background browser input
 

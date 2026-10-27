@@ -16,7 +16,7 @@ export async function resolveDashPrompt(
     return prompt;
   }
   if ((stream as NodeJS.ReadStream).isTTY) {
-    throw new Error(`"-p -" requires piped input, for example: echo "prompt" | oracle -p -.`);
+    throw new Error(`"-p -" requires piped input, for example: echo "prompt" | vellumpix -p -.`);
   }
   const stdinPrompt = (await readStdin(stream)).trim();
   if (!stdinPrompt) {

@@ -13,7 +13,7 @@ import {
 } from "../../src/cli/perfTrace.js";
 
 const execFileAsync = promisify(execFile);
-const CLI_ENTRY = path.join(process.cwd(), "bin", "oracle-cli.ts");
+const CLI_ENTRY = path.join(process.cwd(), "bin", "vellumpix-cli.ts");
 const TSX_LOADER = pathToFileURL(
   path.join(process.cwd(), "node_modules", "tsx", "dist", "loader.mjs"),
 ).href;
@@ -28,7 +28,7 @@ describe("CLI performance traces", () => {
         "--browser-follow-up=sensitive follow-up",
         "--token",
         "service-token",
-        "--connect=oracle+tcp://example.com:1234?token=service-token",
+        "--connect=vellumpix+tcp://example.com:1234?token=service-token",
         "--remote-token=remote-secret",
         "--browser-inline-cookies",
         "[cookie-json]",
@@ -41,7 +41,7 @@ describe("CLI performance traces", () => {
       "--browser-follow-up=[redacted]",
       "--token",
       "[redacted]",
-      "--connect=oracle+tcp://example.com:1234?token=[redacted]",
+      "--connect=vellumpix+tcp://example.com:1234?token=[redacted]",
       "--remote-token=[redacted]",
       "--browser-inline-cookies",
       "[redacted]",
@@ -51,11 +51,11 @@ describe("CLI performance traces", () => {
   });
 
   test("moves inherited explicit env trace paths to detached child sidecars", () => {
-    expect(deriveDetachedPerfTraceEnv("/tmp/oracle-trace.json", "abc123")).toBe(
-      "/tmp/oracle-trace.abc123.json",
+    expect(deriveDetachedPerfTraceEnv("/tmp/vellumpix-trace.json", "abc123")).toBe(
+      "/tmp/vellumpix-trace.abc123.json",
     );
-    expect(deriveDetachedPerfTraceEnv("/tmp/oracle-trace", "abc/123")).toBe(
-      "/tmp/oracle-trace.abc_123.json",
+    expect(deriveDetachedPerfTraceEnv("/tmp/vellumpix-trace", "abc/123")).toBe(
+      "/tmp/vellumpix-trace.abc_123.json",
     );
     expect(deriveDetachedPerfTraceEnv("1", "abc123")).toBe("1");
   });
@@ -72,25 +72,25 @@ describe("CLI performance traces", () => {
 
   test("omits unset trace env for detached children", () => {
     expect(buildDetachedPerfTraceEnv({}, undefined, "abc123")).not.toHaveProperty(
-      "ORACLE_PERF_TRACE",
+      "VELLUMPIX_PERF_TRACE",
     );
     expect(
-      buildDetachedPerfTraceEnv({ ORACLE_PERF_TRACE: undefined }, undefined, "abc123"),
-    ).not.toHaveProperty("ORACLE_PERF_TRACE");
+      buildDetachedPerfTraceEnv({ VELLUMPIX_PERF_TRACE: undefined }, undefined, "abc123"),
+    ).not.toHaveProperty("VELLUMPIX_PERF_TRACE");
     expect(
-      buildDetachedPerfTraceEnv({ ORACLE_PERF_TRACE: "/tmp/env.json" }, undefined, "abc123")
-        .ORACLE_PERF_TRACE,
+      buildDetachedPerfTraceEnv({ VELLUMPIX_PERF_TRACE: "/tmp/env.json" }, undefined, "abc123")
+        .VELLUMPIX_PERF_TRACE,
     ).toBe("/tmp/env.abc123.json");
     expect(
-      buildDetachedPerfTraceEnv({ ORACLE_PERF_TRACE: "/tmp/env.json" }, true, "abc123")
-        .ORACLE_PERF_TRACE,
+      buildDetachedPerfTraceEnv({ VELLUMPIX_PERF_TRACE: "/tmp/env.json" }, true, "abc123")
+        .VELLUMPIX_PERF_TRACE,
     ).toBe("1");
   });
 
   test(
     "writes trace for help early exits",
     async () => {
-      const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-perf-trace-"));
+      const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-perf-trace-"));
       const tracePath = path.join(tmp, "help-trace.json");
 
       const { stdout } = await execFileAsync(
@@ -99,7 +99,7 @@ describe("CLI performance traces", () => {
         { timeout: CLI_TIMEOUT },
       );
 
-      expect(stdout).toContain("Oracle CLI");
+      expect(stdout).toContain("VellumPix CLI");
       const trace = JSON.parse(await readFile(tracePath, "utf8")) as {
         totalMs: number;
         events: Array<{ name: string; ms: number }>;
@@ -117,7 +117,7 @@ describe("CLI performance traces", () => {
   test(
     "accepts equals form for explicit trace path",
     async () => {
-      const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-perf-trace-"));
+      const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-perf-trace-"));
       const tracePath = path.join(tmp, "equals-trace.json");
 
       await execFileAsync(
@@ -137,7 +137,7 @@ describe("CLI performance traces", () => {
   test(
     "keeps perf-only invocation on the zero-argument path",
     async () => {
-      const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-perf-trace-"));
+      const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-perf-trace-"));
       const tracePath = path.join(tmp, "no-args-trace.json");
 
       const { stdout, stderr } = await execFileAsync(
@@ -159,7 +159,7 @@ describe("CLI performance traces", () => {
   test(
     "rejects a missing trace path before another option is consumed",
     async () => {
-      const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-perf-trace-"));
+      const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-perf-trace-"));
 
       await expect(
         execFileAsync(
@@ -181,7 +181,9 @@ describe("CLI performance traces", () => {
         stderr: expect.stringContaining("option '--perf-trace-path <path>' argument missing"),
       });
 
-      expect((await readdir(tmp)).some((entry) => entry.startsWith(".oracle-perf-"))).toBe(false);
+      expect((await readdir(tmp)).some((entry) => entry.startsWith(".vellumpix-perf-"))).toBe(
+        false,
+      );
 
       await rm(tmp, { recursive: true, force: true });
     },
@@ -191,14 +193,14 @@ describe("CLI performance traces", () => {
   test(
     "does not rewrite prompt values that look like perf flags",
     async () => {
-      const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-perf-trace-"));
+      const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-perf-trace-"));
       const traceTarget = path.join(tmp, "should-not-exist.json");
       const env = {
         ...process.env,
         // biome-ignore lint/style/useNamingConvention: env var name
         OPENAI_API_KEY: "sk-perf-trace-key",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_CLIENT_FACTORY: "INLINE_TEST_FACTORY",
+        VELLUMPIX_CLIENT_FACTORY: "INLINE_TEST_FACTORY",
       };
 
       const { stdout } = await execFileAsync(
@@ -220,7 +222,7 @@ describe("CLI performance traces", () => {
         { cwd: tmp, env, timeout: CLI_TIMEOUT },
       );
 
-      expect(stdout).toContain("[dry-run] Oracle");
+      expect(stdout).toContain("[dry-run] VellumPix");
       expect(await readdir(tmp)).not.toContain("should-not-exist.json");
 
       await rm(tmp, { recursive: true, force: true });
@@ -231,14 +233,14 @@ describe("CLI performance traces", () => {
   test(
     "does not detect perf flags after the positional delimiter",
     async () => {
-      const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-perf-trace-"));
+      const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-perf-trace-"));
       const traceTarget = path.join(tmp, "prompt-token.json");
       const env = {
         ...process.env,
         // biome-ignore lint/style/useNamingConvention: env var name
         OPENAI_API_KEY: "sk-perf-trace-key",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_CLIENT_FACTORY: "INLINE_TEST_FACTORY",
+        VELLUMPIX_CLIENT_FACTORY: "INLINE_TEST_FACTORY",
       };
 
       const { stdout } = await execFileAsync(
@@ -260,7 +262,7 @@ describe("CLI performance traces", () => {
         { cwd: tmp, env, timeout: CLI_TIMEOUT },
       );
 
-      expect(stdout).toContain("[dry-run] Oracle");
+      expect(stdout).toContain("[dry-run] VellumPix");
       expect(await readdir(tmp)).not.toContain("prompt-token.json");
 
       await rm(tmp, { recursive: true, force: true });
@@ -271,7 +273,7 @@ describe("CLI performance traces", () => {
   test(
     "does not change bridge config output routing",
     async () => {
-      const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-perf-trace-"));
+      const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-perf-trace-"));
       const tracePath = path.join(tmp, "bridge-trace.json");
 
       const { stdout } = await execFileAsync(
@@ -290,7 +292,7 @@ describe("CLI performance traces", () => {
       );
 
       expect(stdout).toMatch(/^# ~\/\.codex\/config\.toml/);
-      expect(stdout).not.toContain("🧿 oracle");
+      expect(stdout).not.toContain("🪶 vellumpix");
       await readFile(tracePath, "utf8");
 
       await rm(tmp, { recursive: true, force: true });
@@ -301,7 +303,7 @@ describe("CLI performance traces", () => {
   test(
     "writes startup and first-output timing trace",
     async () => {
-      const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-perf-trace-"));
+      const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-perf-trace-"));
       const tracePath = path.join(tmp, "trace.json");
       const env = {
         ...process.env,
@@ -314,7 +316,7 @@ describe("CLI performance traces", () => {
         // biome-ignore lint/style/useNamingConvention: env var name
         AZURE_OPENAI_DEPLOYMENT: "",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: tmp,
+        VELLUMPIX_HOME_DIR: tmp,
       };
 
       const { stdout } = await execFileAsync(
@@ -356,7 +358,7 @@ describe("CLI performance traces", () => {
   test(
     "does not consume positional prompt or persist prompt text",
     async () => {
-      const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-perf-trace-"));
+      const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-perf-trace-"));
       const tracePath = path.join(tmp, "prompt-trace.json");
       const env = {
         ...process.env,
@@ -369,9 +371,9 @@ describe("CLI performance traces", () => {
         // biome-ignore lint/style/useNamingConvention: env var name
         AZURE_OPENAI_DEPLOYMENT: "",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_CLIENT_FACTORY: "INLINE_TEST_FACTORY",
+        VELLUMPIX_CLIENT_FACTORY: "INLINE_TEST_FACTORY",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: tmp,
+        VELLUMPIX_HOME_DIR: tmp,
       };
 
       const { stdout } = await execFileAsync(
@@ -403,7 +405,7 @@ describe("CLI performance traces", () => {
       };
       expect(trace.argv).toContain("[redacted-positional]");
       expect(trace.events.find((event) => event.name === "pre-action")?.data?.command).toBe(
-        "oracle",
+        "vellumpix",
       );
 
       await rm(tmp, { recursive: true, force: true });

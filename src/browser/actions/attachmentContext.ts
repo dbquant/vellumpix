@@ -1,7 +1,7 @@
 import { withoutBrowserCancellation } from "../cancellation.js";
 import { randomUUID } from "node:crypto";
 import type { ChromeClient } from "../types.js";
-import { BrowserAutomationError } from "../../oracle/errors.js";
+import { BrowserAutomationError } from "../../vellumpix/errors.js";
 import { conversationIdFromUrl } from "./navigation.js";
 
 export async function captureComposerNavigationUrl(
@@ -14,7 +14,7 @@ export async function captureComposerNavigationUrl(
   const url = result?.result?.value;
   if (typeof url !== "string" || !url) {
     throw new BrowserAutomationError(
-      "Oracle could not capture ChatGPT's page identity before attachment upload.",
+      "VellumPix could not capture ChatGPT's page identity before attachment upload.",
       {
         stage: "upload-attachment",
         code: "attachment-navigation-identity-unavailable",
@@ -212,7 +212,7 @@ export async function withGuardedFileInput(
     if (!(input instanceof HTMLInputElement) || input.type !== 'file') return { installed: false };
     const guard = ${buildFileInputGuardExpression("input", startUrl)};
     if (guard.blocked) { guard.cleanup(); return { blocked: guard.blocked }; }
-    const guards = window.__oracleAttachmentInputGuards ??= Object.create(null);
+    const guards = window.__vellumpixAttachmentInputGuards ??= Object.create(null);
     guards[${JSON.stringify(id)}] = guard;
     return { installed: true };
   })()`,
@@ -233,7 +233,7 @@ export async function withGuardedFileInput(
       runtime
         .evaluate({
           expression: `(() => {
-      const guards = window.__oracleAttachmentInputGuards;
+      const guards = window.__vellumpixAttachmentInputGuards;
       const guard = guards?.[${JSON.stringify(id)}];
       if (!guard) return null;
       guard.validate(true);

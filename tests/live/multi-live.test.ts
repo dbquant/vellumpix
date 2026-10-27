@@ -4,11 +4,11 @@ import { promisify } from "node:util";
 import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
-import { runMultiModelApiSession } from "../../src/oracle/multiModelRunner.js";
+import { runMultiModelApiSession } from "../../src/vellumpix/multiModelRunner.js";
 import { sessionStore } from "../../src/sessionStore.js";
-import type { ModelName } from "../../src/oracle.js";
+import type { ModelName } from "../../src/vellumpix.js";
 
-const live = process.env.ORACLE_LIVE_TEST === "1";
+const live = process.env.VELLUMPIX_LIVE_TEST === "1";
 const baseUrl = process.env.OPENAI_BASE_URL ?? "";
 const isOpenRouterBase = baseUrl.includes("openrouter");
 const hasKeys =
@@ -39,7 +39,7 @@ const isAccessOrAuthError = (reason: unknown): boolean => {
 const isHtmlError = (reason: unknown): boolean => /<!doctype|<html/i.test(String(reason ?? ""));
 const execFileAsync = promisify(execFile);
 const TSX_BIN = path.join(process.cwd(), "node_modules", "tsx", "dist", "cli.mjs");
-const CLI_ENTRY = path.join(process.cwd(), "bin", "oracle-cli.ts");
+const CLI_ENTRY = path.join(process.cwd(), "bin", "vellumpix-cli.ts");
 
 (live && !isOpenRouterBase ? describe : describe.skip)(
   "Multi-model live smoke (GPT + Gemini + Claude)",
@@ -122,13 +122,15 @@ const CLI_ENTRY = path.join(process.cwd(), "bin", "oracle-cli.ts");
     }, 180_000);
 
     it("accepts shorthand models end-to-end via CLI", async () => {
-      const oracleHome = await mkdtemp(path.join(os.tmpdir(), "oracle-live-multi-shorthand-"));
+      const vellumpixHome = await mkdtemp(
+        path.join(os.tmpdir(), "vellumpix-live-multi-shorthand-"),
+      );
       const env = {
         ...process.env,
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: oracleHome,
+        VELLUMPIX_HOME_DIR: vellumpixHome,
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_NO_DETACH: "1",
+        VELLUMPIX_NO_DETACH: "1",
       };
 
       try {
@@ -160,7 +162,7 @@ const CLI_ENTRY = path.join(process.cwd(), "bin", "oracle-cli.ts");
         throw _error;
       }
 
-      const sessionsDir = path.join(oracleHome, "sessions");
+      const sessionsDir = path.join(vellumpixHome, "sessions");
       const sessionIds = await readdir(sessionsDir);
       expect(sessionIds.length).toBe(1);
       const sessionDir = path.join(sessionsDir, sessionIds[0]);
@@ -192,7 +194,7 @@ const CLI_ENTRY = path.join(process.cwd(), "bin", "oracle-cli.ts");
         throw error;
       }
 
-      await rm(oracleHome, { recursive: true, force: true });
+      await rm(vellumpixHome, { recursive: true, force: true });
     }, 600_000);
   },
 );

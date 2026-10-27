@@ -1,12 +1,12 @@
 # MCP Server
 
-`oracle-mcp` is a minimal MCP stdio server that mirrors the Oracle CLI. It shares session storage with the CLI (`~/.oracle/sessions` or `ORACLE_HOME_DIR`) so you can mix and match: run with the CLI, inspect or re-run via MCP, or vice versa.
+`vellumpix-mcp` is a minimal MCP stdio server that mirrors the VellumPix CLI. It shares session storage with the CLI (`~/.vellumpix/sessions` or `VELLUMPIX_HOME_DIR`) so you can mix and match: run with the CLI, inspect or re-run via MCP, or vice versa.
 
-The server uses MCP SDK v2 and serves both modern and legacy protocol clients over stdio. Existing tool inputs, defaults, structured outputs, and `oracle-session://` resources are preserved. The SDK owns protocol negotiation and transport shutdown; the server definition is shared between protocol generations. HTTP transport, authentication, subscriptions, and protocol task APIs remain separate from this migration.
+The server uses MCP SDK v2 and serves both modern and legacy protocol clients over stdio. Existing tool inputs, defaults, structured outputs, and `vellumpix-session://` resources are preserved. The SDK owns protocol negotiation and transport shutdown; the server definition is shared between protocol generations. HTTP transport, authentication, subscriptions, and protocol task APIs remain separate from this migration.
 
 ## Let Them Fight
 
-Claude Code can call `oracle-mcp` and ask a subscription-backed ChatGPT browser session for a second opinion. Use the `chatgpt-pro-heavy` preset when you want a compact MCP request that targets ChatGPT browser mode, the current Pro picker alias, and Pro Extended thinking time. The preset is intentionally boring at the API layer: it is a shortcut for existing browser-mode fields, not a new model id.
+Claude Code can call `vellumpix-mcp` and ask a subscription-backed ChatGPT browser session for a second opinion. Use the `chatgpt-pro-heavy` preset when you want a compact MCP request that targets ChatGPT browser mode, the current Pro picker alias, and Pro Extended thinking time. The preset is intentionally boring at the API layer: it is a shortcut for existing browser-mode fields, not a new model id.
 
 ## Tools
 
@@ -14,8 +14,8 @@ Claude Code can call `oracle-mcp` and ask a subscription-backed ChatGPT browser 
 
 - Inputs: `prompt` (required), `files?: string[]` for reference images/assets, `outputPath?: string`, `aspectRatio?: string`, `model?: string`, plus browser controls such as `browserThinkingTime`, `browserModelLabel`, `browserModelStrategy`, `browserArchive`, `browserKeepBrowser`, and `dryRun`.
 - Behavior: convenience wrapper for ChatGPT browser image generation. It forces `engine:"browser"`, sets `generateImage` for the existing image-aware wait/download path, and defaults `browserAttachments:"always"` when files are provided so reference images are uploaded instead of pasted.
-- Output: returns the normal session metadata plus `requestedOutputPath` and `structuredContent.images[]` with saved local paths, MIME type, size, dimensions, and ChatGPT file id when available. Signed source/download URLs are not returned. If `outputPath` is omitted, Oracle picks a unique file under `ORACLE_HOME_DIR/generated/`.
-- Output path safety: agent-supplied `outputPath` must resolve under `ORACLE_HOME_DIR/generated` by default; traversal and symlink escapes are rejected. This keeps MCP writes away from Oracle config, session metadata, and browser profile state. Set `ORACLE_MCP_ALLOW_EXTERNAL_OUTPUT=1` to allow writing elsewhere as an explicit operator decision. Omit `outputPath` to use the safe default.
+- Output: returns the normal session metadata plus `requestedOutputPath` and `structuredContent.images[]` with saved local paths, MIME type, size, dimensions, and ChatGPT file id when available. Signed source/download URLs are not returned. If `outputPath` is omitted, VellumPix picks a unique file under `VELLUMPIX_HOME_DIR/generated/`.
+- Output path safety: agent-supplied `outputPath` must resolve under `VELLUMPIX_HOME_DIR/generated` by default; traversal and symlink escapes are rejected. This keeps MCP writes away from VellumPix config, session metadata, and browser profile state. Set `VELLUMPIX_MCP_ALLOW_EXTERNAL_OUTPUT=1` to allow writing elsewhere as an explicit operator decision. Omit `outputPath` to use the safe default.
 - Remote browser services: image output requires the host's `generatedImages: true` capability with artifact protocol v1. Current clients send image intent without exposing their filesystem path to the host; the host captures into its own session directory, then the client transfers the image to the requested local output path. Clients reject image requests before sending prompts or attachments to older hosts and report that the host needs an upgrade; text-only calls remain compatible.
 
 ```json
@@ -28,7 +28,7 @@ Claude Code can call `oracle-mcp` and ask a subscription-backed ChatGPT browser 
 
 ### `consult`
 
-- Inputs: `prompt` (required), `files?: string[]` (globs), `model?: string` (defaults to CLI), `engine?: "api" | "browser"` (optional; Oracle follows CLI defaults: `ORACLE_ENGINE` and the effective config first, then API when `OPENAI_API_KEY` is set, otherwise browser), `waitForCompletion?: boolean`, `slug?: string`.
+- Inputs: `prompt` (required), `files?: string[]` (globs), `model?: string` (defaults to CLI), `engine?: "api" | "browser"` (optional; VellumPix follows CLI defaults: `VELLUMPIX_ENGINE` and the effective config first, then API when `OPENAI_API_KEY` is set, otherwise browser), `waitForCompletion?: boolean`, `slug?: string`.
 - Presets: `preset?: "chatgpt-pro-heavy"` applies browser mode + current Pro model alias + extended thinking, unless the request overrides those fields.
 - Browser-only extras: `browserAttachments?: "auto"|"never"|"always"`, `browserBundleFiles?: boolean`, `browserBundleFormat?: "auto"|"text"|"zip"`, `browserThinkingTime?: "light"|"standard"|"extended"|"extra-high"|"pro"|"heavy"`, `browserResearchMode?: "deep"`, `browserFollowUps?: string[]`, `browserArchive?: "auto"|"always"|"never"`, `browserKeepBrowser?: boolean`, `browserModelLabel?: string`, `browserModelStrategy?: "select"|"current"|"ignore"`, `generateImage?: string`, `outputPath?: string`.
 - Browser file uploads: one text/source file stays native, while multiple text/source files default to one bundle. `browserBundleFormat:"auto"` keeps flattened text for text-only uploads and uses ZIP when raw files are present. Set `browserBundleFormat:"zip"` for a filesystem tree, or `browserBundleFiles:true` to force one all-file bundle.
@@ -37,14 +37,14 @@ Claude Code can call `oracle-mcp` and ask a subscription-backed ChatGPT browser 
 - Local browser consultations select ChatGPT or Gemini from the model, including detached workers. Remote browser services support ChatGPT only; Gemini requests fail before submission.
 - Logging: emits MCP logs (`info` per line, `debug` for streamed chunks with byte sizes). If browser prerequisites are missing, returns an error payload instead of running.
 - Research mode: set `browserResearchMode:"deep"` for broad public-web research and cited reports. Use normal browser runs with `gpt-5.5-pro` + `browserThinkingTime:"extended"` for legacy Pro Extended code review, `gpt-5.6-sol` + `browserThinkingTime:"extra-high"` for Extra High, or `gpt-5.6-sol` + `browserThinkingTime:"pro"` when you explicitly want the current Pro effort tier.
-- Multi-turn consults: set `browserFollowUps:["Challenge your recommendation", "Give the final decision"]` to keep one ChatGPT browser conversation open and ask sequential follow-up prompts. Use one-shot calls for narrow bugs and exact file-set reviews; use multi-turn for ambiguous architecture/product decisions where a challenge pass and final recommendation are useful; use Deep Research for broad public-web work with citations. Oracle never invents follow-ups automatically.
+- Multi-turn consults: set `browserFollowUps:["Challenge your recommendation", "Give the final decision"]` to keep one ChatGPT browser conversation open and ask sequential follow-up prompts. Use one-shot calls for narrow bugs and exact file-set reviews; use multi-turn for ambiguous architecture/product decisions where a challenge pass and final recommendation are useful; use Deep Research for broad public-web work with citations. VellumPix never invents follow-ups automatically.
 - Archiving: set `browserArchive:"auto"|"always"|"never"` to control ChatGPT conversation cleanup. `auto` archives only successful browser one-shots after local artifacts are saved, and skips project, Deep Research, multi-turn, failed, and incomplete sessions.
 - Web Search: set `engine:"browser", browserResearchMode:"search"` to explicitly select the English ChatGPT Web Search control. Selection and the staged prompt must be verified before submission. This pilot uses locally controlled Chrome, including attach-running/direct remote Chrome; remote browser-service execution is refused until capability negotiation is available.
-- ChatGPT image generation: set `engine:"browser"` and `generateImage` to a path under `ORACLE_HOME_DIR/generated` to use the same image-aware wait/download path as CLI `--generate-image`. Saved files are returned in `structuredContent.images` and recorded as session artifacts; multiple images save as numbered siblings. Agent-supplied `generateImage` / `outputPath` are constrained to that generated-output directory by default (set `ORACLE_MCP_ALLOW_EXTERNAL_OUTPUT=1` to allow external paths).
+- ChatGPT image generation: set `engine:"browser"` and `generateImage` to a path under `VELLUMPIX_HOME_DIR/generated` to use the same image-aware wait/download path as CLI `--generate-image`. Saved files are returned in `structuredContent.images` and recorded as session artifacts; multiple images save as numbered siblings. Agent-supplied `generateImage` / `outputPath` are constrained to that generated-output directory by default (set `VELLUMPIX_MCP_ALLOW_EXTERNAL_OUTPUT=1` to allow external paths).
 
 #### Long browser consults from agents
 
-Browser-backed GPT-5.5 Pro and Deep Research consults can legitimately run for many minutes. Start them with `waitForCompletion:false`, then call `wait` with the returned `sessionId`; this keeps the run alive independently of either MCP request and avoids agent-side polling. Start with `dryRun:true` when configuring a new agent, prefer `preset:"chatgpt-pro-heavy"` or `engine:"browser"` explicitly, and inspect the shared session store before retrying a prompt. Detached consult launch currently requires local execution; remote browser-service callers should keep `waitForCompletion:true`. If the browser control plan says Oracle will launch visible Chrome, use attach/remote Chrome when the operator is actively using the computer.
+Browser-backed GPT-5.5 Pro and Deep Research consults can legitimately run for many minutes. Start them with `waitForCompletion:false`, then call `wait` with the returned `sessionId`; this keeps the run alive independently of either MCP request and avoids agent-side polling. Start with `dryRun:true` when configuring a new agent, prefer `preset:"chatgpt-pro-heavy"` or `engine:"browser"` explicitly, and inspect the shared session store before retrying a prompt. Detached consult launch currently requires local execution; remote browser-service callers should keep `waitForCompletion:true`. If the browser control plan says VellumPix will launch visible Chrome, use attach/remote Chrome when the operator is actively using the computer.
 
 ```json
 {
@@ -63,14 +63,14 @@ Then wait without polling:
 
 #### ChatGPT images from agents
 
-For generated images, pass an explicit `generateImage` path. That opt-in is important because it switches the browser wait loop to watch for ChatGPT image artifacts instead of only assistant text. The path must resolve under `ORACLE_HOME_DIR/generated` unless `ORACLE_MCP_ALLOW_EXTERNAL_OUTPUT=1` is set.
+For generated images, pass an explicit `generateImage` path. That opt-in is important because it switches the browser wait loop to watch for ChatGPT image artifacts instead of only assistant text. The path must resolve under `VELLUMPIX_HOME_DIR/generated` unless `VELLUMPIX_MCP_ALLOW_EXTERNAL_OUTPUT=1` is set.
 
 ```json
 {
   "engine": "browser",
   "model": "gpt-5.5-pro",
   "prompt": "Create a 9:16 App Store screenshot background for a focus timer.",
-  "generateImage": "${ORACLE_HOME_DIR}/generated/focus-timer-bg.png"
+  "generateImage": "${VELLUMPIX_HOME_DIR}/generated/focus-timer-bg.png"
 }
 ```
 
@@ -78,14 +78,14 @@ The MCP response includes `structuredContent.images[]` with the saved file path,
 
 ### `sessions`
 
-- Inputs: `{id?, hours?, limit?, includeAll?, detail?}` mirroring `oracle status` / `oracle session`.
+- Inputs: `{id?, hours?, limit?, includeAll?, detail?}` mirroring `vellumpix status` / `vellumpix session`.
 - Behavior: without `id`, returns a bounded list of recent sessions. With `id`/slug, returns a summary row; set `detail: true` to fetch full metadata, log, and stored request body.
 
 ### `wait`
 
 - Inputs: `id` (required session id or slug), `timeoutMs?: number`.
 - Behavior: blocks until the durable session status becomes `completed`, `partial`, `error`, or `cancelled`, then returns the final log tail and artifact/model/image summaries. It uses filesystem notifications with a low-frequency fallback and rereads session metadata after every wakeup.
-- Timeout semantics: omit `timeoutMs` to wait indefinitely, set a positive value to bound only this MCP call, or set `0` for an immediate snapshot. A timeout returns `waitStatus:"timed_out"`; caller cancellation, transport closure, host-imposed request deadlines, or timeout never cancels the Oracle worker. Call `wait` again with the same `id` to continue.
+- Timeout semantics: omit `timeoutMs` to wait indefinitely, set a positive value to bound only this MCP call, or set `0` for an immediate snapshot. A timeout returns `waitStatus:"timed_out"`; caller cancellation, transport closure, host-imposed request deadlines, or timeout never cancels the VellumPix worker. Call `wait` again with the same `id` to continue.
 
 ### `project_sources`
 
@@ -96,44 +96,48 @@ The MCP response includes `structuredContent.images[]` with the saved file path,
 
 ## Resources
 
-- `oracle-session://{id}/{metadata|log|request}` — read-only resources that surface stored session artifacts via MCP resource reads.
+- `vellumpix-session://{id}/{metadata|log|request}` — read-only resources that surface stored session artifacts via MCP resource reads.
 
 ## Background / detach behavior
 
 - `consult` remains synchronous by default for compatibility. Set `waitForCompletion:false` to detach any local API or browser run explicitly, then use `wait` to attach a bounded or unbounded waiter to its durable session state.
-- The detached worker owns the run. Ending or timing out a `wait` call only releases that waiter; it does not stop the worker. CLI inspection and reattachment remain available through `oracle session <id>` / `oracle status`.
+- The detached worker owns the run. Ending or timing out a `wait` call only releases that waiter; it does not stop the worker. CLI inspection and reattachment remain available through `vellumpix session <id>` / `vellumpix status`.
 
 ## Launching & usage
 
 - Installed from npm:
-  - One-off: `npx @steipete/oracle oracle-mcp`
-  - Global: `oracle-mcp`
+  - One-off: `npx @dbquant/vellumpix vellumpix-mcp`
+  - Global: `vellumpix-mcp`
 - From the repo (contributors):
   - `pnpm build`
-  - `pnpm mcp` (or `oracle-mcp` in the repo root)
+  - `pnpm mcp` (or `vellumpix-mcp` in the repo root)
 - mcporter example (stdio):
   ```json
   {
-    "name": "oracle",
+    "name": "vellumpix",
     "type": "stdio",
     "command": "npx",
-    "args": ["@steipete/oracle", "oracle-mcp"]
+    "args": ["@dbquant/vellumpix", "vellumpix-mcp"]
   }
   ```
 - Project-scoped Claude (.mcp.json) example:
   ```json
   {
     "mcpServers": {
-      "oracle": { "type": "stdio", "command": "npx", "args": ["@steipete/oracle", "oracle-mcp"] }
+      "vellumpix": {
+        "type": "stdio",
+        "command": "npx",
+        "args": ["@dbquant/vellumpix", "vellumpix-mcp"]
+      }
     }
   }
   ```
 - Bridge helper snippets:
-  - Codex CLI: `oracle bridge codex-config`
-  - Claude Code: `oracle bridge claude-config`
-  - Claude Code with local macOS Chrome: `oracle bridge claude-config --local-browser > .mcp.json`
-- Tools and resources operate on the same session store as `oracle status|session`.
-- Defaults (model/engine/etc.) come from the effective Oracle CLI config; see `docs/configuration.md`, `~/.oracle/config.json`, and project `.oracle/config.json` files.
+  - Codex CLI: `vellumpix bridge codex-config`
+  - Claude Code: `vellumpix bridge claude-config`
+  - Claude Code with local macOS Chrome: `vellumpix bridge claude-config --local-browser > .mcp.json`
+- Tools and resources operate on the same session store as `vellumpix status|session`.
+- Defaults (model/engine/etc.) come from the effective VellumPix CLI config; see `docs/configuration.md`, `~/.vellumpix/config.json`, and project `.vellumpix/config.json` files.
 
 ### Lifecycle compatibility check
 
@@ -146,6 +150,6 @@ For a real OpenAI run, add `--live-key-file <private-key-file>`; the harness use
 an authenticated upstream request and delays its reply until the lifecycle
 assertions finish. This does not exercise signed-in browser execution.
 
-For recognized GPT model IDs, Oracle chooses the corresponding ChatGPT model label automatically; `browserModelLabel` supplies a label for custom model IDs and does not override a recognized GPT model. GPT-6 selection accepts both the GPT-6 radio and legacy Latest labels. Model selection and thinking effort are verified separately: `heavy` does not request the Pro tier.
+For recognized GPT model IDs, VellumPix chooses the corresponding ChatGPT model label automatically; `browserModelLabel` supplies a label for custom model IDs and does not override a recognized GPT model. GPT-6 selection accepts both the GPT-6 radio and legacy Latest labels. Model selection and thinking effort are verified separately: `heavy` does not request the Pro tier.
 
 An explicit GPT-6 Pro model alias takes precedence over saved `browser.thinkingTime` defaults. A per-call `browserThinkingTime` still takes precedence over the alias. Older model aliases, an omitted model, and a `current`/`ignore` model strategy keep their existing saved-effort behavior.

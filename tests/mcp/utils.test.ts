@@ -3,11 +3,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, test } from "vitest";
 import { mapConsultToRunOptions } from "../../src/mcp/utils.js";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 
 describe("mapConsultToRunOptions", () => {
   afterEach(() => {
-    setOracleHomeDirOverrideForTest(null);
+    setVellumPixHomeDirOverrideForTest(null);
   });
 
   test("passes multi-model selections through to run options", () => {
@@ -68,7 +68,7 @@ describe("mapConsultToRunOptions", () => {
   });
 
   test("maps external ChatGPT image output paths when external output is allowed", () => {
-    const env: NodeJS.ProcessEnv = { ORACLE_MCP_ALLOW_EXTERNAL_OUTPUT: "1" };
+    const env: NodeJS.ProcessEnv = { VELLUMPIX_MCP_ALLOW_EXTERNAL_OUTPUT: "1" };
     const { runOptions, resolvedEngine } = mapConsultToRunOptions({
       prompt: "generate a product mockup",
       files: [],
@@ -86,8 +86,8 @@ describe("mapConsultToRunOptions", () => {
   });
 
   test("rejects MCP output paths outside the generated output directory by default", () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       expect(() =>
         mapConsultToRunOptions({
@@ -106,8 +106,8 @@ describe("mapConsultToRunOptions", () => {
   });
 
   test("rejects traversal escapes from the generated output directory", () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       expect(() =>
         mapConsultToRunOptions({
@@ -126,8 +126,8 @@ describe("mapConsultToRunOptions", () => {
   });
 
   test("allows MCP output paths under the generated output directory without opt-in", () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       const target = path.join(home, "generated", "img.png");
       const { runOptions } = mapConsultToRunOptions({
@@ -146,8 +146,8 @@ describe("mapConsultToRunOptions", () => {
   });
 
   test("rejects the generated output directory itself as an image path", () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       expect(() =>
         mapConsultToRunOptions({
@@ -165,9 +165,9 @@ describe("mapConsultToRunOptions", () => {
     }
   });
 
-  test("rejects writes into Oracle config and session state", () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
+  test("rejects writes into VellumPix config and session state", () => {
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       for (const target of [
         path.join(home, "config.json"),
@@ -192,9 +192,9 @@ describe("mapConsultToRunOptions", () => {
   });
 
   test("rejects a symlinked parent that escapes the generated directory (generateImage)", () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    const outside = mkdtempSync(path.join(tmpdir(), "oracle-outside-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    const outside = mkdtempSync(path.join(tmpdir(), "vellumpix-outside-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       const generated = path.join(home, "generated");
       mkdirSync(generated);
@@ -218,9 +218,9 @@ describe("mapConsultToRunOptions", () => {
   });
 
   test("rejects a symlinked parent that escapes the generated directory (outputPath)", () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    const outside = mkdtempSync(path.join(tmpdir(), "oracle-outside-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    const outside = mkdtempSync(path.join(tmpdir(), "vellumpix-outside-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       const generated = path.join(home, "generated");
       mkdirSync(generated);
@@ -244,9 +244,9 @@ describe("mapConsultToRunOptions", () => {
   });
 
   test("rejects a broken symlink at the requested output path", () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    const outside = mkdtempSync(path.join(tmpdir(), "oracle-outside-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    const outside = mkdtempSync(path.join(tmpdir(), "vellumpix-outside-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       const generated = path.join(home, "generated");
       mkdirSync(generated);
@@ -270,8 +270,8 @@ describe("mapConsultToRunOptions", () => {
   });
 
   test("canonicalizes a symlinked parent that stays within the generated directory", () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       const generated = path.join(home, "generated");
       const realDir = path.join(generated, "real");
@@ -293,14 +293,14 @@ describe("mapConsultToRunOptions", () => {
     }
   });
 
-  test("canonicalizes a non-existent Oracle home under a symlinked parent", () => {
-    const container = mkdtempSync(path.join(tmpdir(), "oracle-parent-"));
+  test("canonicalizes a non-existent VellumPix home under a symlinked parent", () => {
+    const container = mkdtempSync(path.join(tmpdir(), "vellumpix-parent-"));
     const realParent = path.join(container, "real");
     const linkedParent = path.join(container, "linked");
     mkdirSync(realParent);
     symlinkSync(realParent, linkedParent);
-    const home = path.join(linkedParent, "oracle-home");
-    setOracleHomeDirOverrideForTest(home);
+    const home = path.join(linkedParent, "vellumpix-home");
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       const target = path.join(home, "generated", "img.png");
       const { runOptions } = mapConsultToRunOptions({
@@ -313,7 +313,7 @@ describe("mapConsultToRunOptions", () => {
         env: {},
       });
       expect(runOptions.generateImage).toBe(
-        path.join(realpathSync(realParent), "oracle-home", "generated", "img.png"),
+        path.join(realpathSync(realParent), "vellumpix-home", "generated", "img.png"),
       );
     } finally {
       rmSync(container, { recursive: true, force: true });
@@ -321,8 +321,8 @@ describe("mapConsultToRunOptions", () => {
   });
 
   test("rejects image output when the resolved engine is API", () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       expect(() =>
         mapConsultToRunOptions({
@@ -341,9 +341,9 @@ describe("mapConsultToRunOptions", () => {
   });
 
   test("allows a symlink escape when external output is explicitly enabled", () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    const outside = mkdtempSync(path.join(tmpdir(), "oracle-outside-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    const outside = mkdtempSync(path.join(tmpdir(), "vellumpix-outside-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       symlinkSync(outside, path.join(home, "escape"));
       const target = path.join(home, "escape", "img.png");
@@ -354,7 +354,7 @@ describe("mapConsultToRunOptions", () => {
         engine: "browser",
         generateImage: target,
         userConfig: undefined,
-        env: { ORACLE_MCP_ALLOW_EXTERNAL_OUTPUT: "1" },
+        env: { VELLUMPIX_MCP_ALLOW_EXTERNAL_OUTPUT: "1" },
       });
       expect(runOptions.generateImage).toBe(path.resolve(target));
     } finally {

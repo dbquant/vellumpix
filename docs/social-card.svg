@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Oracle — askoracle.sh">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="VellumPix — github.com/dbquant/vellumpix">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0a0815"/>
@@ -62,9 +62,9 @@
 
   <!-- text block -->
   <g font-family="Inter, ui-sans-serif, -apple-system, system-ui, sans-serif">
-    <text x="80" y="166" font-size="22" font-weight="600" fill="#a78bfa" letter-spacing="6">ASK · ORACLE · DEV</text>
+    <text x="80" y="166" font-size="22" font-weight="600" fill="#a78bfa" letter-spacing="6">ASK · VELLUMPIX · DEV</text>
 
-    <text x="80" y="284" font-size="98" font-weight="700" fill="url(#text-grad)" letter-spacing="-2">oracle</text>
+    <text x="80" y="284" font-size="98" font-weight="700" fill="url(#text-grad)" letter-spacing="-2">vellumpix</text>
 
     <text x="80" y="350" font-size="34" font-weight="600" fill="#ece9fb">Whisper your prompt</text>
     <text x="80" y="394" font-size="34" font-weight="600" fill="#ece9fb">to a mythical pro agent.</text>
@@ -73,7 +73,7 @@
 
     <g font-family="JetBrains Mono, SF Mono, ui-monospace, monospace" font-size="20" fill="#cdc1f0">
       <rect x="78" y="510" width="540" height="64" rx="10" fill="#0c0820" stroke="#2a1d56"/>
-      <text x="100" y="552"><tspan fill="#7c5cd6">$</tspan> brew install steipete/tap/oracle</text>
+      <text x="100" y="552"><tspan fill="#7c5cd6">$</tspan> npm i -g @dbquant/vellumpix</text>
     </g>
   </g>
 </svg>

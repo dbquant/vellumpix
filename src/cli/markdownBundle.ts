@@ -1,10 +1,10 @@
 import fs from "node:fs/promises";
-import { DEFAULT_SYSTEM_PROMPT } from "../oracle/config.js";
-import { buildPrompt } from "../oracle/request.js";
-import { createFileSections, readFiles } from "../oracle/files.js";
-import { createFsAdapter } from "../oracle/fsAdapter.js";
-import { buildPromptMarkdown } from "../oracle/promptAssembly.js";
-import type { MinimalFsModule, RunOracleOptions, FileContent } from "../oracle/types.js";
+import { DEFAULT_SYSTEM_PROMPT } from "../vellumpix/config.js";
+import { buildPrompt } from "../vellumpix/request.js";
+import { createFileSections, readFiles } from "../vellumpix/files.js";
+import { createFsAdapter } from "../vellumpix/fsAdapter.js";
+import { buildPromptMarkdown } from "../vellumpix/promptAssembly.js";
+import type { MinimalFsModule, RunVellumPixOptions, FileContent } from "../vellumpix/types.js";
 
 export interface MarkdownBundle {
   markdown: string;
@@ -14,7 +14,7 @@ export interface MarkdownBundle {
 }
 
 export async function buildMarkdownBundle(
-  options: Pick<RunOracleOptions, "prompt" | "file" | "system" | "maxFileSizeBytes">,
+  options: Pick<RunVellumPixOptions, "prompt" | "file" | "system" | "maxFileSizeBytes">,
   deps: { cwd?: string; fs?: MinimalFsModule } = {},
 ): Promise<MarkdownBundle> {
   const cwd = deps.cwd ?? process.cwd();

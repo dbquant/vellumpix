@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-const LOCK_ROOT = path.join(os.homedir(), ".oracle", "live-test-locks");
+const LOCK_ROOT = path.join(os.homedir(), ".vellumpix", "live-test-locks");
 
 type LockInfo = {
   pid: number;

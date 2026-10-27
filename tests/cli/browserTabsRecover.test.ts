@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import type { SessionMetadata } from "../../src/sessionStore.js";
 
 const getPaths = async () => ({
-  dir: path.join(os.tmpdir(), `oracle-recovery-mock-${randomUUID()}`),
+  dir: path.join(os.tmpdir(), `vellumpix-recovery-mock-${randomUUID()}`),
 });
 
 const baseMeta = {

@@ -391,7 +391,7 @@ describe("applyBrowserDefaultsFromConfig", () => {
     const config: UserConfig = {
       browser: {
         manualLogin: true,
-        manualLoginProfileDir: "/tmp/oracle-profile",
+        manualLoginProfileDir: "/tmp/vellumpix-profile",
         manualLoginCookieSync: true,
       },
     };
@@ -399,7 +399,7 @@ describe("applyBrowserDefaultsFromConfig", () => {
     applyBrowserDefaultsFromConfig(options, config, (_key) => "default");
 
     expect(options.browserManualLogin).toBe(true);
-    expect(options.browserManualLoginProfileDir).toBe("/tmp/oracle-profile");
+    expect(options.browserManualLoginProfileDir).toBe("/tmp/vellumpix-profile");
     expect(options.browserManualLoginCookieSync).toBe(true);
   });
 
@@ -431,7 +431,7 @@ describe("applyBrowserDefaultsFromConfig", () => {
         noFocus: true,
         keepBrowser: true,
         manualLogin: true,
-        manualLoginProfileDir: "/tmp/oracle-profile",
+        manualLoginProfileDir: "/tmp/vellumpix-profile",
         thinkingTime: "extended",
       },
     };

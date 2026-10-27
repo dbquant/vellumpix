@@ -49,7 +49,7 @@ import { waitForDeepResearchCompletion } from "./actions/deepResearch.js";
 import { CHROME_COOKIE_SYNC_WARNING, shouldSyncBrowserCookies } from "./policies.js";
 import type { BrowserRecoveryCapture } from "./recoveryTarget.js";
 import { BrowserCancellation, withoutBrowserCancellation } from "./cancellation.js";
-import { BrowserRunCancelledError } from "../oracle/errors.js";
+import { BrowserRunCancelledError } from "../vellumpix/errors.js";
 
 export interface ReattachDeps {
   listTargets?: () => Promise<TargetInfoLite[]>;
@@ -357,9 +357,10 @@ async function resumeBrowserSessionViaNewChrome(
   const resolved = resolveBrowserConfig(config ?? {});
   const manualLogin = Boolean(resolved.manualLogin);
   const userDataDir = manualLogin
-    ? (resolved.manualLoginProfileDir ?? path.join(os.homedir(), ".oracle", "browser-profile"))
+    ? (resolved.manualLoginProfileDir ?? path.join(os.homedir(), ".vellumpix", "browser-profile"))
     : await (
-        deps.createTemporaryProfile ?? (() => mkdtemp(path.join(os.tmpdir(), "oracle-reattach-")))
+        deps.createTemporaryProfile ??
+        (() => mkdtemp(path.join(os.tmpdir(), "vellumpix-reattach-")))
       )();
   if (manualLogin) {
     await mkdir(userDataDir, { recursive: true });

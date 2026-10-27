@@ -1,5 +1,5 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { BrowserRunCancelledError } from "../oracle/errors.js";
+import { BrowserRunCancelledError } from "../vellumpix/errors.js";
 import type { ChromeClient } from "./types.js";
 
 const context = new AsyncLocalStorage<AbortSignal | undefined>();

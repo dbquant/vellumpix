@@ -11,11 +11,12 @@ import { registerProjectSourcesTool } from "./tools/projectSources.js";
 import { registerSessionsTool } from "./tools/sessions.js";
 import { registerWaitTool } from "./tools/wait.js";
 import { registerSessionResources } from "./tools/sessionResources.js";
+import { MCP_SERVER_NAME } from "../brand.js";
 
 export function createMcpServer(): McpServer {
   const server = new McpServer(
     {
-      name: "oracle-mcp",
+      name: MCP_SERVER_NAME,
       version: getCliVersion(),
     },
     {
@@ -50,7 +51,7 @@ export function shouldStartMcpServerFromModule(
 
 if (shouldStartMcpServerFromModule()) {
   startMcpServer().catch((error) => {
-    console.error("Failed to start oracle-mcp:", error);
+    console.error(`Failed to start ${MCP_SERVER_NAME}:`, error);
     process.exitCode = 1;
   });
 }

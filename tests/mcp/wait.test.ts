@@ -4,7 +4,7 @@ import path from "node:path";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import type { SessionMetadata } from "../../src/sessionStore.js";
 import { sessionStore } from "../../src/sessionStore.js";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 import {
   registerWaitTool,
   runWaitTool,
@@ -161,7 +161,7 @@ test("the registered waiter observes the SDK v2 request cancellation signal", as
 
 describe("wait MCP result", () => {
   afterEach(() => {
-    setOracleHomeDirOverrideForTest(null);
+    setVellumPixHomeDirOverrideForTest(null);
   });
 
   test.each([-1, 0.5, Number.NaN, Number.POSITIVE_INFINITY])(
@@ -172,8 +172,8 @@ describe("wait MCP result", () => {
   );
 
   test("observes durable completion on the real filesystem", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-wait-notify-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-wait-notify-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       const created = await sessionStore.createSession(
         { prompt: "filesystem waiter", file: [], model: "gpt-5.4", mode: "api" },
@@ -192,8 +192,8 @@ describe("wait MCP result", () => {
   }, 5_000);
 
   test("returns terminal output and artifact summaries without another sessions call", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-wait-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-wait-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       const created = await sessionStore.createSession(
         { prompt: "review", file: [], model: "gpt-5.6-sol", mode: "browser" },

@@ -18,7 +18,7 @@ import {
   readAssistantSnapshot,
   throwIfAssistantUiError,
 } from "./assistantResponse.js";
-import { BrowserAutomationError } from "../../oracle/errors.js";
+import { BrowserAutomationError } from "../../vellumpix/errors.js";
 
 type ActivateOutcome =
   | { status: "activated" }
@@ -357,7 +357,7 @@ export async function waitForDeepResearchCompletion(
 
     if (val?.accountBlocked) {
       throw new BrowserAutomationError(
-        "ChatGPT account security block detected during Deep Research. Open chatgpt.com in Chrome, secure the account, then rerun Oracle.",
+        "ChatGPT account security block detected during Deep Research. Open chatgpt.com in Chrome, secure the account, then rerun VellumPix.",
         { stage: "chatgpt-account-blocked", code: "chatgpt-account-blocked" },
       );
     }
@@ -462,7 +462,7 @@ export async function waitForDeepResearchCompletion(
   const elapsed = Math.round((Date.now() - start) / 1000);
   throw new BrowserAutomationError(
     `Deep Research did not complete within ${Math.round(timeoutMs / 60_000)} minutes (${elapsed}s elapsed). ` +
-      "Use 'oracle session <id>' to reattach later, or increase --timeout.",
+      "Use 'vellumpix session <id>' to reattach later, or increase --timeout.",
     {
       stage: "deep-research-timeout",
       code: "deep-research-timeout",
@@ -621,7 +621,7 @@ async function readDeepResearchFrameResult(
           params?: Record<string, unknown>,
           sessionId?: string,
         ) => Promise<unknown>;
-        oraclePageSessionId?: string;
+        vellumpixPageSessionId?: string;
       })
     | undefined;
   if (minTurnIndex >= 0) {
@@ -636,7 +636,7 @@ async function readDeepResearchFrameResult(
       ownerTurnIndex = await readDeepResearchTargetOwnerTurnIndex(
         rawClient as ChromeClient & { send: NonNullable<typeof rawClient.send> },
         frameId,
-        rawClient.oraclePageSessionId,
+        rawClient.vellumpixPageSessionId,
       );
       if (ownerTurnIndex === null || ownerTurnIndex < minTurnIndex) {
         continue;
@@ -644,7 +644,7 @@ async function readDeepResearchFrameResult(
     }
     const world = await pageWithFrames.createIsolatedWorld({
       frameId,
-      worldName: "oracle-deep-research",
+      worldName: "vellumpix-deep-research",
       grantUniveralAccess: true,
     });
     if (typeof world.executionContextId !== "number") {
@@ -681,7 +681,7 @@ async function readDeepResearchTargetResult(
       params?: Record<string, unknown>,
       sessionId?: string,
     ) => Promise<unknown>;
-    oraclePageSessionId?: string;
+    vellumpixPageSessionId?: string;
   };
   if (typeof rawClient.send !== "function") {
     return null;
@@ -695,7 +695,7 @@ async function readDeepResearchTargetResult(
   // browser-level send. We must therefore pass the page session id explicitly so
   // Target.setAutoAttach binds to THIS page (not the whole browser). For a direct
   // tab client this is undefined and `send` already defaults to the page session.
-  const pageSessionId = rawClient.oraclePageSessionId;
+  const pageSessionId = rawClient.vellumpixPageSessionId;
 
   const sessions = new Map<string, { targetId?: string; url: string }>();
   const ownedSessionIds = new Set<string>();
@@ -722,7 +722,7 @@ async function readDeepResearchTargetResult(
 
   client.on("Target.attachedToTarget", onAttached as never);
   try {
-    // Scope discovery to the current Oracle-controlled page. `client` is
+    // Scope discovery to the current VellumPix-controlled page. `client` is
     // connected to the conversation page target, so enabling auto-attach on this
     // session only attaches THIS page's related targets (its Deep Research OOPIF
     // subframe) and emits Target.attachedToTarget for them.
@@ -915,7 +915,7 @@ async function readDeepResearchTargetSession(
         "Page.createIsolatedWorld",
         {
           frameId,
-          worldName: "oracle-deep-research",
+          worldName: "vellumpix-deep-research",
           grantUniveralAccess: true,
         },
         sessionId,

@@ -2,8 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import chalk from "chalk";
 import type { BrowserSessionConfig } from "../sessionStore.js";
-import type { ModelName, ThinkingTimeLevel } from "../oracle/types.js";
-import { normalizeThinkingTimeLevel } from "../oracle/thinkingTime.js";
+import type { ModelName, ThinkingTimeLevel } from "../vellumpix/types.js";
+import { normalizeThinkingTimeLevel } from "../vellumpix/thinkingTime.js";
 import { CHATGPT_URL, DEFAULT_MODEL_STRATEGY, DEFAULT_MODEL_TARGET } from "../browser/constants.js";
 import { normalizeChatgptUrl } from "../browser/utils.js";
 import { parseDuration } from "../duration.js";
@@ -15,7 +15,7 @@ import type {
   BrowserResearchMode,
 } from "../browser/types.js";
 import type { CookieParam } from "../browser/types.js";
-import { getOracleHomeDir } from "../oracleHome.js";
+import { getVellumPixHomeDir } from "../vellumpixHome.js";
 import type { BrowserProvider, ConcreteBrowserProvider } from "../browser/browserProvider.js";
 
 const DEFAULT_BROWSER_TIMEOUT_MS = 1_200_000;
@@ -236,13 +236,13 @@ export async function buildBrowserConfig(
     });
   assertBrowserModelAvailable(options.model, modelStrategy);
   const cookieNames = parseCookieNames(
-    options.browserCookieNames ?? process.env.ORACLE_BROWSER_COOKIE_NAMES,
+    options.browserCookieNames ?? process.env.VELLUMPIX_BROWSER_COOKIE_NAMES,
   );
   let inline = await resolveInlineCookies({
     inlineArg: options.browserInlineCookies,
     inlineFileArg: options.browserInlineCookiesFile,
-    envPayload: process.env.ORACLE_BROWSER_COOKIES_JSON,
-    envFile: process.env.ORACLE_BROWSER_COOKIES_FILE,
+    envPayload: process.env.VELLUMPIX_BROWSER_COOKIES_JSON,
+    envFile: process.env.VELLUMPIX_BROWSER_COOKIES_FILE,
     cwd: process.cwd(),
   });
   const chromeCookieSyncRequested =
@@ -587,11 +587,11 @@ async function resolveInlineCookies({
     if (parsed) return { cookies: parsed, source };
   }
 
-  // fallback: ~/.oracle/cookies.{json,base64}
-  const oracleHome = getOracleHomeDir();
+  // fallback: ~/.vellumpix/cookies.{json,base64}
+  const vellumpixHome = getVellumPixHomeDir();
   const candidates = ["cookies.json", "cookies.base64"];
   for (const file of candidates) {
-    const fullPath = path.join(oracleHome, file);
+    const fullPath = path.join(vellumpixHome, file);
     try {
       const stat = await fs.stat(fullPath);
       if (!stat.isFile()) continue;

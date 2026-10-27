@@ -333,7 +333,7 @@ describe("attachSession rendering", () => {
         execution: "background",
         attached: false,
         detached: true,
-        reattachCommand: "oracle session sess",
+        reattachCommand: "vellumpix session sess",
       },
     } as SessionMetadata;
     readSessionMetadataMock.mockResolvedValue(lifecycleMeta);
@@ -344,7 +344,7 @@ describe("attachSession rendering", () => {
     await attachSession("sess", { renderMarkdown: false });
 
     expect(logSpy).toHaveBeenCalledWith("Execution: api/bg (detached)");
-    expect(logSpy).toHaveBeenCalledWith("Reattach: oracle session sess");
+    expect(logSpy).toHaveBeenCalledWith("Reattach: vellumpix session sess");
   });
 
   test("propagates a detached worker failure only when requested", async () => {
@@ -388,7 +388,7 @@ describe("attachSession rendering", () => {
         attached: false,
         detached: true,
         workerPid: 2_147_483_647,
-        reattachCommand: "oracle session sess",
+        reattachCommand: "vellumpix session sess",
       },
     } as SessionMetadata;
     readSessionMetadataMock
@@ -442,7 +442,7 @@ describe("attachSession rendering", () => {
         attached: false,
         detached: true,
         workerPid: process.pid,
-        reattachCommand: "oracle session sess",
+        reattachCommand: "vellumpix session sess",
       },
     } as SessionMetadata;
     const cancelledMeta: SessionMetadata = {
@@ -487,7 +487,7 @@ describe("attachSession rendering", () => {
         attached: false,
         detached: true,
         workerPid: process.pid,
-        reattachCommand: "oracle session sess",
+        reattachCommand: "vellumpix session sess",
       },
     } as SessionMetadata;
     readSessionMetadataMock
@@ -522,7 +522,7 @@ describe("attachSession rendering", () => {
         attached: false,
         detached: true,
         workerPid: process.pid,
-        reattachCommand: "oracle session sess",
+        reattachCommand: "vellumpix session sess",
       },
     } as SessionMetadata;
     const deadMeta = {
@@ -564,7 +564,7 @@ describe("attachSession rendering", () => {
         attached: false,
         detached: true,
         workerPid: process.pid,
-        reattachCommand: "oracle session sess",
+        reattachCommand: "vellumpix session sess",
       },
     } as SessionMetadata;
     const deadSnapshot = {

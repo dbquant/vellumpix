@@ -189,8 +189,8 @@ describe("provider-native capture", () => {
   );
 
   it("writes private verbatim artifacts and truthful materialization evidence, even when fetch B fails", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "oracle-provider-"));
-    vi.stubEnv("ORACLE_HOME_DIR", root);
+    const root = await mkdtemp(path.join(os.tmpdir(), "vellumpix-provider-"));
+    vi.stubEnv("VELLUMPIX_HOME_DIR", root);
     const page = runtime({ failSecond: true });
     try {
       const { summary, artifacts } = await finalizeProviderNativeCapture({
@@ -284,10 +284,10 @@ describe("provider-native capture", () => {
   });
 
   it("reports filesystem failures without throwing or logging paths/secrets", async () => {
-    const root = await mkdtemp(path.join(os.tmpdir(), "oracle-provider-"));
+    const root = await mkdtemp(path.join(os.tmpdir(), "vellumpix-provider-"));
     const file = path.join(root, "synthetic-secret");
     await writeFile(file, "not a directory");
-    vi.stubEnv("ORACLE_HOME_DIR", file);
+    vi.stubEnv("VELLUMPIX_HOME_DIR", file);
     const page = runtime();
     try {
       const result = await finalizeProviderNativeCapture({

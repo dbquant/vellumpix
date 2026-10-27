@@ -9,7 +9,7 @@ import * as profileState from "../../src/browser/profileState.js";
 
 describe("profileState", () => {
   test("writes DevToolsActivePort to both root and Default", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-profile-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-profile-"));
     try {
       await profileState.writeDevToolsActivePort(dir, 12345);
       const root = path.join(dir, "DevToolsActivePort");
@@ -24,8 +24,8 @@ describe("profileState", () => {
     }
   });
 
-  test("cleans DevToolsActivePort, but only removes locks when oracle pid is dead", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-profile-"));
+  test("cleans DevToolsActivePort, but only removes locks when vellumpix pid is dead", async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-profile-"));
     const lockFiles = [
       path.join(dir, "lockfile"),
       path.join(dir, "SingletonLock"),
@@ -41,7 +41,7 @@ describe("profileState", () => {
       // Alive pid => keep locks
       await profileState.writeChromePid(dir, process.pid);
       await profileState.cleanupStaleProfileState(dir, undefined, {
-        lockRemovalMode: "if_oracle_pid_dead",
+        lockRemovalMode: "if_vellumpix_pid_dead",
       });
       expect(existsSync(path.join(dir, "DevToolsActivePort"))).toBe(false);
       for (const lock of lockFiles) {
@@ -56,7 +56,7 @@ describe("profileState", () => {
       await once(child, "exit");
       await profileState.writeChromePid(dir, child.pid ?? 0);
       await profileState.cleanupStaleProfileState(dir, undefined, {
-        lockRemovalMode: "if_oracle_pid_dead",
+        lockRemovalMode: "if_vellumpix_pid_dead",
       });
       for (const lock of lockFiles) {
         expect(existsSync(lock)).toBe(false);
@@ -67,7 +67,7 @@ describe("profileState", () => {
   });
 
   test("skips manual-login cleanup when DevTools port is still reachable", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-profile-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-profile-"));
     try {
       await profileState.writeDevToolsActivePort(dir, 12345);
       await expect(
@@ -82,7 +82,7 @@ describe("profileState", () => {
   });
 
   test("skips normal manual-login cleanup when reused Chrome is still reachable", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-profile-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-profile-"));
     try {
       await profileState.writeDevToolsActivePort(dir, 12345);
       await expect(
@@ -97,7 +97,7 @@ describe("profileState", () => {
   });
 
   test("runs manual-login cleanup when DevTools port is unreachable", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-profile-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-profile-"));
     try {
       await profileState.writeDevToolsActivePort(dir, 12345);
       await expect(
@@ -112,11 +112,11 @@ describe("profileState", () => {
   });
 
   test("acquires and releases the manual-login profile lock", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-profile-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-profile-"));
     try {
       const lock = await profileState.acquireProfileRunLock(dir, { timeoutMs: 500, pollMs: 50 });
       expect(lock).not.toBeNull();
-      const lockPath = path.join(dir, "oracle-automation.lock");
+      const lockPath = path.join(dir, "vellumpix-automation.lock");
       expect(existsSync(lockPath)).toBe(true);
       await lock?.release();
       expect(existsSync(lockPath)).toBe(false);
@@ -126,7 +126,7 @@ describe("profileState", () => {
   });
 
   test("waits for profile lock and errors on timeout", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-profile-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-profile-"));
     try {
       const lock = await profileState.acquireProfileRunLock(dir, { timeoutMs: 500, pollMs: 50 });
       await expect(
@@ -139,14 +139,14 @@ describe("profileState", () => {
   });
 
   test("clears stale profile lock when pid is dead", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-profile-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-profile-"));
     try {
       const child = spawn(process.execPath, ["-e", "process.exit(0)"], { stdio: "ignore" });
       await once(child, "exit");
       if (!child.pid) {
         throw new Error("Missing child pid");
       }
-      const lockPath = path.join(dir, "oracle-automation.lock");
+      const lockPath = path.join(dir, "vellumpix-automation.lock");
       await writeFile(
         lockPath,
         JSON.stringify({ pid: child.pid, lockId: "stale", createdAt: new Date().toISOString() }),
@@ -161,9 +161,9 @@ describe("profileState", () => {
   });
 
   test("deletes unreadable profile lock and continues", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-profile-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-profile-"));
     try {
-      const lockPath = path.join(dir, "oracle-automation.lock");
+      const lockPath = path.join(dir, "vellumpix-automation.lock");
       await writeFile(lockPath, "not-json");
       const lock = await profileState.acquireProfileRunLock(dir, { timeoutMs: 2000, pollMs: 50 });
       expect(lock).not.toBeNull();
@@ -176,7 +176,7 @@ describe("profileState", () => {
   });
 
   test("matches recorded Chrome commands to the expected profile", () => {
-    const dir = "/Users/example/.oracle/browser-profile";
+    const dir = "/Users/example/.vellumpix/browser-profile";
     expect(
       profileState.isChromeCommandForUserDataDirForTest(
         `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --user-data-dir=${dir}`,
@@ -197,32 +197,32 @@ describe("profileState", () => {
     () => {
       expect(
         profileState.isChromeCommandForUserDataDirForTest(
-          '"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --user-data-dir=C:\\USERS\\XING_\\.ORACLE\\BROWSER-PROFILE',
-          "c:\\users\\xing_\\.oracle\\browser-profile",
+          '"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --user-data-dir=C:\\USERS\\XING_\\.VELLUMPIX\\BROWSER-PROFILE',
+          "c:\\users\\xing_\\.vellumpix\\browser-profile",
         ),
       ).toBe(true);
       expect(
         profileState.isChromeCommandForUserDataDirForTest(
-          '"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe" --user-data-dir="C:\\Oracle\\edge profile"',
-          "c:\\oracle\\edge profile",
+          '"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe" --user-data-dir="C:\\VellumPix\\edge profile"',
+          "c:\\vellumpix\\edge profile",
         ),
       ).toBe(true);
       expect(
         profileState.isChromeCommandForUserDataDirForTest(
-          '"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --user-data-dir="C:\\Oracle\\manual-profile-backup"',
-          "C:\\Oracle\\manual-profile",
+          '"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --user-data-dir="C:\\VellumPix\\manual-profile-backup"',
+          "C:\\VellumPix\\manual-profile",
         ),
       ).toBe(false);
       expect(
         profileState.isChromeCommandForUserDataDirForTest(
-          '"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --user-data-dir "C:\\Oracle\\manual profile"',
-          "c:\\oracle\\manual profile\\",
+          '"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --user-data-dir "C:\\VellumPix\\manual profile"',
+          "c:\\vellumpix\\manual profile\\",
         ),
       ).toBe(true);
       expect(
         profileState.isChromeCommandForUserDataDirForTest(
-          'node.exe worker.js --label=chrome --user-data-dir="C:\\Oracle\\manual-profile"',
-          "C:\\Oracle\\manual-profile",
+          'node.exe worker.js --label=chrome --user-data-dir="C:\\VellumPix\\manual-profile"',
+          "C:\\VellumPix\\manual-profile",
         ),
       ).toBe(false);
     },
@@ -245,7 +245,7 @@ describe("profileState", () => {
   });
 
   test("discovers running Chrome DevTools port from process list", () => {
-    const dir = "/Users/example/.oracle/browser-profile";
+    const dir = "/Users/example/.vellumpix/browser-profile";
     const processList = `
       123 node worker.js
       456 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome --remote-debugging-port=64305 --user-data-dir=${dir} about:blank

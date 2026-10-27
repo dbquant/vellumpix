@@ -152,7 +152,7 @@ class FilePerfTrace implements PerfTrace {
 }
 
 export function createPerfTrace(options: PerfTraceOptions): PerfTrace {
-  const envValue = process.env.ORACLE_PERF_TRACE;
+  const envValue = process.env.VELLUMPIX_PERF_TRACE;
   const optionValue = options.value;
   if (!optionValue && !envValue) {
     return new DisabledPerfTrace();
@@ -163,7 +163,7 @@ export function createPerfTrace(options: PerfTraceOptions): PerfTrace {
       ? path.resolve(options.cwd ?? process.cwd(), rawValue)
       : path.join(
           options.cwd ?? process.cwd(),
-          `.oracle-perf-${new Date().toISOString().replace(/[:.]/g, "-")}-${process.pid}.json`,
+          `.vellumpix-perf-${new Date().toISOString().replace(/[:.]/g, "-")}-${process.pid}.json`,
         );
   const trace = new FilePerfTrace(outputPath, options);
   trace.wrapFirstOutput();
@@ -206,11 +206,11 @@ export function buildDetachedPerfTraceEnv(
   sessionId: string,
 ): NodeJS.ProcessEnv {
   const nextEnv = { ...env };
-  const traceValue = resolveDetachedPerfTraceEnv(cliValue, env.ORACLE_PERF_TRACE, sessionId);
+  const traceValue = resolveDetachedPerfTraceEnv(cliValue, env.VELLUMPIX_PERF_TRACE, sessionId);
   if (traceValue) {
-    nextEnv.ORACLE_PERF_TRACE = traceValue;
+    nextEnv.VELLUMPIX_PERF_TRACE = traceValue;
   } else {
-    delete nextEnv.ORACLE_PERF_TRACE;
+    delete nextEnv.VELLUMPIX_PERF_TRACE;
   }
   return nextEnv;
 }

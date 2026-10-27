@@ -283,7 +283,7 @@ function sidecarWithProgress(progress: number, text = "Thinking sidecar") {
   const sidecar = new FakeElement(
     "aside",
     text,
-    { role: "complementary", class: "oracle-thinking-sidecar" },
+    { role: "complementary", class: "vellumpix-thinking-sidecar" },
     visibleRect({ left: 720, right: 1120, width: 400, height: 300, bottom: 360 }),
   );
   sidecar.append(

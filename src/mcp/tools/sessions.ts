@@ -19,7 +19,7 @@ const sessionsInputShape = {
     .boolean()
     .optional()
     .describe(
-      "Include sessions outside the time window when listing (mirrors `oracle status --all`).",
+      "Include sessions outside the time window when listing (mirrors `vellumpix status --all`).",
     ),
   detail: z
     .boolean()
@@ -54,9 +54,9 @@ export function registerSessionsTool(server: McpServer): void {
   server.registerTool(
     "sessions",
     {
-      title: "List or fetch oracle sessions",
+      title: "List or fetch vellumpix sessions",
       description:
-        "Inspect Oracle session history stored under `ORACLE_HOME_DIR` (shared with the CLI). List recent sessions or fetch one by id/slug (optionally including metadata + request + log).",
+        "Inspect VellumPix session history stored under `VELLUMPIX_HOME_DIR` (shared with the CLI). List recent sessions or fetch one by id/slug (optionally including metadata + request + log).",
       inputSchema: z.object(sessionsInputShape),
       outputSchema: z.object(sessionsOutputShape),
     },

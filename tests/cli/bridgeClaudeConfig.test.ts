@@ -7,39 +7,39 @@ import { promisify } from "node:util";
 import { formatClaudeMcpConfig } from "../../src/cli/bridge/claudeConfig.ts";
 
 const execFileAsync = promisify(execFile);
-const CLI_ENTRY = path.join(process.cwd(), "bin", "oracle-cli.ts");
+const CLI_ENTRY = path.join(process.cwd(), "bin", "vellumpix-cli.ts");
 
 describe("formatClaudeMcpConfig", () => {
   test("prints a remote Claude Code MCP config without exposing tokens by default", () => {
     const parsed = JSON.parse(
       formatClaudeMcpConfig({
-        oracleHomeDir: "/Users/test/.oracle-local",
-        browserProfileDir: "/Users/test/.oracle-local/browser-profile",
+        vellumpixHomeDir: "/Users/test/.vellumpix-local",
+        browserProfileDir: "/Users/test/.vellumpix-local/browser-profile",
         remoteHost: "127.0.0.1:9473",
         remoteToken: "secret-token",
         includeToken: false,
       }),
     );
 
-    expect(parsed.mcpServers.oracle).toMatchObject({
+    expect(parsed.mcpServers.vellumpix).toMatchObject({
       type: "stdio",
-      command: "oracle-mcp",
+      command: "vellumpix-mcp",
       args: [],
     });
-    expect(parsed.mcpServers.oracle.env).toMatchObject({
-      ORACLE_ENGINE: "browser",
-      ORACLE_HOME_DIR: "/Users/test/.oracle-local",
-      ORACLE_BROWSER_PROFILE_DIR: "/Users/test/.oracle-local/browser-profile",
-      ORACLE_REMOTE_HOST: "127.0.0.1:9473",
-      ORACLE_REMOTE_TOKEN: "<YOUR_TOKEN>",
+    expect(parsed.mcpServers.vellumpix.env).toMatchObject({
+      VELLUMPIX_ENGINE: "browser",
+      VELLUMPIX_HOME_DIR: "/Users/test/.vellumpix-local",
+      VELLUMPIX_BROWSER_PROFILE_DIR: "/Users/test/.vellumpix-local/browser-profile",
+      VELLUMPIX_REMOTE_HOST: "127.0.0.1:9473",
+      VELLUMPIX_REMOTE_TOKEN: "<YOUR_TOKEN>",
     });
   });
 
   test("prints a local-browser Claude Code MCP config without remote bridge env", () => {
     const parsed = JSON.parse(
       formatClaudeMcpConfig({
-        oracleHomeDir: "/Users/test/.oracle",
-        browserProfileDir: "/Users/test/.oracle/browser-profile",
+        vellumpixHomeDir: "/Users/test/.vellumpix",
+        browserProfileDir: "/Users/test/.vellumpix/browser-profile",
         remoteHost: "127.0.0.1:9473",
         remoteToken: "secret-token",
         includeToken: true,
@@ -47,16 +47,16 @@ describe("formatClaudeMcpConfig", () => {
       }),
     );
 
-    expect(parsed.mcpServers.oracle.env).toEqual({
-      ORACLE_ENGINE: "browser",
-      ORACLE_HOME_DIR: "/Users/test/.oracle",
-      ORACLE_BROWSER_PROFILE_DIR: "/Users/test/.oracle/browser-profile",
+    expect(parsed.mcpServers.vellumpix.env).toEqual({
+      VELLUMPIX_ENGINE: "browser",
+      VELLUMPIX_HOME_DIR: "/Users/test/.vellumpix",
+      VELLUMPIX_BROWSER_PROFILE_DIR: "/Users/test/.vellumpix/browser-profile",
     });
   });
 
   test("prints local-browser CLI config as parseable stdout JSON", async () => {
-    const oracleHome = await mkdtemp(path.join(os.tmpdir(), "oracle-claude-config-"));
-    const browserProfileDir = path.join(oracleHome, "browser-profile");
+    const vellumpixHome = await mkdtemp(path.join(os.tmpdir(), "vellumpix-claude-config-"));
+    const browserProfileDir = path.join(vellumpixHome, "browser-profile");
     try {
       const { stdout, stderr } = await execFileAsync(
         process.execPath,
@@ -68,22 +68,22 @@ describe("formatClaudeMcpConfig", () => {
               .filter(Boolean)
               .join(" "),
             // biome-ignore lint/style/useNamingConvention: env var name
-            ORACLE_HOME_DIR: oracleHome,
+            VELLUMPIX_HOME_DIR: vellumpixHome,
             // biome-ignore lint/style/useNamingConvention: env var name
-            ORACLE_BROWSER_PROFILE_DIR: browserProfileDir,
+            VELLUMPIX_BROWSER_PROFILE_DIR: browserProfileDir,
           },
         },
       );
 
       const parsed = JSON.parse(stdout);
       expect(stderr.trim()).toBe("");
-      expect(parsed.mcpServers.oracle.env).toEqual({
-        ORACLE_ENGINE: "browser",
-        ORACLE_HOME_DIR: oracleHome,
-        ORACLE_BROWSER_PROFILE_DIR: browserProfileDir,
+      expect(parsed.mcpServers.vellumpix.env).toEqual({
+        VELLUMPIX_ENGINE: "browser",
+        VELLUMPIX_HOME_DIR: vellumpixHome,
+        VELLUMPIX_BROWSER_PROFILE_DIR: browserProfileDir,
       });
     } finally {
-      await rm(oracleHome, { recursive: true, force: true });
+      await rm(vellumpixHome, { recursive: true, force: true });
     }
   }, 15_000);
 });

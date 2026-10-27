@@ -47,7 +47,7 @@ describe("browser follow-up resolution", () => {
       browser: {
         config: {
           manualLogin: true,
-          manualLoginProfileDir: "/tmp/oracle-profile",
+          manualLoginProfileDir: "/tmp/vellumpix-profile",
           browserTabRef: "stale-tab",
           researchMode: "deep",
           archiveConversations: "auto",
@@ -63,7 +63,7 @@ describe("browser follow-up resolution", () => {
       model: "gpt-5.5-pro",
       browserConfig: {
         manualLogin: true,
-        manualLoginProfileDir: "/tmp/oracle-profile",
+        manualLoginProfileDir: "/tmp/vellumpix-profile",
         browserTabRef: null,
         researchMode: "off",
         archiveConversations: "never",
@@ -94,7 +94,7 @@ describe("browser follow-up resolution", () => {
     const store = { readSession: vi.fn(async () => metadata) };
 
     await expect(resolveBrowserFollowupReference("missing-url", store)).rejects.toThrow(
-      /does not contain a ChatGPT conversation URL.*oracle status/s,
+      /does not contain a ChatGPT conversation URL.*vellumpix status/s,
     );
   });
 

@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { sessionStore } from "../sessionStore.js";
 import type { BrowserHarvestIntegrity } from "../sessionManager.js";
 import { extractConversationIdFromUrl, type ChatGptTabSummary } from "../browser/liveTabs.js";
-import { BrowserAutomationError } from "../oracle/errors.js";
+import { BrowserAutomationError } from "../vellumpix/errors.js";
 
 const INTEGRITY_WARNING = "browser-harvest-integrity";
 const INTEGRITY_MESSAGE =
@@ -23,7 +23,7 @@ async function readTranscriptConversation(filename: string): Promise<string | un
     const match = buffer
       .subarray(0, bytesRead)
       .toString("utf8")
-      .match(/^# Oracle Browser Transcript\r?\n\r?\nConversation: ([^\r\n]+)\r?\n/);
+      .match(/^# VellumPix Browser Transcript\r?\n\r?\nConversation: ([^\r\n]+)\r?\n/);
     return match ? extractConversationIdFromUrl(match[1]) : undefined;
   } catch {
     return undefined;

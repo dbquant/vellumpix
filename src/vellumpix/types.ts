@@ -1,0 +1,374 @@
+export type TokenizerFn = (input: unknown, options?: Record<string, unknown>) => number;
+
+export type KnownModelName =
+  | "gpt-6-astra"
+  | "gpt-5.6"
+  | "gpt-5.6-sol"
+  | "gpt-5.5"
+  | "gpt-5.5-pro"
+  | "gpt-5.4"
+  | "gpt-5.4-pro"
+  | "gpt-5.1-pro"
+  | "gpt-5-pro"
+  | "gpt-5.1"
+  | "gpt-5.1-codex"
+  | "gpt-5.2"
+  | "gpt-5.2-instant"
+  | "gpt-5.2-pro"
+  | "gemini-3.1-flash-lite"
+  | "gemini-3.1-pro"
+  | "gemini-3.5-flash"
+  | "gemini-3-pro"
+  | "claude-4.6-sonnet"
+  | "claude-4.1-opus"
+  | "grok-4.1";
+
+// ModelName now allows arbitrary strings so OpenRouter / custom IDs can pass through.
+export type ModelName = KnownModelName | (string & {});
+
+export type ProModelName =
+  | "gpt-5.5-pro"
+  | "gpt-5.4-pro"
+  | "gpt-5.1-pro"
+  | "gpt-5-pro"
+  | "gpt-5.2-pro"
+  | "claude-4.6-sonnet"
+  | "claude-4.1-opus";
+
+export type ReasoningEffort = "none" | "low" | "medium" | "high" | "xhigh" | "max";
+export type ReasoningMode = "standard" | "pro";
+
+export type ThinkingTimeLevel = "light" | "standard" | "extended" | "extra-high" | "heavy" | "pro";
+
+export type BrowserBundleFormat = "auto" | "text" | "zip";
+
+export interface AzureOptions {
+  endpoint?: string;
+  apiVersion?: string;
+  deployment?: string;
+}
+
+export type ApiProviderMode = "auto" | "openai" | "azure";
+export type PartialMode = "fail" | "ok";
+
+export type ClientFactory = (
+  apiKey: string,
+  options?: {
+    baseUrl?: string;
+    azure?: AzureOptions;
+    model?: ModelName;
+    resolvedModelId?: string;
+    httpTimeoutMs?: number;
+  },
+) => ClientLike;
+
+export interface ModelConfig {
+  model: ModelName;
+  /** Provider-specific model id used for API calls (defaults to `model`). */
+  apiModel?: string;
+  /** Upstream provider to help with OpenRouter mapping and auth precedence. */
+  provider?: "openai" | "anthropic" | "google" | "xai" | "other";
+  /** Explicit OpenRouter model id when it differs from apiModel/model. */
+  openRouterId?: string;
+  tokenizer: TokenizerFn;
+  inputLimit: number;
+  pricing?: {
+    inputPerToken: number;
+    outputPerToken: number;
+  } | null;
+  reasoning: { effort: ReasoningEffort } | null;
+  supportsBackground?: boolean;
+  supportsSearch?: boolean;
+  searchToolType?: ToolConfig["type"];
+}
+
+/**
+ * API-only user-config override for a single known model entry. Lets users running against
+ * custom OpenAI-compatible gateways (e.g. a LiteLLM proxy) remap the on-wire model
+ * id and reasoning effort without editing bundled model configs. Applied on top of
+ * an existing {@link MODEL_CONFIGS} entry, so the tokenizer and other fields are
+ * inherited from the known model.
+ */
+export interface ModelConfigOverride {
+  /** On-wire model id sent to the API (overrides the known entry's apiModel/model). */
+  apiModel?: string;
+  /** Reasoning effort override; `null` explicitly clears the known model's reasoning. */
+  reasoning?: { effort: ReasoningEffort } | null;
+  /** Context window override (positive integer). */
+  inputLimit?: number;
+  /** Pricing override; `null` clears the known entry's pricing. */
+  pricing?: {
+    inputPerToken: number;
+    outputPerToken: number;
+  } | null;
+}
+
+/** Map of known model name -> override, sourced from user config only. */
+export type ModelOverridesConfig = Record<string, ModelConfigOverride>;
+
+export interface FileContent {
+  path: string;
+  content: string;
+}
+
+export interface FileSection {
+  /** Legacy 1-based file number retained for callers that inspect createFileSections() output. */
+  index: number;
+  absolutePath: string;
+  displayPath: string;
+  /**
+   * Legacy raw fenced section text using the historical `### File N:` heading.
+   * Generated model prompt context should render from displayPath/content instead.
+   */
+  sectionText: string;
+  content: string;
+}
+
+export interface FsStats {
+  isFile(): boolean;
+  isDirectory(): boolean;
+  size?: number;
+}
+
+export interface MinimalFsModule {
+  stat(targetPath: string): Promise<FsStats>;
+  readdir(targetPath: string): Promise<string[]>;
+  readFile(targetPath: string, encoding: NodeJS.BufferEncoding): Promise<string>;
+}
+
+export interface FileTokenEntry {
+  path: string;
+  displayPath: string;
+  tokens: number;
+  percent?: number;
+}
+
+export interface FileTokenStats {
+  stats: FileTokenEntry[];
+  totalTokens: number;
+}
+
+export type PreviewMode = "summary" | "json" | "full";
+
+export interface ResponseStreamEvent {
+  type: string;
+  delta?: string;
+  [key: string]: unknown;
+}
+
+export interface ResponseStreamLike extends AsyncIterable<ResponseStreamEvent> {
+  finalResponse(): Promise<VellumPixResponse>;
+}
+
+export interface ClientLike {
+  responses: {
+    stream(body: VellumPixRequestBody): Promise<ResponseStreamLike> | ResponseStreamLike;
+    create(body: VellumPixRequestBody): Promise<VellumPixResponse>;
+    retrieve(id: string): Promise<VellumPixResponse>;
+  };
+}
+
+export interface RunVellumPixOptions {
+  prompt: string;
+  model: ModelName;
+  models?: ModelName[];
+  /** Reasoning effort override. GPT-5.6 API models only. */
+  reasoningEffort?: ReasoningEffort;
+  /** Responses API reasoning execution mode. GPT-5.6 API models only. */
+  reasoningMode?: ReasoningMode;
+  /**
+   * Continue an OpenAI Responses API conversation by chaining from a prior response id.
+   * This maps to the Responses API field `previous_response_id`.
+   *
+   * Note: Responses API does not carry forward `instructions`, so callers must still
+   * send instructions each turn (VellumPix does).
+   */
+  previousResponseId?: string;
+  file?: string[];
+  /** Override the per-file attachment size guard (bytes). */
+  maxFileSizeBytes?: number;
+  slug?: string;
+  filesReport?: boolean;
+  maxInput?: number;
+  maxOutput?: number;
+  system?: string;
+  silent?: boolean;
+  search?: boolean;
+  preview?: boolean | string;
+  previewMode?: PreviewMode;
+  apiKey?: string;
+  provider?: ApiProviderMode;
+  baseUrl?: string;
+  azure?: AzureOptions;
+  sessionId?: string;
+  /** User-config per-model overrides (apiModel/reasoning/inputLimit/pricing) applied over known model configs. */
+  modelOverrides?: ModelOverridesConfig;
+  effectiveModelId?: string;
+  verbose?: boolean;
+  heartbeatIntervalMs?: number;
+  /**
+   * Browser-only: controls whether `--file` inputs are pasted inline (never upload),
+   * uploaded as attachments (always), or selected automatically based on prompt size.
+   */
+  browserAttachments?: "auto" | "never" | "always";
+  browserInlineFiles?: boolean;
+  browserBundleFiles?: boolean;
+  browserBundleFormat?: BrowserBundleFormat;
+  /** Browser image generation output path. */
+  generateImage?: string;
+  /** Optional output path used by browser image operations. */
+  outputPath?: string;
+  youtube?: string;
+  editImage?: string;
+  aspectRatio?: string;
+  geminiShowThoughts?: boolean;
+  geminiAllowModelFallback?: boolean;
+  /**
+   * Browser-only: submit these prompts sequentially after the initial answer in
+   * the same ChatGPT conversation.
+   */
+  browserFollowUps?: string[];
+  /** Browser-only: open this existing ChatGPT conversation before submitting the prompt. */
+  browserResumeConversationUrl?: string;
+  background?: boolean;
+  /** Optional absolute path to save only the assistant's final text output. */
+  writeOutputPath?: string;
+  /** Browser-only: export captured files beside the answer written by writeOutputPath. */
+  writeArtifacts?: boolean;
+  /** Multi-model failure policy: fail the command or accept partial success. */
+  partialMode?: PartialMode;
+  /** Number of seconds to wait before timing out, or 'auto' to use model defaults. */
+  timeoutSeconds?: number | "auto";
+  /** Override HTTP client timeout (milliseconds). */
+  httpTimeoutMs?: number;
+  /** Override zombie timeout for the session (milliseconds). */
+  zombieTimeoutMs?: number;
+  /** Use last log activity to detect stale sessions. */
+  zombieUseLastActivity?: boolean;
+  /** Render plain text instead of ANSI-rendered markdown when printing answers to a rich TTY. */
+  renderPlain?: boolean;
+  /** Suppress the per-run header log line (used for multi-model logs where a model header is already printed). */
+  suppressHeader?: boolean;
+  /** Hide the default “Answer:” label, but keep the leading newline for readability. */
+  suppressAnswerHeader?: boolean;
+  /** Skip preamble tips (no-files / short prompt) when a higher-level runner already printed them. */
+  suppressTips?: boolean;
+}
+
+export interface UsageSummary {
+  inputTokens: number;
+  outputTokens: number;
+  reasoningTokens: number;
+  totalTokens: number;
+  cost?: number;
+}
+
+export interface PreviewResult {
+  mode: "preview";
+  previewMode: PreviewMode;
+  requestBody: VellumPixRequestBody;
+  estimatedInputTokens: number;
+  inputTokenBudget: number;
+}
+
+export interface LiveResult {
+  mode: "live";
+  response: VellumPixResponse;
+  usage: UsageSummary;
+  elapsedMs: number;
+}
+
+export type RunVellumPixResult = PreviewResult | LiveResult;
+
+export interface RunVellumPixDeps {
+  apiKey?: string;
+  cwd?: string;
+  fs?: MinimalFsModule;
+  log?: (message: string) => void;
+  write?: (chunk: string) => boolean;
+  allowStdout?: boolean;
+  stdoutWrite?: (text: string) => boolean;
+  now?: () => number;
+  clientFactory?: ClientFactory;
+  client?: ClientLike;
+  wait?: (ms: number) => Promise<void>;
+}
+
+export interface BuildRequestBodyParams {
+  modelConfig: ModelConfig;
+  reasoningEffort?: ReasoningEffort;
+  reasoningMode?: ReasoningMode;
+  systemPrompt: string;
+  userPrompt: string;
+  searchEnabled: boolean;
+  maxOutputTokens?: number;
+  background?: boolean;
+  storeResponse?: boolean;
+  previousResponseId?: string;
+}
+
+export interface ToolConfig {
+  type: "web_search_preview" | "web_search";
+}
+
+export interface VellumPixRequestBody {
+  model: string;
+  previous_response_id?: string;
+  instructions: string;
+  input: Array<{
+    role: "user";
+    content: Array<{
+      type: "input_text";
+      text: string;
+    }>;
+  }>;
+  tools?: ToolConfig[];
+  reasoning?: { effort?: ReasoningEffort; mode?: ReasoningMode };
+  max_output_tokens?: number;
+  background?: boolean;
+  store?: boolean;
+}
+
+export interface ResponseContentPart {
+  type?: string;
+  text?: string;
+}
+
+export interface ResponseOutputItem {
+  type?: string;
+  content?: ResponseContentPart[];
+  text?: string;
+}
+
+export interface VellumPixResponse {
+  id?: string;
+  status?: string;
+  error?: { message?: string };
+  incomplete_details?: { reason?: string };
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
+    reasoning_tokens?: number;
+    output_tokens_details?: { reasoning_tokens?: number };
+    total_tokens?: number;
+  };
+  output_text?: string[];
+  output?: ResponseOutputItem[];
+  _request_id?: string | null;
+}
+
+export interface VellumPixResponseMetadata {
+  responseId?: string;
+  requestId?: string | null;
+  status?: string;
+  incompleteReason?: string | null;
+}
+
+export type TransportFailureReason =
+  | "client-timeout"
+  | "connection-lost"
+  | "client-abort"
+  | "api-error"
+  | "model-unavailable"
+  | "unsupported-endpoint"
+  | "unknown";

@@ -15,7 +15,7 @@ const result = {
   answerChars: 2,
 };
 async function fixture() {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-remote-bundle-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-remote-bundle-"));
   const attachments = await Promise.all(
     Array.from({ length: 11 }, async (_, i) => {
       const file = path.join(root, `source-${i}.ts`);
@@ -87,7 +87,7 @@ test.each([false, true])(
           generated = path.dirname(fallback.attachments[0]!.path);
           expect(path.dirname(generated)).toBe(runDir);
           expect(
-            (await fs.readdir(runDir)).filter((f) => f.startsWith("oracle-browser-bundle-")),
+            (await fs.readdir(runDir)).filter((f) => f.startsWith("vellumpix-browser-bundle-")),
           ).toHaveLength(1);
           expect(await fs.readFile(fallback.attachments[0]!.path, "utf8")).toContain("source-10");
           if (fail) throw new Error("synthetic run failure");

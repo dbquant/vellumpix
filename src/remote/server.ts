@@ -33,7 +33,7 @@ import {
 import { getCookies, type Cookie } from "@steipete/sweet-cookie";
 import { CHATGPT_URL } from "../browser/constants.js";
 import { getCliVersion } from "../version.js";
-import { getOracleHomeDir } from "../oracleHome.js";
+import { getVellumPixHomeDir } from "../vellumpixHome.js";
 import { resolveBrowserProvider, resolveRemoteBrowserModel } from "../browser/provider.js";
 import {
   cleanupStaleProfileState,
@@ -154,7 +154,7 @@ export async function createRemoteServer(
   const logger = options.logger ?? console.log;
   const authToken = options.token ?? randomBytes(16).toString("hex");
   const startedAt = Date.now();
-  const verbose = process.argv.includes("--verbose") || process.env.ORACLE_SERVE_VERBOSE === "1";
+  const verbose = process.argv.includes("--verbose") || process.env.VELLUMPIX_SERVE_VERBOSE === "1";
   const color = process.stdout.isTTY
     ? (formatter: (msg: string) => string, msg: string) => formatter(msg)
     : (_formatter: (msg: string) => string, msg: string) => msg;
@@ -396,7 +396,7 @@ export async function createRemoteServer(
       logger(
         `[serve] Accepted run ${runId} from ${formatSocket(req)} (prompt ${payload.prompt.length} chars)`,
       );
-      runDir = await mkdtemp(path.join(os.tmpdir(), `oracle-serve-${runId}-`));
+      runDir = await mkdtemp(path.join(os.tmpdir(), `vellumpix-serve-${runId}-`));
       const attachmentDir = path.join(runDir, "attachments");
       signal?.throwIfAborted();
       const attachmentsPayload = Array.isArray(payload.attachments) ? payload.attachments : [];
@@ -545,7 +545,7 @@ export async function createRemoteServer(
           type: "log",
           message:
             `[browser] ${artifactDescriptors.length} artifact(s) ready for bridge transfer. ` +
-            "If no cloud-local artifact path appears, upgrade both Oracle bridge endpoints or copy the file manually from the Windows browser host.",
+            "If no cloud-local artifact path appears, upgrade both VellumPix bridge endpoints or copy the file manually from the Windows browser host.",
         });
       }
       for (const artifact of artifactDescriptors) {
@@ -604,7 +604,7 @@ export async function createRemoteServer(
   const also = extras.length ? `, also [${extras.join(", ")}]` : "";
   logger(color(chalk.cyanBright.bold, `Listening at ${primary}${also}`));
   logger(color(chalk.yellowBright, `Access token: ${authToken}`));
-  logger("Leave this terminal running; press Ctrl+C to stop oracle serve.");
+  logger("Leave this terminal running; press Ctrl+C to stop vellumpix serve.");
 
   return {
     port: address.port,
@@ -621,7 +621,7 @@ export async function createRemoteServer(
 export async function serveRemote(options: RemoteServerOptions = {}): Promise<void> {
   validateAdmissionOptions(options);
   const manualProfileDir =
-    options.manualLoginProfileDir ?? path.join(os.homedir(), ".oracle", "browser-profile");
+    options.manualLoginProfileDir ?? path.join(os.homedir(), ".vellumpix", "browser-profile");
   const preferManualLogin =
     options.manualLoginDefault ||
     options.cookieSyncDefault !== true ||
@@ -630,12 +630,12 @@ export async function serveRemote(options: RemoteServerOptions = {}): Promise<vo
   let cookies: CookieParam[] | null = null;
   let opened = false;
 
-  if (isWsl() && process.env.ORACLE_ALLOW_WSL_SERVE !== "1") {
+  if (isWsl() && process.env.VELLUMPIX_ALLOW_WSL_SERVE !== "1") {
     console.log(
-      "WSL detected. For reliable browser automation, run `oracle serve` from Windows PowerShell/Command Prompt so we can use your Windows Chrome profile.",
+      "WSL detected. For reliable browser automation, run `vellumpix serve` from Windows PowerShell/Command Prompt so we can use your Windows Chrome profile.",
     );
     console.log(
-      "If you want to stay in WSL anyway, set ORACLE_ALLOW_WSL_SERVE=1 and ensure a Linux Chrome is installed, then rerun.",
+      "If you want to stay in WSL anyway, set VELLUMPIX_ALLOW_WSL_SERVE=1 and ensure a Linux Chrome is installed, then rerun.",
     );
     console.log(
       "Alternatively, start Windows Chrome with --remote-debugging-port=9222 and use `--remote-chrome <windows-ip>:9222`.",
@@ -687,7 +687,7 @@ export async function serveRemote(options: RemoteServerOptions = {}): Promise<vo
       }
     } else if (opened) {
       console.log(
-        "Opened chatgpt.com for login. Sign in, then restart `oracle serve` to continue.",
+        "Opened chatgpt.com for login. Sign in, then restart `vellumpix serve` to continue.",
       );
       return;
     } else {
@@ -739,7 +739,7 @@ function matchArtifactRequest(
   }
   let url: URL;
   try {
-    url = new URL(req.url, "http://oracle.local");
+    url = new URL(req.url, "http://vellumpix.local");
   } catch {
     return null;
   }
@@ -814,8 +814,8 @@ async function serveRemoteArtifact(params: {
     "Content-Disposition": `attachment; filename="${filename.replace(/"/g, "")}"`,
     "Cache-Control": "no-store",
     "X-Content-Type-Options": "nosniff",
-    "X-Oracle-Artifact-Id": artifact.descriptor.artifactId,
-    "X-Oracle-Artifact-Sha256": artifact.descriptor.sha256,
+    "X-VellumPix-Artifact-Id": artifact.descriptor.artifactId,
+    "X-VellumPix-Artifact-Sha256": artifact.descriptor.sha256,
   });
 
   await pipeline(createReadStream(artifact.filePath), params.res).catch((error) => {
@@ -875,7 +875,7 @@ async function registerRemoteArtifacts(params: {
               : "remote-artifact-registration-failed",
           severity: "warning",
           message:
-            `Oracle captured the browser text response, but the bridge host could not prepare ${filename} for transfer. ` +
+            `VellumPix captured the browser text response, but the bridge host could not prepare ${filename} for transfer. ` +
             "Open the ChatGPT browser on the bridge host, download the ZIP/file shown in the current response, and copy it to a cloud-readable path.",
         });
         return null;
@@ -948,7 +948,7 @@ async function buildRemoteArtifactRegistration(
 async function resolveRegisteredArtifactPath(filePath: string): Promise<string> {
   const [resolvedFile, sessionsRoot] = await Promise.all([
     realpath(filePath),
-    realpath(path.join(getOracleHomeDir(), "sessions")),
+    realpath(path.join(getVellumPixHomeDir(), "sessions")),
   ]);
   const relative = path.relative(sessionsRoot, resolvedFile);
   const segments = relative.split(path.sep);
@@ -959,7 +959,7 @@ async function resolveRegisteredArtifactPath(filePath: string): Promise<string> 
     segments.length < 3 ||
     segments[1] !== "artifacts"
   ) {
-    throw new Error("artifact is outside Oracle's session artifact boundary");
+    throw new Error("artifact is outside VellumPix's session artifact boundary");
   }
   return resolvedFile;
 }
@@ -1313,7 +1313,7 @@ function toCdpCookie(cookie: Cookie): CookieParam | null {
 }
 
 function triggerLocalLoginPrompt(logger: (message: string) => void, url: string): boolean {
-  const verbose = process.argv.includes("--verbose") || process.env.ORACLE_SERVE_VERBOSE === "1";
+  const verbose = process.argv.includes("--verbose") || process.env.VELLUMPIX_SERVE_VERBOSE === "1";
   const openers: Array<{ cmd: string; args?: string[] }> = [];
 
   if (process.platform === "darwin") {

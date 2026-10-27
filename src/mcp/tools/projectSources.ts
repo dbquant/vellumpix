@@ -93,7 +93,7 @@ export function registerProjectSourcesTool(server: McpServer): void {
         return {
           isError: true,
           content: textContent(
-            "project_sources v1 must run on the signed-in browser host; remote oracle serve support is not enabled yet.",
+            "project_sources v1 must run on the signed-in browser host; remote vellumpix serve support is not enabled yet.",
           ),
         };
       }

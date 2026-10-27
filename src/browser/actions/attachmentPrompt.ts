@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { ChromeClient } from "../types.js";
 import { INPUT_SELECTORS } from "../constants.js";
 import { delay } from "../utils.js";
-import { BrowserAutomationError } from "../../oracle/errors.js";
+import { BrowserAutomationError } from "../../vellumpix/errors.js";
 import {
   assertComposerNavigationSnapshot,
   buildComposerNavigationValidationExpression,
@@ -81,7 +81,7 @@ export async function stageAttachmentPrompt(
           write(text);
           editor.dispatchEvent(new InputEvent('input', { bubbles: true, data: text, inputType: 'insertFromPaste' }));
         };
-        (window.__oracleAttachmentPromptGuards ??= Object.create(null))[${JSON.stringify(id)}] = guard;
+        (window.__vellumpixAttachmentPromptGuards ??= Object.create(null))[${JSON.stringify(id)}] = guard;
         if (!validate(false)) return { ready: false, blocked: guard.blocked };
         guard.beforeValue = read();
         window.addEventListener('beforeinput', onBeforeInput, true);
@@ -103,7 +103,7 @@ export async function stageAttachmentPrompt(
     // A renderer command cannot land in a replacement document after navigation.
     const inserted = await runtime.evaluate({
       expression: `(() => {
-        const guard = window.__oracleAttachmentPromptGuards?.[${JSON.stringify(id)}];
+        const guard = window.__vellumpixAttachmentPromptGuards?.[${JSON.stringify(id)}];
         if (!guard) return { ready: false };
         guard.insert(${JSON.stringify(prompt)});
         return guard.summary();
@@ -114,7 +114,7 @@ export async function stageAttachmentPrompt(
     await delay(500);
     const staged = await runtime.evaluate({
       expression: `(() => {
-        const guard = window.__oracleAttachmentPromptGuards?.[${JSON.stringify(id)}];
+        const guard = window.__vellumpixAttachmentPromptGuards?.[${JSON.stringify(id)}];
         if (!guard) return { ready: false };
         const before = guard.summary();
         if (before.ready && !before.length) guard.fallback(${JSON.stringify(prompt)});
@@ -139,7 +139,7 @@ export async function stageAttachmentPrompt(
     await withoutBrowserCancellation(() =>
       runtime
         .evaluate({
-          expression: `(() => { const guards = window.__oracleAttachmentPromptGuards; const guard = guards?.[${JSON.stringify(id)}]; guard?.cleanup(); if (guards) delete guards[${JSON.stringify(id)}]; })()`,
+          expression: `(() => { const guards = window.__vellumpixAttachmentPromptGuards; const guard = guards?.[${JSON.stringify(id)}]; guard?.cleanup(); if (guards) delete guards[${JSON.stringify(id)}]; })()`,
         })
         .catch(() => undefined),
     );

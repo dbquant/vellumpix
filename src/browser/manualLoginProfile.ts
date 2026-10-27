@@ -1,7 +1,7 @@
 import { readdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { BrowserAutomationError } from "../oracle/errors.js";
+import { BrowserAutomationError } from "../vellumpix/errors.js";
 
 export function resolveManualLoginWaitMs(timeoutMs: number | undefined, keepBrowser: boolean) {
   const configured = Math.min(timeoutMs ?? 1_200_000, 20 * 60_000);
@@ -27,7 +27,7 @@ export async function assertManualLoginProfileReadyForRun({
   const setupCommand = formatManualLoginSetupCommand(userDataDir);
   throw new BrowserAutomationError(
     "ChatGPT browser manual-login profile is not initialized. " +
-      `Browser mode is using Oracle's private Chrome profile at ${userDataDir}, separate from your normal Chrome profile. ` +
+      `Browser mode is using VellumPix's private Chrome profile at ${userDataDir}, separate from your normal Chrome profile. ` +
       `Run first-time setup, sign in there, then retry: ${setupCommand}. ` +
       "If you want to reuse an already signed-in Chrome instead, use --browser-attach-running.",
     {
@@ -54,12 +54,12 @@ export async function isManualLoginProfileInitialized(profileDir: string): Promi
 
 export function formatManualLoginSetupCommand(profileDir: string): string {
   return [
-    "oracle --engine browser --browser-manual-login --browser-keep-browser",
+    "vellumpix --engine browser --browser-manual-login --browser-keep-browser",
     `--browser-manual-login-profile-dir ${JSON.stringify(profileDir)}`,
     '-p "HI"',
   ].join(" ");
 }
 
 export function defaultManualLoginProfileDir() {
-  return path.join(os.homedir(), ".oracle", "browser-profile");
+  return path.join(os.homedir(), ".vellumpix", "browser-profile");
 }

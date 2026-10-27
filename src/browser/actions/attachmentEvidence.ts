@@ -27,7 +27,7 @@ export function buildAttachmentEvidenceExpression(
     const names = ${JSON.stringify(names)}.map(name => String(name).toLowerCase().replace(/\\s+/g, ' ').trim());
     const action = ${JSON.stringify(action)};
     const id = ${JSON.stringify(id ?? "")};
-    const key = '__oracleAttachmentEvidence';
+    const key = '__vellumpixAttachmentEvidence';
     if (action === 'clear') { delete globalThis[key]; return true; }
     const empty = names.map(() => false);
     if (action === 'read' && !globalThis[key]) return empty;

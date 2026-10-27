@@ -33,7 +33,7 @@ describe("maybeReuseRunningChrome", () => {
   });
 
   test("waits for a shared Chrome port before reusing", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chrome-reuse-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chrome-reuse-"));
     const port = 9222;
 
     void (async () => {
@@ -59,7 +59,7 @@ describe("maybeReuseRunningChrome", () => {
   }, 10_000);
 
   test("returns null immediately when no port and no wait", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chrome-reuse-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chrome-reuse-"));
     const probe = vi.fn(async () => ({ ok: true as const }));
     const reused = await maybeReuseRunningChromeForTest(tmpDir, noopLogger, {
       waitForPortMs: 0,
@@ -73,7 +73,7 @@ describe("maybeReuseRunningChrome", () => {
   test.each(reusePaths)(
     "cleans stale locks for %s when a recorded Chrome pid is dead and no DevTools target is reachable",
     async (_label, maybeReuse) => {
-      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chrome-reuse-"));
+      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chrome-reuse-"));
       try {
         const lockFiles = await writeChromeLocks(tmpDir);
         const child = spawn(process.execPath, ["-e", "process.exit(0)"], { stdio: "ignore" });
@@ -105,7 +105,7 @@ describe("maybeReuseRunningChrome", () => {
   test.each(reusePaths)(
     "preserves locks for %s when the recorded Chrome pid is still alive",
     async (_label, maybeReuse) => {
-      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chrome-reuse-"));
+      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chrome-reuse-"));
       try {
         const lockFiles = await writeChromeLocks(tmpDir);
         await fs.writeFile(path.join(tmpDir, "chrome.pid"), `${process.pid}\n`, "utf8");
@@ -130,9 +130,9 @@ describe("maybeReuseRunningChrome", () => {
   );
 
   test.each(reusePaths)(
-    "preserves locks for %s when no Oracle Chrome pid was recorded",
+    "preserves locks for %s when no VellumPix Chrome pid was recorded",
     async (_label, maybeReuse) => {
-      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chrome-reuse-"));
+      const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chrome-reuse-"));
       try {
         const lockFiles = await writeChromeLocks(tmpDir);
         const logger = vi.fn();
@@ -154,7 +154,7 @@ describe("maybeReuseRunningChrome", () => {
   );
 
   test("warns when a configured executable cannot replace shared Chrome", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chrome-reuse-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chrome-reuse-"));
     try {
       await fs.writeFile(path.join(tmpDir, "DevToolsActivePort"), "45678\n/devtools/browser");
       await fs.writeFile(path.join(tmpDir, "chrome.pid"), "12345");
@@ -175,7 +175,7 @@ describe("maybeReuseRunningChrome", () => {
   });
 
   test("serializes manual-login Chrome launch so parallel runs reuse the first browser", async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-chrome-launch-lock-"));
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chrome-launch-lock-"));
     try {
       const config = resolveBrowserConfig({
         manualLogin: true,
@@ -258,6 +258,6 @@ describe("maybeReuseRunningChrome", () => {
       terminationHandled: true,
       releaseError: releaseFailure,
     });
-    expect(logger).toHaveBeenCalledWith(expect.stringContaining("restart Oracle/Codex MCP"));
+    expect(logger).toHaveBeenCalledWith(expect.stringContaining("restart VellumPix/Codex MCP"));
   });
 });

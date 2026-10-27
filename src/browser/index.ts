@@ -92,7 +92,7 @@ import type {
 } from "../sessionStore.js";
 import { CHATGPT_URL, DEFAULT_MODEL_STRATEGY } from "./constants.js";
 import type { LaunchedChrome } from "chrome-launcher";
-import { BrowserAutomationError, BrowserRunCancelledError } from "../oracle/errors.js";
+import { BrowserAutomationError, BrowserRunCancelledError } from "../vellumpix/errors.js";
 import {
   buildAttachmentBasenameCollisionDetails,
   findAttachmentBasenameCollisions,
@@ -744,7 +744,7 @@ async function releaseLocalBrowserTabLease(options: {
     releaseError = error instanceof Error ? error : new Error(String(error));
     if (!terminationHandled) keepBrowserOpen = true;
     options.logger(
-      `[browser] Failed to release the ChatGPT browser slot registry lock; restart Oracle/Codex MCP before another browser run: ${releaseError.message}`,
+      `[browser] Failed to release the ChatGPT browser slot registry lock; restart VellumPix/Codex MCP before another browser run: ${releaseError.message}`,
     );
   }
 
@@ -1016,7 +1016,7 @@ async function runBrowserModeInternal(
   const userDataDir = manualLogin
     ? manualProfileDir
     : await cancellation.acquire(
-        async () => mkdtemp(path.join(await resolveUserDataBaseDir(), "oracle-browser-")),
+        async () => mkdtemp(path.join(await resolveUserDataBaseDir(), "vellumpix-browser-")),
         (dir) => rm(dir, { recursive: true, force: true }),
       );
   const effectiveKeepBrowser = Boolean(config.keepBrowser);
@@ -1266,7 +1266,7 @@ async function runBrowserModeInternal(
       await positionChromeWindowOffscreen(client, userDataDir, logger);
     } else if (!config.headless) {
       // Persistent profiles can retain bounds from a prior hidden run. Visible
-      // local runs must actively restore the Oracle-owned Chrome window.
+      // local runs must actively restore the VellumPix-owned Chrome window.
       await positionChromeWindowOnscreen(client, userDataDir, logger);
     }
     // The send button is clicked with trusted CDP input events at viewport
@@ -1345,7 +1345,7 @@ async function runBrowserModeInternal(
           details: {
             profile: config.chromeProfile ?? "Default",
             cookiePath: config.chromeCookiePath ?? null,
-            hint: "If macOS Keychain prompts or denies access, run oracle from a GUI session or use --copy/--render for the manual flow.",
+            hint: "If macOS Keychain prompts or denies access, run vellumpix from a GUI session or use --copy/--render for the manual flow.",
           },
         },
       );
@@ -2346,7 +2346,7 @@ async function runBrowserModeInternal(
         controllerPid: process.pid,
       };
       const reuseProfileHint =
-        `oracle --engine browser --browser-manual-login ` +
+        `vellumpix --engine browser --browser-manual-login ` +
         `--browser-manual-login-profile-dir ${JSON.stringify(userDataDir)}`;
       await emitRuntimeHint();
       if (config.noFocus && !config.headless) {
@@ -2605,7 +2605,7 @@ async function runBrowserModeInternal(
       if (tabLeaseReleaseError) {
         // oxlint-disable-next-line eslint/no-unsafe-finally -- This cleanup failure must override a successful browser result or a live MCP owner can remain locked.
         throw new Error(
-          "Failed to release the ChatGPT browser slot registry lock; restart Oracle/Codex MCP before another browser run.",
+          "Failed to release the ChatGPT browser slot registry lock; restart VellumPix/Codex MCP before another browser run.",
           { cause: tabLeaseReleaseError },
         );
       }
@@ -2698,7 +2698,7 @@ async function waitForLogin({
   const setupCommand = formatManualLoginSetupCommand(profileDir ?? defaultManualLoginProfileDir());
   throw new Error(
     "Manual login mode timed out waiting for ChatGPT session. " +
-      `Browser mode is using Oracle's private Chrome profile at ${profileDir ?? "(default profile)"}, not your normal Chrome profile. ` +
+      `Browser mode is using VellumPix's private Chrome profile at ${profileDir ?? "(default profile)"}, not your normal Chrome profile. ` +
       `Run first-time setup, sign in there, then retry: ${setupCommand}`,
   );
 }
@@ -4172,7 +4172,7 @@ function describeDevtoolsFirewallHint(host: string, port: number): string | null
     `New-NetFirewallRule -DisplayName 'Chrome DevTools ${port}' -Direction Inbound -Action Allow -Protocol TCP -LocalPort ${port}`,
     "New-NetFirewallRule -DisplayName 'Chrome DevTools (chrome.exe)' -Direction Inbound -Action Allow -Program 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe' -Protocol TCP",
     "",
-    "Re-run the same oracle command after adding the rule.",
+    "Re-run the same vellumpix command after adding the rule.",
   ].join("\n");
 }
 

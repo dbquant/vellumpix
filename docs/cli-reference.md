@@ -1,23 +1,23 @@
 ---
 title: CLI Reference
-description: "Every flag you'll actually use, grouped by what it does. Run `oracle --help --verbose` for the full hidden list."
+description: "Every flag you'll actually use, grouped by what it does. Run `vellumpix --help --verbose` for the full hidden list."
 ---
 
-This is the curated cheatsheet. The authoritative source is always `oracle --help` (and `oracle --help --verbose` for advanced flags).
+This is the curated cheatsheet. The authoritative source is always `vellumpix --help` (and `vellumpix --help --verbose` for advanced flags).
 
 ## Commands
 
-| Command                        | What it does                                                       |
-| ------------------------------ | ------------------------------------------------------------------ |
-| `oracle [flags] -p "<prompt>"` | Run a consult.                                                     |
-| `oracle status`                | List recent sessions (see [Sessions](sessions.md)).                |
-| `oracle session <id>`          | Replay or block on a stored session.                               |
-| `oracle restart <id>`          | Re-run with the same prompt + files.                               |
-| `oracle docs check`            | Check documented flags against CLI help metadata.                  |
-| `oracle serve`                 | Run the remote browser host (see [Browser Mode](browser-mode.md)). |
-| `oracle bridge claude-config`  | Emit a `.mcp.json` for Claude Code (see [MCP](mcp.md)).            |
-| `oracle tui`                   | Interactive TUI (humans only).                                     |
-| `oracle-mcp`                   | Stdio MCP server entrypoint.                                       |
+| Command                           | What it does                                                       |
+| --------------------------------- | ------------------------------------------------------------------ |
+| `vellumpix [flags] -p "<prompt>"` | Run a consult.                                                     |
+| `vellumpix status`                | List recent sessions (see [Sessions](sessions.md)).                |
+| `vellumpix session <id>`          | Replay or block on a stored session.                               |
+| `vellumpix restart <id>`          | Re-run with the same prompt + files.                               |
+| `vellumpix docs check`            | Check documented flags against CLI help metadata.                  |
+| `vellumpix serve`                 | Run the remote browser host (see [Browser Mode](browser-mode.md)). |
+| `vellumpix bridge claude-config`  | Emit a `.mcp.json` for Claude Code (see [MCP](mcp.md)).            |
+| `vellumpix tui`                   | Interactive TUI (humans only).                                     |
+| `vellumpix-mcp`                   | Stdio MCP server entrypoint.                                       |
 
 ## Core consult flags
 
@@ -31,7 +31,7 @@ This is the curated cheatsheet. The authoritative source is always `oracle --hel
 | `--slug <name>`                   | Stable session slug.                                                                                                                |
 | `--render`                        | Print the assembled bundle to stdout.                                                                                               |
 | `--copy`                          | Copy the bundle to the clipboard.                                                                                                   |
-| `--write-output <path>`           | Save the final answer to a file; multi-model runs add per-model files plus `<stem>.oracle.json`.                                    |
+| `--write-output <path>`           | Save the final answer to a file; multi-model runs add per-model files plus `<stem>.vellumpix.json`.                                 |
 | `--write-artifacts`               | Browser runs only: also copy captured files beside `--write-output`, preserving canonical artifacts and existing destination files. |
 | `--files-report`                  | Print per-file token usage.                                                                                                         |
 | `--dry-run [summary\|json\|full]` | Preview without sending.                                                                                                            |
@@ -61,7 +61,7 @@ Notes:
 - `--dry-run` is mutually exclusive with `--render` / `--render-markdown`; choose the preview or rendered bundle path.
 - Missing root prompts exit nonzero after help so scripts fail closed.
 - Ctrl-C exits foreground API runs with code 130 and stops an attached local Pro browser worker. Unexpected foreground termination leaves the detached browser worker running so the session can still finish.
-- `--perf-trace=/tmp/oracle.json` is accepted in addition to `--perf-trace-path`; `ORACLE_PERF_TRACE=1` writes a local `.oracle-perf-…json` file.
+- `--perf-trace=/tmp/vellumpix.json` is accepted in addition to `--perf-trace-path`; `VELLUMPIX_PERF_TRACE=1` writes a local `.vellumpix-perf-…json` file.
 
 ## API endpoints
 
@@ -112,7 +112,7 @@ See [Browser Mode](browser-mode.md) for usage.
 
 | Flag                                  | Purpose                                                                                           |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `--remote-host <host:port>`           | Use a remote `oracle serve` host.                                                                 |
+| `--remote-host <host:port>`           | Use a remote `vellumpix serve` host.                                                              |
 | `--remote-token <secret>`             | Auth for the remote host.                                                                         |
 | `--remote-chrome <host:port>`         | Attach to an existing remote Chrome session.                                                      |
 | `serve --max-concurrent-runs <count>` | Opt into bounded concurrent admission; effective capacity cannot exceed the host browser tab cap. |
@@ -136,24 +136,24 @@ See [Browser Mode](browser-mode.md) for usage.
 
 ## Environment variables
 
-| Var                                 | Effect                                                  |
-| ----------------------------------- | ------------------------------------------------------- |
-| `OPENAI_API_KEY`                    | Enables OpenAI API mode.                                |
-| `AZURE_OPENAI_API_KEY` etc.         | Enables Azure mode (paired with endpoint / deployment). |
-| `GEMINI_API_KEY`                    | Enables Gemini API mode.                                |
-| `ANTHROPIC_API_KEY`                 | Enables Claude API mode.                                |
-| `OPENROUTER_API_KEY`                | Enables OpenRouter ids.                                 |
-| `ORACLE_HOME_DIR`                   | Override `~/.oracle/` root.                             |
-| `ORACLE_MAX_FILE_SIZE_BYTES`        | Per-file size cap (default 1 MB).                       |
-| `ORACLE_BROWSER_COOKIES_JSON`       | Inline ChatGPT cookies (JSON / base64).                 |
-| `ORACLE_BROWSER_COOKIES_FILE`       | Path to cookies JSON.                                   |
-| `ORACLE_BROWSER_ATTACHMENT_TIMEOUT` | Attachment upload/readiness timeout for browser mode.   |
-| `ORACLE_CHATGPT_ACCOUNT_EMAIL`      | Exact saved account for the Welcome back picker.        |
+| Var                                    | Effect                                                  |
+| -------------------------------------- | ------------------------------------------------------- |
+| `OPENAI_API_KEY`                       | Enables OpenAI API mode.                                |
+| `AZURE_OPENAI_API_KEY` etc.            | Enables Azure mode (paired with endpoint / deployment). |
+| `GEMINI_API_KEY`                       | Enables Gemini API mode.                                |
+| `ANTHROPIC_API_KEY`                    | Enables Claude API mode.                                |
+| `OPENROUTER_API_KEY`                   | Enables OpenRouter ids.                                 |
+| `VELLUMPIX_HOME_DIR`                   | Override `~/.vellumpix/` root.                          |
+| `VELLUMPIX_MAX_FILE_SIZE_BYTES`        | Per-file size cap (default 1 MB).                       |
+| `VELLUMPIX_BROWSER_COOKIES_JSON`       | Inline ChatGPT cookies (JSON / base64).                 |
+| `VELLUMPIX_BROWSER_COOKIES_FILE`       | Path to cookies JSON.                                   |
+| `VELLUMPIX_BROWSER_ATTACHMENT_TIMEOUT` | Attachment upload/readiness timeout for browser mode.   |
+| `VELLUMPIX_CHATGPT_ACCOUNT_EMAIL`      | Exact saved account for the Welcome back picker.        |
 
 ## See also
 
-- `oracle --help` — short usage.
-- `oracle --help --verbose` (or `oracle -h --verbose`) — primary and advanced help. Either flag order works; `oracle --debug-help` shows only the advanced groups.
-- [Configuration](configuration.md) — `~/.oracle/config.json` and project `.oracle/config.json` defaults.
+- `vellumpix --help` — short usage.
+- `vellumpix --help --verbose` (or `vellumpix -h --verbose`) — primary and advanced help. Either flag order works; `vellumpix --debug-help` shows only the advanced groups.
+- [Configuration](configuration.md) — `~/.vellumpix/config.json` and project `.vellumpix/config.json` defaults.
 
 Provider-native evidence: `--browser-capture-provider-native` saves the full ChatGPT conversation record and independent text digests with session artifacts. It is opt-in; `--no-browser-capture-provider-native` overrides a saved preference. See [provider-native evidence](browser-mode.md#provider-native-conversation-evidence) for retained data, fidelity, and fallback behavior.

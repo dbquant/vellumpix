@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 import { PROJECT_CONFIG_RELATIVE_PATH } from "../../src/config.js";
 
 // biome-ignore lint/complexity/useRegexLiterals: constructor form avoids control-char lint noise.
@@ -21,23 +21,23 @@ vi.mock("../../src/browser/detect.js", () => ({
 
 import { runBridgeDoctor } from "../../src/cli/bridge/doctor.js";
 
-describe("oracle bridge doctor", () => {
+describe("vellumpix bridge doctor", () => {
   let tempDir: string;
   let originalExitCode: number | undefined;
 
   beforeEach(async () => {
     originalExitCode = typeof process.exitCode === "number" ? process.exitCode : undefined;
     process.exitCode = undefined;
-    delete process.env.ORACLE_REMOTE_HOST;
-    delete process.env.ORACLE_REMOTE_TOKEN;
-    delete process.env.ORACLE_ENGINE;
+    delete process.env.VELLUMPIX_REMOTE_HOST;
+    delete process.env.VELLUMPIX_REMOTE_TOKEN;
+    delete process.env.VELLUMPIX_ENGINE;
 
-    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-bridge-doctor-"));
-    setOracleHomeDirOverrideForTest(tempDir);
+    tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-bridge-doctor-"));
+    setVellumPixHomeDirOverrideForTest(tempDir);
   });
 
   afterEach(async () => {
-    setOracleHomeDirOverrideForTest(null);
+    setVellumPixHomeDirOverrideForTest(null);
     process.exitCode = originalExitCode;
     await fs.rm(tempDir, { recursive: true, force: true });
     vi.restoreAllMocks();
@@ -82,8 +82,8 @@ describe("oracle bridge doctor", () => {
 
   it("reports project-only config separately from the missing user config", async () => {
     const originalCwd = process.cwd();
-    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-bridge-project-"));
-    await fs.mkdir(path.join(repoDir, ".oracle"), { recursive: true });
+    const repoDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-bridge-project-"));
+    await fs.mkdir(path.join(repoDir, ".vellumpix"), { recursive: true });
     const projectConfigPath = path.join(repoDir, PROJECT_CONFIG_RELATIVE_PATH);
     await fs.writeFile(projectConfigPath, `{ engine: "browser" }`, "utf8");
 
@@ -101,7 +101,7 @@ describe("oracle bridge doctor", () => {
     const output = stripAnsi(logs.join("\n"));
     expect(output).toContain(`Config: ${path.join(tempDir, "config.json")} (missing)`);
     expect(output).toMatch(
-      /Project config: .*oracle-bridge-project-.*[\\/]\.oracle[\\/]config\.json/,
+      /Project config: .*vellumpix-bridge-project-.*[\\/]\.vellumpix[\\/]config\.json/,
     );
     expect(output).toMatch(/Default engine:\s+browser/i);
     expect(process.exitCode ?? 0).toBe(0);

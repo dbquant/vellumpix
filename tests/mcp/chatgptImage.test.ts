@@ -7,7 +7,7 @@ import {
   buildChatGptImageConsultInput,
   registerChatGptImageTool,
 } from "../../src/mcp/tools/chatgptImage.ts";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 
 function registerHandler(): (input: unknown) => Promise<unknown> {
   const handlers: Array<(input: unknown) => Promise<unknown>> = [];
@@ -30,7 +30,7 @@ function registerHandler(): (input: unknown) => Promise<unknown> {
 
 describe("chatgpt_image MCP tool", () => {
   afterEach(() => {
-    setOracleHomeDirOverrideForTest(null);
+    setVellumPixHomeDirOverrideForTest(null);
   });
 
   test("builds an image-aware browser consult with uploaded references", () => {
@@ -98,8 +98,8 @@ describe("chatgpt_image MCP tool", () => {
   });
 
   test("returns resolved dry-run details from the registered tool", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       const handler = registerHandler();
       const target = path.join(home, "generated", "product-mockup.png");
@@ -125,8 +125,8 @@ describe("chatgpt_image MCP tool", () => {
   });
 
   test("rejects an output path outside the generated output directory without malformed structured output", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       const handler = registerHandler();
       const result = (await handler({

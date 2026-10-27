@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { formatBaseUrlForLog, maskApiKey } from "../src/oracle/logging.js";
+import { formatBaseUrlForLog, maskApiKey } from "../src/vellumpix/logging.js";
 
 describe("maskApiKey", () => {
   test("masks long keys with first/last 4 chars", () => {

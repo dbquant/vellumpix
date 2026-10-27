@@ -36,7 +36,7 @@ export async function runBridgeDoctor(_options: BridgeDoctorCliOptions): Promise
   lines.push(chalk.bold("Bridge doctor"));
   lines.push(chalk.dim(`OS: ${process.platform} ${os.release()} (${process.arch})`));
   lines.push(chalk.dim(`Node: ${process.version}`));
-  lines.push(chalk.dim(`Oracle: ${version}`));
+  lines.push(chalk.dim(`VellumPix: ${version}`));
   lines.push(chalk.dim(`Config: ${userConfigLoaded ? configPath : `${configPath} (missing)`}`));
   if (projectConfigPaths.length > 0) {
     const label = projectConfigPaths.length === 1 ? "Project config" : "Project configs";
@@ -73,7 +73,7 @@ export async function runBridgeDoctor(_options: BridgeDoctorCliOptions): Promise
 
     if (!resolvedRemote.token) {
       fail.push(
-        "Remote token is missing. Run `oracle bridge client --connect <...> --write-config` or set ORACLE_REMOTE_TOKEN.",
+        "Remote token is missing. Run `vellumpix bridge client --connect <...> --write-config` or set VELLUMPIX_REMOTE_TOKEN.",
       );
     } else if (tcp.ok) {
       const health = await checkRemoteHealth({
@@ -82,7 +82,7 @@ export async function runBridgeDoctor(_options: BridgeDoctorCliOptions): Promise
         timeoutMs: 5000,
       });
       if (health.ok) {
-        const meta = health.version ? `oracle ${health.version}` : "ok";
+        const meta = health.version ? `vellumpix ${health.version}` : "ok";
         lines.push(chalk.dim(`Auth (/health): ${chalk.green(meta)}`));
         if (health.capabilities?.artifactTransfer) {
           lines.push(

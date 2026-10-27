@@ -65,7 +65,7 @@ async function listTargets(port) {
 }
 
 async function run() {
-  const userDataDir = await mkdtemp(path.join(os.tmpdir(), "oracle-cdp-proof-"));
+  const userDataDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-cdp-proof-"));
   let chrome;
   let client;
   let port;
@@ -100,7 +100,7 @@ async function run() {
     const { Page, Runtime } = client;
     await Page.enable();
     await Page.navigate({
-      url: "data:text/html,<title>oracle-cdp-proof</title><h1>alive</h1>",
+      url: "data:text/html,<title>vellumpix-cdp-proof</title><h1>alive</h1>",
     });
     await Page.loadEventFired();
     const { result: titleResult } = await Runtime.evaluate({
@@ -112,7 +112,7 @@ async function run() {
     const targetsBefore = await listTargets(port);
     const pageTarget =
       targetsBefore.find(
-        (t) => t.type === "page" && String(t.url || "").includes("oracle-cdp-proof"),
+        (t) => t.type === "page" && String(t.url || "").includes("vellumpix-cdp-proof"),
       ) || targetsBefore.find((t) => t.type === "page");
     if (!pageTarget?.id) throw new Error("no page target found");
     const targetId = pageTarget.id;

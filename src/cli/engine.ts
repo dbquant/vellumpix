@@ -1,5 +1,5 @@
-import { isProModel } from "../oracle/modelResolver.js";
-import type { ReasoningMode } from "../oracle/types.js";
+import { isProModel } from "../vellumpix/modelResolver.js";
+import type { ReasoningMode } from "../vellumpix/types.js";
 
 export type EngineMode = "api" | "browser";
 
@@ -22,7 +22,7 @@ export function defaultWaitPreference(
  * 1) Legacy --browser flag forces browser.
  * 2) Explicit --engine value.
  * 3) Explicit API provider routing flags force API.
- * 4) ORACLE_ENGINE environment override (api|browser).
+ * 4) VELLUMPIX_ENGINE environment override (api|browser).
  * 5) Config engine value.
  * 6) API environment decides: api when set, otherwise browser.
  */
@@ -48,7 +48,7 @@ export function resolveEngine({
   if (apiProviderRequested) {
     return "api";
   }
-  const envEngine = normalizeEngineMode(env.ORACLE_ENGINE);
+  const envEngine = normalizeEngineMode(env.VELLUMPIX_ENGINE);
   if (envEngine) {
     return envEngine;
   }

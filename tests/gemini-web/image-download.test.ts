@@ -32,7 +32,7 @@ describe("gemini-web image download", () => {
       });
     });
 
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "oracle-gemini-"));
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-gemini-"));
     const outputPath = path.join(tempDir, "generated.png");
 
     const output = {

@@ -1,33 +1,33 @@
 # Bridge (Windows-hosted ChatGPT session → Linux clients)
 
-Oracle’s bridge workflow lets you keep an authenticated ChatGPT session on a Windows machine while running Oracle (CLI + `oracle-mcp`) from Linux boxes (often over SSH), without exporting browser cookies off Windows.
+VellumPix’s bridge workflow lets you keep an authenticated ChatGPT session on a Windows machine while running VellumPix (CLI + `vellumpix-mcp`) from Linux boxes (often over SSH), without exporting browser cookies off Windows.
 
 ## Concepts
 
-- **Host (Windows)**: runs `oracle bridge host` and holds the signed-in ChatGPT session.
+- **Host (Windows)**: runs `vellumpix bridge host` and holds the signed-in ChatGPT session.
 - **Client (Linux)**: stores the host connection once and routes browser runs (and MCP browser runs) through the host.
 
 The host sanitizes incoming attachment filenames for staging. If names collide after sanitization (or differ only by case), later uploads receive a unique numeric suffix before the extension, while their original display paths and payload order are retained. This applies to both primary uploads and prompt-size fallback uploads. Non-colliding filenames are unchanged; supplied names such as `a_b-2.txt` are reserved before suffix allocation.
 
 ## Run admission and cancellation
 
-`oracle serve` also offers opt-in bounded admission via `--max-concurrent-runs` and `--max-queued-runs`; see [concurrent admission](browser-mode.md#optional-concurrent-admission). The default remains single-flight HTTP 409. Explicit programmatic cancellation requires the host's `runCancellation` capability; generated-file transfers honor the caller's AbortSignal and remove incomplete transfer files.
+`vellumpix serve` also offers opt-in bounded admission via `--max-concurrent-runs` and `--max-queued-runs`; see [concurrent admission](browser-mode.md#optional-concurrent-admission). The default remains single-flight HTTP 409. Explicit programmatic cancellation requires the host's `runCancellation` capability; generated-file transfers honor the caller's AbortSignal and remove incomplete transfer files.
 
 ## Generated artifact transfer
 
-Bridge runs now keep the Windows browser host and Linux client separated while still returning ChatGPT-generated files and images, such as PNG, ZIP, CSV, PDF, wheels, and source distributions, to a cloud-readable path. The host advertises artifact-transfer support from the token-protected `GET /health` response. The Linux client uses that capability signal in `oracle bridge client --test` and `oracle bridge doctor`; older hosts remain usable for text responses. Explicit image-output requests require the host to advertise `generatedImages: true` with artifact protocol v1; otherwise the client refuses before sending the prompt or attachments and asks for a host upgrade. Other generated artifacts still require manual copying when the host lacks artifact transfer.
+Bridge runs now keep the Windows browser host and Linux client separated while still returning ChatGPT-generated files and images, such as PNG, ZIP, CSV, PDF, wheels, and source distributions, to a cloud-readable path. The host advertises artifact-transfer support from the token-protected `GET /health` response. The Linux client uses that capability signal in `vellumpix bridge client --test` and `vellumpix bridge doctor`; older hosts remain usable for text responses. Explicit image-output requests require the host to advertise `generatedImages: true` with artifact protocol v1; otherwise the client refuses before sending the prompt or attachments and asks for a host upgrade. Other generated artifacts still require manual copying when the host lacks artifact transfer.
 
 The transfer protocol is pull-based and keeps secrets local to the host:
 
 1. The browser host saves the ChatGPT file to its local session artifacts directory as before.
 2. The host emits only a redacted artifact descriptor over the existing NDJSON run stream: artifact id, safe filename, MIME type, byte size, SHA-256, validation status, and coarse source kind. It does not expose cookies, bearer tokens, signed ChatGPT download URLs, or Windows filesystem paths.
-3. The Linux client fetches `GET /runs/<runId>/artifacts/<artifactId>` with the same bridge bearer token, writes to `~/.oracle/sessions/<sessionId>/artifacts/`, verifies size and SHA-256, validates ZIP structure when applicable, and only then publishes the final path in session metadata.
-4. If transfer fails, Oracle keeps the text response and records a warning with manual fallback instructions. Open the ChatGPT browser on the Windows host, use the visible download button/link in the current assistant response, and copy the file to a cloud-readable path yourself.
+3. The Linux client fetches `GET /runs/<runId>/artifacts/<artifactId>` with the same bridge bearer token, writes to `~/.vellumpix/sessions/<sessionId>/artifacts/`, verifies size and SHA-256, validates ZIP structure when applicable, and only then publishes the final path in session metadata.
+4. If transfer fails, VellumPix keeps the text response and records a warning with manual fallback instructions. Open the ChatGPT browser on the Windows host, use the visible download button/link in the current assistant response, and copy the file to a cloud-readable path yourself.
 
 Operational notes:
 
-- Run the same patched Oracle version on both Windows host and Linux client before relying on automatic file transfer. Mixed versions remain backward compatible for text-only runs.
-- `oracle bridge doctor` reports `Artifact transfer: bridge v1` when the host supports the protocol, including the advertised maximum artifact size.
+- Run the same patched VellumPix version on both Windows host and Linux client before relying on automatic file transfer. Mixed versions remain backward compatible for text-only runs.
+- `vellumpix bridge doctor` reports `Artifact transfer: bridge v1` when the host supports the protocol, including the advertised maximum artifact size.
 - The default bridge transfer size limit is 512 MiB. Larger files stay on the browser host and require manual copy.
 - Incoming `POST /runs` bodies are capped at 1,432,704,342 bytes (two base64 attachment sets at the 512 MiB artifact cap, plus a 1 MiB JSON envelope). Oversized bodies receive HTTP 413 with `payload_too_large` before a browser run starts, including chunked uploads without a declared length.
 - Session inspection prints artifact path, size, SHA-256 prefix, validation status, and transfer status so agents can verify whether the returned path is local to the Linux client.
@@ -37,15 +37,15 @@ Operational notes:
 Run this on the Windows machine that’s signed into ChatGPT:
 
 ```powershell
-oracle bridge host --token auto --ssh user@your-linux-host
+vellumpix bridge host --token auto --ssh user@your-linux-host
 ```
 
 What it does:
 
-- Starts a local `oracle serve` instance bound to `127.0.0.1:9473` by default.
+- Starts a local `vellumpix serve` instance bound to `127.0.0.1:9473` by default.
 - Generates an access token (stored to disk; not printed unless you ask).
 - Starts an SSH reverse tunnel so the Linux host can reach the Windows service at `127.0.0.1:9473`.
-- Writes a connection artifact to `~/.oracle/bridge-connection.json` (contains host + token).
+- Writes a connection artifact to `~/.vellumpix/bridge-connection.json` (contains host + token).
 
 Useful flags:
 
@@ -54,51 +54,51 @@ Useful flags:
 - Print the connection string (includes token): `--print`
 - Print only the token: `--print-token`
 - SSH port/custom args: `--ssh-extra-args "-p 2222"`
-- Background mode (writes pid/log files under `~/.oracle`): `--background`
+- Background mode (writes pid/log files under `~/.vellumpix`): `--background`
 
 ## 2) Linux: configure the client once
 
 Copy the connection artifact from Windows to Linux (example from Windows → Linux):
 
 ```powershell
-scp "$env:USERPROFILE\.oracle\bridge-connection.json" user@your-linux-host:~/bridge-connection.json
+scp "$env:USERPROFILE\.vellumpix\bridge-connection.json" user@your-linux-host:~/bridge-connection.json
 ```
 
 Then on the Linux host:
 
 ```bash
-oracle bridge client --connect ~/bridge-connection.json --write-config --test
+vellumpix bridge client --connect ~/bridge-connection.json --write-config --test
 ```
 
 This writes:
 
-- `~/.oracle/config.json` → `browser.remoteHost` and `browser.remoteToken`
+- `~/.vellumpix/config.json` → `browser.remoteHost` and `browser.remoteToken`
 
 Now browser runs automatically route through the host:
 
 ```bash
-oracle --engine browser -p "hello" --file README.md
+vellumpix --engine browser -p "hello" --file README.md
 ```
 
 ## 2b) Linux desktop: local manual-login (no bridge)
 
-If you’re physically on a Linux desktop and just want Oracle to reuse a local signed-in Chrome profile (no Windows bridge):
+If you’re physically on a Linux desktop and just want VellumPix to reuse a local signed-in Chrome profile (no Windows bridge):
 
 1. Run a browser session once and sign in when Chrome opens:
 
 ```bash
-ORACLE_HOME_DIR=~/.oracle-local \
-ORACLE_BROWSER_PROFILE_DIR=~/.oracle-local/browser-profile \
-oracle --engine browser --browser-manual-login --browser-keep-browser -p "hello"
+VELLUMPIX_HOME_DIR=~/.vellumpix-local \
+VELLUMPIX_BROWSER_PROFILE_DIR=~/.vellumpix-local/browser-profile \
+vellumpix --engine browser --browser-manual-login --browser-keep-browser -p "hello"
 ```
 
 2. After you’re signed in, reuse the same env vars for future runs (no more login prompts).
 
-Optional: use the helper wrapper `scripts/oracle-local-browser.sh` to avoid repeating flags/env vars:
+Optional: use the helper wrapper `scripts/vellumpix-local-browser.sh` to avoid repeating flags/env vars:
 
 ```bash
-chmod +x ./scripts/oracle-local-browser.sh
-./scripts/oracle-local-browser.sh -p "hello" --file README.md
+chmod +x ./scripts/vellumpix-local-browser.sh
+./scripts/vellumpix-local-browser.sh -p "hello" --file README.md
 ```
 
 ## 3) Codex CLI (MCP) integration
@@ -106,7 +106,7 @@ chmod +x ./scripts/oracle-local-browser.sh
 On the Linux machine where Codex runs:
 
 ```bash
-oracle bridge codex-config
+vellumpix bridge codex-config
 ```
 
 Paste the printed snippet into `~/.codex/config.toml`.
@@ -116,35 +116,35 @@ Paste the printed snippet into `~/.codex/config.toml`.
 On the Linux machine where Claude Code runs:
 
 ```bash
-oracle bridge claude-config > .mcp.json
+vellumpix bridge claude-config > .mcp.json
 ```
 
 Then start Claude Code with that config (or register it via `claude mcp add` depending on your setup).
 
 Notes:
 
-- The snippet includes `ORACLE_ENGINE="browser"` so MCP consult calls use browser mode even if `OPENAI_API_KEY` is set.
-- By default the snippets leave `ORACLE_REMOTE_TOKEN` as `<YOUR_TOKEN>` to avoid printing secrets; rerun with `--print-token` if you explicitly want it included.
+- The snippet includes `VELLUMPIX_ENGINE="browser"` so MCP consult calls use browser mode even if `OPENAI_API_KEY` is set.
+- By default the snippets leave `VELLUMPIX_REMOTE_TOKEN` as `<YOUR_TOKEN>` to avoid printing secrets; rerun with `--print-token` if you explicitly want it included.
 
 ### macOS local browser: Let Them Fight
 
 If Claude Code and the signed-in Chrome profile are on the same Mac, skip the remote bridge and generate a local config:
 
 ```bash
-oracle bridge claude-config --local-browser > .mcp.json
+vellumpix bridge claude-config --local-browser > .mcp.json
 ```
 
-This points Claude Code at `oracle-mcp`, sets `ORACLE_ENGINE="browser"`, and reuses the shared manual-login profile at `~/.oracle/browser-profile`. From Claude Code, call `consult` with `preset:"chatgpt-pro-heavy"` for the “Let Them Fight” workflow: Claude asks Oracle, Oracle asks ChatGPT Pro Extended in browser mode, and the answer comes back through MCP. Use `dryRun:true` first when you only want to validate the resolved request.
+This points Claude Code at `vellumpix-mcp`, sets `VELLUMPIX_ENGINE="browser"`, and reuses the shared manual-login profile at `~/.vellumpix/browser-profile`. From Claude Code, call `consult` with `preset:"chatgpt-pro-heavy"` for the “Let Them Fight” workflow: Claude asks VellumPix, VellumPix asks ChatGPT Pro Extended in browser mode, and the answer comes back through MCP. Use `dryRun:true` first when you only want to validate the resolved request.
 
-For long Pro runs, keep the Oracle session id visible in the agent transcript and inspect `oracle status` / `oracle session <id>` before retrying. Browser consults may wait on ChatGPT for several minutes; the dry-run/browser control plan is the operator-facing signal for whether Oracle will attach to an existing browser, use remote Chrome, or launch a visible window.
+For long Pro runs, keep the VellumPix session id visible in the agent transcript and inspect `vellumpix status` / `vellumpix session <id>` before retrying. Browser consults may wait on ChatGPT for several minutes; the dry-run/browser control plan is the operator-facing signal for whether VellumPix will attach to an existing browser, use remote Chrome, or launch a visible window.
 
 Override local paths when needed:
 
 ```bash
-oracle bridge claude-config \
+vellumpix bridge claude-config \
   --local-browser \
-  --oracle-home-dir ~/.oracle \
-  --browser-profile-dir ~/.oracle/browser-profile > .mcp.json
+  --vellumpix-home-dir ~/.vellumpix \
+  --browser-profile-dir ~/.vellumpix/browser-profile > .mcp.json
 ```
 
 ## 4) Troubleshooting
@@ -152,7 +152,7 @@ oracle bridge claude-config \
 Run:
 
 ```bash
-oracle bridge doctor
+vellumpix bridge doctor
 ```
 
 It checks:
@@ -165,9 +165,9 @@ It checks:
 ## Security notes
 
 - Tokens are not printed by default.
-- The connection artifact and config file contain secrets; keep them private (Oracle writes them with restrictive permissions on Unix).
+- The connection artifact and config file contain secrets; keep them private (VellumPix writes them with restrictive permissions on Unix).
 - Bridge does **not** extract/decrypt cookies from arbitrary profiles; the Windows machine keeps the authenticated session locally.
 
-Cancellation also removes Oracle’s attachment input, prompt, and send guards from retained tabs. Guard cleanup runs outside the aborted request scope; it does not cancel provider processing that already received a file or prompt.
+Cancellation also removes VellumPix’s attachment input, prompt, and send guards from retained tabs. Guard cleanup runs outside the aborted request scope; it does not cancel provider processing that already received a file or prompt.
 
 With opt-in queue admission, capacity is reserved when authenticated request headers arrive, before buffering the JSON body. Active/queued health counts include body reception; invalid or disconnected uploads release their reservation. This bounds concurrent body buffers by the configured active-plus-queued capacity and preserves admission order across slow uploads. The existing individual payload-size policy is unchanged.

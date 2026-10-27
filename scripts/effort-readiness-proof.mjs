@@ -23,7 +23,7 @@ const baseline = option("--baseline-cli");
 const captures = option("--captures");
 const fourTier = process.argv.includes("--four-tier");
 // Snap Chromium can access home-backed files, unlike the host's private /tmp.
-const root = await fs.mkdtemp(path.join(os.homedir(), "oracle-effort-proof-"));
+const root = await fs.mkdtemp(path.join(os.homedir(), "vellumpix-effort-proof-"));
 const chromePath = [
   process.env.CHROME_PATH,
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -38,9 +38,9 @@ let activeRun;
 let submissionCapture = Promise.resolve();
 const page = (
   mode,
-) => `<!doctype html><meta charset="utf-8"><title>Oracle effort readiness fixture</title>
+) => `<!doctype html><meta charset="utf-8"><title>VellumPix effort readiness fixture</title>
 <style>body{font:18px system-ui;max-width:800px;margin:40px auto}button{padding:8px}textarea{display:block;width:95%;height:100px}#menu{padding:20px;border:1px solid #aaa}#simple{min-height:80px}#control{height:60px;padding:12px;box-sizing:border-box;background:#eee}#control.hidden{height:0;padding:0;overflow:hidden}article{padding:12px;border-bottom:1px solid #ddd}</style>
-<h1>Oracle effort readiness fixture</h1><p>Synthetic controls; no provider account or generated model answer.</p>
+<h1>VellumPix effort readiness fixture</h1><p>Synthetic controls; no provider account or generated model answer.</p>
 <button data-testid="profile-button">Synthetic profile</button><button data-testid="model-switcher-dropdown-button">GPT-5.6 Sol</button>
 <main><div id="turns"></div><form><textarea id="prompt-textarea" name="prompt-textarea" placeholder="Ask anything"></textarea>
 <button id="pill" type="button" class="__composer-pill" aria-haspopup="menu" aria-controls="menu" aria-expanded="false">${mode === "already" ? "Pro" : "Extra High"}</button>
@@ -80,8 +80,8 @@ const send=()=>{
  document.querySelector('#prompt-textarea').value='';history.replaceState({},'', '/c/fixture-'+mode);
  setTimeout(()=>{
  const answer=document.createElement('article');answer.dataset.testid='conversation-turn-1';answer.dataset.turn='assistant';
- answer.innerHTML='<div data-message-author-role="assistant" data-message-id="synthetic-answer"><div class="markdown"><p>ORACLE_SLIDER_PROOF_OK</p></div></div><button type="button" data-testid="copy-turn-action-button" aria-label="Copy">Copy</button>';
- answer.querySelector('button').onclick=()=>navigator.clipboard.writeText('ORACLE_SLIDER_PROOF_OK');document.querySelector('#turns').append(answer);
+ answer.innerHTML='<div data-message-author-role="assistant" data-message-id="synthetic-answer"><div class="markdown"><p>VELLUMPIX_SLIDER_PROOF_OK</p></div></div><button type="button" data-testid="copy-turn-action-button" aria-label="Copy">Copy</button>';
+ answer.querySelector('button').onclick=()=>navigator.clipboard.writeText('VELLUMPIX_SLIDER_PROOF_OK');document.querySelector('#turns').append(answer);
  },200);
 };
 document.querySelector('[data-testid=send-button]').onclick=send;
@@ -142,7 +142,7 @@ async function captureSelectedTier(name) {
   }
 }
 const results = [];
-const serviceToken = "oracle-effort-fixture-only";
+const serviceToken = "vellumpix-effort-fixture-only";
 let service;
 let serviceDone;
 let servicePort;
@@ -200,7 +200,7 @@ async function startBridge() {
   service = spawn(
     process.execPath,
     [
-      path.join(repo, "dist/bin/oracle-cli.js"),
+      path.join(repo, "dist/bin/vellumpix-cli.js"),
       "serve",
       "--host",
       "127.0.0.1",
@@ -214,7 +214,7 @@ async function startBridge() {
     ],
     {
       cwd: repo,
-      env: { ...process.env, ORACLE_HOME_DIR: path.join(root, "service-home") },
+      env: { ...process.env, VELLUMPIX_HOME_DIR: path.join(root, "service-home") },
       stdio: ["ignore", "pipe", "pipe"],
     },
   );
@@ -265,7 +265,7 @@ try {
           name: "candidate-" + mode,
           mode,
           level: mode === "four-pro" ? "pro" : "extra-high",
-          cli: path.join(repo, "dist/bin/oracle-cli.js"),
+          cli: path.join(repo, "dist/bin/vellumpix-cli.js"),
           success: mode !== "four-pro",
         })),
       ]
@@ -274,28 +274,28 @@ try {
         ...["mounted", "geometry", "never"].map((mode) => ({
           name: "candidate-" + mode,
           mode,
-          cli: path.join(repo, "dist/bin/oracle-cli.js"),
+          cli: path.join(repo, "dist/bin/vellumpix-cli.js"),
           success: mode !== "never",
         })),
         {
           name: "candidate-already",
           mode: "already",
           strategy: "select",
-          cli: path.join(repo, "dist/bin/oracle-cli.js"),
+          cli: path.join(repo, "dist/bin/vellumpix-cli.js"),
           success: true,
         },
         {
           name: "candidate-unverified",
           mode: "never",
           level: "standard",
-          cli: path.join(repo, "dist/bin/oracle-cli.js"),
+          cli: path.join(repo, "dist/bin/vellumpix-cli.js"),
           success: true,
         },
         {
           name: "candidate-bridge",
           mode: "mounted",
           bridge: true,
-          cli: path.join(repo, "dist/bin/oracle-cli.js"),
+          cli: path.join(repo, "dist/bin/vellumpix-cli.js"),
           success: true,
         },
       ]) {
@@ -336,7 +336,7 @@ try {
     const result = await new Promise((resolve, reject) => {
       const child = spawn(process.execPath, args, {
         cwd: repo,
-        env: { ...process.env, ORACLE_HOME_DIR: home },
+        env: { ...process.env, VELLUMPIX_HOME_DIR: home },
         stdio: ["ignore", "pipe", "pipe"],
       });
       let output = "";
@@ -408,7 +408,7 @@ try {
     assert.ok(state.keys.every((k) => k.ready));
     if (run.success) {
       assert.equal(state.sentTier, run.level ? "Extra High" : "Pro");
-      assert.match(result.output, /ORACLE_SLIDER_PROOF_OK/);
+      assert.match(result.output, /VELLUMPIX_SLIDER_PROOF_OK/);
     } else
       assert.match(
         result.output,
@@ -444,7 +444,7 @@ try {
       const displayed = await promisify(execFile)(
         process.execPath,
         [run.cli, "status", sessions[0]],
-        { cwd: repo, env: { ...process.env, ORACLE_HOME_DIR: home }, timeout: 10000 },
+        { cwd: repo, env: { ...process.env, VELLUMPIX_HOME_DIR: home }, timeout: 10000 },
       );
       assert.match(displayed.stdout, /effort requestedLevel=/);
       assert.match(displayed.stdout, run.level ? /verified=no/ : /verified=yes/);

@@ -9,7 +9,7 @@ fi
 
 tag="$1"
 version="${tag#v}"
-REPO="${REPO:-steipete/oracle}"
+REPO="${REPO:-dbquant/vellumpix}"
 attempts="${RELEASE_ASSET_ATTEMPTS:-12}"
 delay="${RELEASE_ASSET_DELAY:-15}"
 public_check="${RELEASE_ASSET_PUBLIC_URL_CHECK:-1}"
@@ -29,7 +29,7 @@ trap 'rm -rf "$tmp"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 chmod 700 "$tmp"
-tgz="oracle-${version}.tgz"
+tgz="vellumpix-${version}.tgz"
 assets=("$tgz" "$tgz.sha1" "$tgz.sha256")
 url="https://github.com/$REPO/releases/download/$tag/$tgz"
 

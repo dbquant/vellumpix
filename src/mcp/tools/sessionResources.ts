@@ -3,18 +3,18 @@ import fs from "node:fs/promises";
 import { sessionStore } from "../../sessionStore.js";
 
 // URIs:
-// - oracle-session://<id>/metadata
-// - oracle-session://<id>/log
-// - oracle-session://<id>/request
+// - vellumpix-session://<id>/metadata
+// - vellumpix-session://<id>/log
+// - vellumpix-session://<id>/request
 
 export function registerSessionResources(server: McpServer): void {
-  const template = new ResourceTemplate("oracle-session://{id}/{kind}", { list: undefined });
+  const template = new ResourceTemplate("vellumpix-session://{id}/{kind}", { list: undefined });
 
   server.registerResource(
-    "oracle-session",
+    "vellumpix-session",
     template,
     {
-      title: "oracle session resources",
+      title: "vellumpix session resources",
       description: "Read stored session metadata, log, or request payload.",
     },
     async (uri, variables) => {

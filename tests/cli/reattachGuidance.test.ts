@@ -9,11 +9,13 @@ describe("formatBrowserReattachGuidance", () => {
       "This run did not return cleanly, but it may still be alive. Reattach:",
     );
     expect(message).toContain(
-      "oracle session gpt55-pro-plan-review --render    # final markdown when complete",
+      "vellumpix session gpt55-pro-plan-review --render    # final markdown when complete",
     );
-    expect(message).toContain("oracle session gpt55-pro-plan-review --live      # tail until done");
     expect(message).toContain(
-      "oracle session gpt55-pro-plan-review --harvest   # snapshot the current answer now",
+      "vellumpix session gpt55-pro-plan-review --live      # tail until done",
+    );
+    expect(message).toContain(
+      "vellumpix session gpt55-pro-plan-review --harvest   # snapshot the current answer now",
     );
   });
 });

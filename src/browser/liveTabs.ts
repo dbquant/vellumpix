@@ -588,7 +588,7 @@ function resolveChatGptTabFromSummaries(
     throw new Error(`Multiple ChatGPT tabs match "${trimmedRef}":\n${details}`);
   }
   throw new Error(
-    `No ChatGPT tab matched "${trimmedRef}". Use "oracle-tabs" or "oracle status --browser-tabs" to inspect live targets.`,
+    `No ChatGPT tab matched "${trimmedRef}". Use "vellumpix-tabs" or "vellumpix status --browser-tabs" to inspect live targets.`,
   );
 }
 

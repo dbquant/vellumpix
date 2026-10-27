@@ -25,7 +25,7 @@ export async function fetchGeminiWebResource(
       cause.code === "UND_ERR_HEADERS_OVERFLOW"
     ) {
       throw new Error(
-        "Gemini response headers exceed the HTTP transport's configured limit (Oracle's default is 64 KiB).",
+        "Gemini response headers exceed the HTTP transport's configured limit (VellumPix's default is 64 KiB).",
         { cause: error },
       );
     }

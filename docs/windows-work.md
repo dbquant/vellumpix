@@ -1,8 +1,8 @@
-﻿# Windows work notes
+# Windows work notes
 
 Read this file whenever you're working from Windows and add new findings so the next agent can stay unblocked.
 
-- Browser-provider selection treats Windows `auto` as Edge first with Chrome fallback. Manual-login data is isolated under `~/.oracle/browser-profiles/edge` or `.../chrome`; never point these defaults at a daily browser's `User Data` directory.
+- Browser-provider selection treats Windows `auto` as Edge first with Chrome fallback. Manual-login data is isolated under `~/.vellumpix/browser-profiles/edge` or `.../chrome`; never point these defaults at a daily browser's `User Data` directory.
 - Both installed binaries were smoke-tested through CDP on this host (Edge 156 and Chrome 155), using separate task-local profiles and closing their debug ports afterward.
 - Detached Edge can keep serving CDP briefly after `taskkill /T /F` reports success. Shared-profile cleanup now waits for the tree to settle and retries the exact recorded PID once before declaring termination.
 - PowerShell process-command probes must force UTF-8 output. Otherwise a non-ASCII `--user-data-dir` is decoded incorrectly, fails the exact profile identity check, and leaves the detached Edge process alive.
@@ -33,11 +33,11 @@ Future Windows gotchas belong here. Update this doc when you learn something new
 - ChatGPT sidebar/history labels can include phrases like "Login setup instruction"; login probes must match exact auth CTAs, not any visible text starting with login, or manual-login automation loops forever before typing.
 - For Windows PR refreshes, use `git -c core.autocrlf=false` for merge and review commands; preserve untracked `.codex-tmp/` handoff state and leave it out of commits.
 - ChatGPT's composer plus button can sit close to Work suggestions. A coordinate click observed on Windows entered a new `/c/WEB:...` Work task even though the attachment tile later appeared. Activate only `#composer-plus-btn` / `button[data-testid="composer-plus-btn"]`, then fail closed if the conversation id changes or Work becomes selected before file assignment. Preserve that page identity through upload and check it again at final dispatch. After upload, close an expanded plus menu and keyboard-activate only the exact `button[data-testid="send-button"]`; a trusted coordinate click was observed dismissing UI without committing the staged attachment prompt.
-- `scripts/browser-tools.ts` may attach its "active page" command to an `about:blank` target when several DevTools targets exist. For signed-in evidence, select the exact target id recorded by the Oracle session and verify its URL and composer state directly.
+- `scripts/browser-tools.ts` may attach its "active page" command to an `about:blank` target when several DevTools targets exist. For signed-in evidence, select the exact target id recorded by the VellumPix session and verify its URL and composer state directly.
 
 - Shared manual-login Chrome is detached from its native Windows controller and launched with `windowsHide`; temporary and copied profiles retain their existing process lifecycle. The final verified lease owner terminates the matching Chrome PID/profile.
 - Unit tests that mock only chrome-launcher's `launch()` must explicitly disable the Windows default `manualLogin` mode. Shared profiles use `new Launcher()`; cover that path with the dedicated lifecycle proof instead of accidentally launching Chrome from an option-construction test.
-- After upgrading this lease protocol, restart all Oracle browser controllers before sharing a profile. Older live controllers can forcibly remove a registry lock after their timeout; stored legacy records remain readable, but simultaneous mixed-version controllers are not a safe upgrade path.
+- After upgrading this lease protocol, restart all VellumPix browser controllers before sharing a profile. Older live controllers can forcibly remove a registry lock after their timeout; stored legacy records remain readable, but simultaneous mixed-version controllers are not a safe upgrade path.
 - Run `node scripts/shared-chrome-lifecycle-proof.mjs` after building for the native two-controller check. It uses a freshly initialized, signed-out profile and locally supplied pages, verifies peer CDP access after the owner exits, then checks final registry/process/endpoint cleanup. It does not prove signed-in ChatGPT concurrency or backend model identity.
 
 - After merging a dependency update that changes oxfmt, CRLF checkouts may fail format checks across otherwise unchanged files. Normalize tracked text working copies to LF and use `git -c core.autocrlf=false` for staging; verify the resulting diff contains only intended changes.

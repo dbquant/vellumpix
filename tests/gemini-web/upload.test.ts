@@ -15,7 +15,7 @@ describe("gemini-web uploads", () => {
   });
 
   it("sends mime metadata for image and non-image uploads", async () => {
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "oracle-gemini-upload-"));
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-gemini-upload-"));
     const imagePath = path.join(tempDir, "input.png");
     const textPath = path.join(tempDir, "notes.txt");
     await writeFile(
@@ -25,7 +25,7 @@ describe("gemini-web uploads", () => {
         "base64",
       ),
     );
-    await writeFile(textPath, "hello from oracle", "utf8");
+    await writeFile(textPath, "hello from vellumpix", "utf8");
 
     const uploadBodies: Array<{ name: string; type: string }> = [];
     let requestPayload: unknown[] | null = null;

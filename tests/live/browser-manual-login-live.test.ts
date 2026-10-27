@@ -13,8 +13,8 @@ import {
 import { acquireLiveTestLock, releaseLiveTestLock } from "./liveLock.js";
 import { getCookies } from "@steipete/sweet-cookie";
 
-const LIVE = process.env.ORACLE_LIVE_TEST === "1";
-const MANUAL = process.env.ORACLE_LIVE_TEST_MANUAL_LOGIN === "1";
+const LIVE = process.env.VELLUMPIX_LIVE_TEST === "1";
+const MANUAL = process.env.VELLUMPIX_LIVE_TEST_MANUAL_LOGIN === "1";
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -60,7 +60,7 @@ async function waitForPageTarget(host: string, port: number, timeoutMs = 30_000)
   test(
     "preserves DevToolsActivePort when connection drops but Chrome stays running",
     async () => {
-      const profileDir = await mkdtemp(path.join(os.tmpdir(), "oracle-manual-login-"));
+      const profileDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-manual-login-"));
       const { cookies } = await getCookies({
         url: "https://chatgpt.com",
         origins: ["https://chatgpt.com", "https://chat.openai.com", "https://atlas.openai.com"],

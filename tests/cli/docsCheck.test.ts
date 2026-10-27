@@ -13,7 +13,7 @@ import {
 } from "../../src/cli/docsCheck.js";
 
 const execFileAsync = promisify(execFile);
-const CLI_ENTRY = path.join(process.cwd(), "bin", "oracle-cli.ts");
+const CLI_ENTRY = path.join(process.cwd(), "bin", "vellumpix-cli.ts");
 const CLI_TIMEOUT = 15_000;
 
 describe("docs check", () => {
@@ -46,7 +46,7 @@ describe("docs check", () => {
   });
 
   test("reports documented flags missing from CLI metadata", async () => {
-    const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-docs-check-"));
+    const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-docs-check-"));
     await writeFile(
       path.join(tmp, "flags.md"),
       "Documented: `--known` and `--stale-flag`.",
@@ -65,7 +65,7 @@ describe("docs check", () => {
   });
 
   test("checks Core consult flags against root options, not unrelated subcommands", async () => {
-    const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-docs-check-"));
+    const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-docs-check-"));
     await writeFile(path.join(tmp, "flags.md"), "## Core consult flags\n`--json`\n", "utf8");
     const program = new Command();
     program.command("doctor").option("--json");
@@ -82,8 +82,8 @@ describe("docs check", () => {
   });
 
   test("checks command examples against that command's options", async () => {
-    const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-docs-check-"));
-    await writeFile(path.join(tmp, "flags.md"), "```bash\noracle status --json\n```\n", "utf8");
+    const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-docs-check-"));
+    await writeFile(path.join(tmp, "flags.md"), "```bash\nvellumpix status --json\n```\n", "utf8");
     const program = new Command();
     program.command("doctor").option("--json");
     program.command("status").option("--hours <hours>");
@@ -94,13 +94,15 @@ describe("docs check", () => {
       paths: ["flags.md"],
     });
 
-    expect(result.issues).toEqual([{ file: "flags.md", flag: "--json", command: "oracle status" }]);
+    expect(result.issues).toEqual([
+      { file: "flags.md", flag: "--json", command: "vellumpix status" },
+    ]);
   });
 
   test(
     "honors custom docs path from the CLI",
     async () => {
-      const tmp = await mkdtemp(path.join(os.tmpdir(), "oracle-docs-check-"));
+      const tmp = await mkdtemp(path.join(os.tmpdir(), "vellumpix-docs-check-"));
       const missing = path.join(tmp, "missing.md");
 
       await expect(

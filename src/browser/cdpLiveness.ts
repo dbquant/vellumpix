@@ -92,10 +92,10 @@ export function connectionLostUserMessage(options: {
 }): string {
   if (options.recoverable) {
     return options.remote
-      ? "Remote Chrome DevTools client disconnected before oracle finished; the browser target appears still alive."
-      : "Chrome DevTools client disconnected before oracle finished; the browser target appears still alive.";
+      ? "Remote Chrome DevTools client disconnected before vellumpix finished; the browser target appears still alive."
+      : "Chrome DevTools client disconnected before vellumpix finished; the browser target appears still alive.";
   }
   return options.remote
-    ? "Remote Chrome connection lost before Oracle finished."
-    : "Chrome window closed before oracle finished. Please keep it open until completion.";
+    ? "Remote Chrome connection lost before VellumPix finished."
+    : "Chrome window closed before vellumpix finished. Please keep it open until completion.";
 }

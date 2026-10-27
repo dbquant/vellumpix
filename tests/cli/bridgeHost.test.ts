@@ -8,7 +8,7 @@ let dir: string;
 let artifact: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(path.join(os.tmpdir(), "oracle-bridge-host-"));
+  dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-bridge-host-"));
   artifact = path.join(dir, "bridge-connection.json");
 });
 

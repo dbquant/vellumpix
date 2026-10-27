@@ -22,7 +22,7 @@ import {
 } from "../dist/src/browser/actions/promptComposer.js";
 
 // Snap Chromium has a private /tmp. Keep disk-backed uploads in its allowed home tree.
-const root = await mkdtemp(path.join(os.homedir(), "oracle-attachment-proof-"));
+const root = await mkdtemp(path.join(os.homedir(), "vellumpix-attachment-proof-"));
 const fixtures = process.argv[2] ? path.resolve(process.argv[2]) : root;
 const chromePath = [
   process.env.CHROME_PATH,

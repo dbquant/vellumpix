@@ -9,7 +9,7 @@ const loadUserConfig = vi.fn(async () => ({
       chatgptUrl: "https://chatgpt.com/g/g-p-test/project",
     },
   },
-  path: "/tmp/oracle-config.json",
+  path: "/tmp/vellumpix-config.json",
   loaded: true,
 }));
 const resolveRemoteServiceConfig = vi.fn(() => ({}));
@@ -64,7 +64,7 @@ describe("project_sources MCP tool", () => {
   });
 
   test("allows dry-run add without confirmation", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-project-sources-mcp-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-project-sources-mcp-"));
     try {
       const filePath = path.join(dir, "architecture.md");
       await writeFile(filePath, "shared project context\n", "utf8");

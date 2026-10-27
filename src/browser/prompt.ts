@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import type { BrowserBundleFormat, FileSection, RunOracleOptions } from "../oracle.js";
+import type { BrowserBundleFormat, FileSection, RunVellumPixOptions } from "../vellumpix.js";
 import {
   readFiles,
   createFileSections,
@@ -9,9 +9,9 @@ import {
   MODEL_CONFIGS,
   TOKENIZER_OPTIONS,
   formatFileSections,
-} from "../oracle.js";
-import { isKnownModel } from "../oracle/modelResolver.js";
-import { buildPromptMarkdown } from "../oracle/promptAssembly.js";
+} from "../vellumpix.js";
+import { isKnownModel } from "../vellumpix/modelResolver.js";
+import { buildPromptMarkdown } from "../vellumpix/promptAssembly.js";
 import type { BrowserAttachment } from "./types.js";
 import { buildAttachmentPlan } from "./policies.js";
 import { createStoredZip } from "./zipBundle.js";
@@ -161,7 +161,7 @@ interface PendingFallbackBundle {
   rawUploadAttachments: BrowserAttachment[];
 }
 
-const GENERATED_BUNDLE_DIR_PREFIX = "oracle-browser-bundle-";
+const GENERATED_BUNDLE_DIR_PREFIX = "vellumpix-browser-bundle-";
 const pendingFallbackBundles = new WeakMap<BrowserPromptArtifacts, PendingFallbackBundle>();
 
 function formatSectionsForBundle(
@@ -467,7 +467,7 @@ async function writeBrowserBundle(
 }
 
 export async function assembleBrowserPrompt(
-  runOptions: RunOracleOptions,
+  runOptions: RunVellumPixOptions,
   deps: AssemblePromptDeps = {},
 ): Promise<BrowserPromptArtifacts> {
   const cwd = deps.cwd ?? process.cwd();

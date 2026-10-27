@@ -238,7 +238,7 @@ describe("gemini-web executor", () => {
 
   it("builds a generate-image prompt with aspect ratio and passes attachments", async () => {
     const { createGeminiWebExecutor } = await import("../../src/gemini-web/executor.js");
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "oracle-gemini-exec-"));
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-gemini-exec-"));
     const outPath = path.join(tempDir, "gen.jpg");
 
     const exec = createGeminiWebExecutor({
@@ -272,7 +272,7 @@ describe("gemini-web executor", () => {
 
   it("runs the edit flow as two calls and uses intro metadata", async () => {
     const { createGeminiWebExecutor } = await import("../../src/gemini-web/executor.js");
-    const tempDir = await mkdtemp(path.join(os.tmpdir(), "oracle-gemini-exec-"));
+    const tempDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-gemini-exec-"));
     const inPath = path.join(tempDir, "in.png");
     const outPath = path.join(tempDir, "out.jpg");
 

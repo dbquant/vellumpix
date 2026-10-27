@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { runOracle, extractTextOutput } from "../../src/oracle.js";
+import { runVellumPix, extractTextOutput } from "../../src/vellumpix.js";
 
-const live = process.env.ORACLE_LIVE_TEST === "1";
+const live = process.env.VELLUMPIX_LIVE_TEST === "1";
 const hasKey = Boolean(process.env.ANTHROPIC_API_KEY);
 const isAccessOrTransportError = (message: string): boolean =>
   /model .*does not exist|not a valid model ID|access|permission|invalid x-api-key|invalid api key|404|unexpected token|invalid JSON response|empty response/i.test(
@@ -16,7 +16,7 @@ const isAccessOrTransportError = (message: string): boolean =>
 
   it("returns a short answer", async () => {
     try {
-      const result = await runOracle(
+      const result = await runVellumPix(
         {
           prompt: "Give one short sentence about photosynthesis.",
           model: "claude-4.6-sonnet",

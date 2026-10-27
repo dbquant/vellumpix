@@ -2,7 +2,7 @@ import type { McpServer, CallToolResult, ServerContext } from "@modelcontextprot
 import { z } from "zod";
 import { getCliVersion } from "../../version.js";
 import { ensureBrowserAvailable, mapConsultToRunOptions } from "../utils.js";
-import type { RunOracleOptions } from "../../oracle.js";
+import type { RunVellumPixOptions } from "../../vellumpix.js";
 import type { EngineMode } from "../../cli/engine.js";
 import type { BrowserSessionConfig, SessionArtifact, SessionModelRun } from "../../sessionStore.js";
 import { sessionStore } from "../../sessionStore.js";
@@ -39,8 +39,8 @@ import {
   resolveDefaultBrowserThinkingTime,
 } from "../../cli/browserConfig.js";
 import type { BrowserModelStrategy } from "../../browser/types.js";
-import { normalizeThinkingTimeLevel } from "../../oracle/thinkingTime.js";
-import type { ThinkingTimeLevel } from "../../oracle/types.js";
+import { normalizeThinkingTimeLevel } from "../../vellumpix/thinkingTime.js";
+import type { ThinkingTimeLevel } from "../../vellumpix/types.js";
 import { launchDetachedSession } from "../../cli/detachedSession.js";
 import { buildSessionLifecycle } from "../../cli/sessionLifecycle.js";
 
@@ -63,7 +63,7 @@ const consultInputShape = {
     .string()
     .optional()
     .describe(
-      "Single model name/label. If `engine` is omitted, Oracle follows CLI defaults: config/ORACLE_ENGINE first, then `api` when OPENAI_API_KEY is set, otherwise `browser`. Prefer setting `engine` explicitly to avoid default surprises.",
+      "Single model name/label. If `engine` is omitted, VellumPix follows CLI defaults: config/VELLUMPIX_ENGINE first, then `api` when OPENAI_API_KEY is set, otherwise `browser`. Prefer setting `engine` explicitly to avoid default surprises.",
     ),
   models: z
     .array(z.string())
@@ -73,7 +73,7 @@ const consultInputShape = {
     .enum(["api", "browser"])
     .optional()
     .describe(
-      "Execution engine. `api` uses provider APIs. `browser` uses ChatGPT automation or the local Gemini web client according to the model. Picker labels apply to ChatGPT only. When omitted, Oracle follows CLI defaults: config/ORACLE_ENGINE first, then `api` when OPENAI_API_KEY is set, otherwise `browser`.",
+      "Execution engine. `api` uses provider APIs. `browser` uses ChatGPT automation or the local Gemini web client according to the model. Picker labels apply to ChatGPT only. When omitted, VellumPix follows CLI defaults: config/VELLUMPIX_ENGINE first, then `api` when OPENAI_API_KEY is set, otherwise `browser`.",
     ),
   browserModelLabel: z
     .string()
@@ -152,13 +152,13 @@ const consultInputShape = {
     .boolean()
     .optional()
     .describe(
-      "When false, start the Oracle run in a detached worker and return its sessionId immediately. Use the wait tool to block for completion without agent-side polling. Defaults to true for compatibility.",
+      "When false, start the VellumPix run in a detached worker and return its sessionId immediately. Use the wait tool to block for completion without agent-side polling. Defaults to true for compatibility.",
     ),
   dryRun: z
     .boolean()
     .optional()
     .describe(
-      "Preview the resolved Oracle run without creating a session or touching the browser.",
+      "Preview the resolved VellumPix run without creating a session or touching the browser.",
     ),
   search: z
     .boolean()
@@ -167,7 +167,7 @@ const consultInputShape = {
   slug: z
     .string()
     .optional()
-    .describe("Optional human-friendly session id (used for later `oracle sessions` lookups)."),
+    .describe("Optional human-friendly session id (used for later `vellumpix sessions` lookups)."),
 } satisfies z.ZodRawShape;
 
 export const consultModelSummaryShape = z.object({
@@ -366,7 +366,7 @@ export function buildConsultBrowserConfig({
   browserFallbackProvider?: "chrome" | "edge" | "none";
 }): BrowserSessionConfig {
   const configuredBrowser = userConfig.browser ?? {};
-  const envProfileDir = (env.ORACLE_BROWSER_PROFILE_DIR ?? "").trim();
+  const envProfileDir = (env.VELLUMPIX_BROWSER_PROFILE_DIR ?? "").trim();
   const hasProfileDir = envProfileDir.length > 0;
   const preferredLabel = (browserModelLabel ?? inputModel)?.trim();
   const isChatGptModel = runModel.startsWith("gpt-") && !runModel.includes("codex");
@@ -441,12 +441,12 @@ export function buildConsultDryRunResolved({
       "Browser engine uses the signed-in ChatGPT profile; run dryRun:true before live use.",
     );
     if (resolvedBrowserConfig?.manualLogin) {
-      const profile = resolvedBrowserConfig.manualLoginProfileDir ?? "~/.oracle/browser-profile";
+      const profile = resolvedBrowserConfig.manualLoginProfileDir ?? "~/.vellumpix/browser-profile";
       guidance.push(
-        `Manual-login browser mode uses Oracle's private Chrome profile at ${profile}, separate from your normal Chrome profile.`,
+        `Manual-login browser mode uses VellumPix's private Chrome profile at ${profile}, separate from your normal Chrome profile.`,
       );
       guidance.push(
-        `First-time setup: run oracle --engine browser --browser-manual-login --browser-keep-browser --browser-manual-login-profile-dir ${JSON.stringify(profile)} -p "HI", sign into ChatGPT in that window, then retry the consult.`,
+        `First-time setup: run vellumpix --engine browser --browser-manual-login --browser-keep-browser --browser-manual-login-profile-dir ${JSON.stringify(profile)} -p "HI", sign into ChatGPT in that window, then retry the consult.`,
       );
       guidance.push(
         "If this profile is not signed in, non-setup MCP/browser runs fail fast instead of waiting for the full browser timeout.",
@@ -589,7 +589,7 @@ export async function runConsultTool(
     slug,
   } = parsedInput;
   const { config: userConfig } = await loadUserConfig();
-  let runOptions: RunOracleOptions;
+  let runOptions: RunVellumPixOptions;
   let resolvedEngine: EngineMode;
   try {
     ({ runOptions, resolvedEngine } = mapConsultToRunOptions({
@@ -679,11 +679,11 @@ export async function runConsultTool(
       ),
     };
   }
-  if (!waitForCompletion && process.env.ORACLE_NO_DETACH === "1") {
+  if (!waitForCompletion && process.env.VELLUMPIX_NO_DETACH === "1") {
     return {
       isError: true,
       content: textContent(
-        "Detached MCP consults are disabled by ORACLE_NO_DETACH=1. Remove it or keep waitForCompletion:true.",
+        "Detached MCP consults are disabled by VELLUMPIX_NO_DETACH=1. Remove it or keep waitForCompletion:true.",
       ),
     };
   }
@@ -704,7 +704,7 @@ export async function runConsultTool(
       return {
         isError: true,
         content: textContent(
-          `Remote host configured (${resolvedRemote.host}) but remote token is missing. Run \`oracle bridge client --connect <...>\` or set ORACLE_REMOTE_TOKEN.`,
+          `Remote host configured (${resolvedRemote.host}) but remote token is missing. Run \`vellumpix bridge client --connect <...>\` or set VELLUMPIX_REMOTE_TOKEN.`,
         ),
       };
     }
@@ -744,7 +744,7 @@ export async function runConsultTool(
             engine: resolvedEngine,
             detached: true,
             workerPid,
-            reattachCommand: `oracle session ${sessionMeta.id}`,
+            reattachCommand: `vellumpix session ${sessionMeta.id}`,
           });
           await sessionStore.updateSession(sessionMeta.id, {
             status: "running",
@@ -859,9 +859,9 @@ export function registerConsultTool(server: McpServer): void {
   server.registerTool(
     "consult",
     {
-      title: "Run an oracle session",
+      title: "Run an vellumpix session",
       description:
-        'Run an Oracle session (API or ChatGPT browser automation). Use `files` to attach project context. If `engine` is omitted, Oracle follows CLI defaults: config/ORACLE_ENGINE first, then API when OPENAI_API_KEY is set, otherwise browser. Browser GPT-5.5 Pro consults can take many minutes; set `waitForCompletion:false` to return a durable sessionId immediately, then use `wait` to block without agent-side polling. Use `dryRun:true` first when configuring an agent and inspect `sessions`/`oracle status` before retrying. Browser manual-login uses a private Oracle Chrome profile separate from the user\'s normal Chrome; dry-run output includes first-time setup guidance when that path is active. For browser-based image/file uploads, set `browserAttachments:"always"`. For ChatGPT image generation, set `generateImage` to enable the same image wait/download path as CLI --generate-image and read returned paths from `images`. Browser consults can include `browserFollowUps` for a multi-turn ChatGPT review in one conversation. Sessions are stored under `ORACLE_HOME_DIR` (shared with the CLI).',
+        'Run an VellumPix session (API or ChatGPT browser automation). Use `files` to attach project context. If `engine` is omitted, VellumPix follows CLI defaults: config/VELLUMPIX_ENGINE first, then API when OPENAI_API_KEY is set, otherwise browser. Browser GPT-5.5 Pro consults can take many minutes; set `waitForCompletion:false` to return a durable sessionId immediately, then use `wait` to block without agent-side polling. Use `dryRun:true` first when configuring an agent and inspect `sessions`/`vellumpix status` before retrying. Browser manual-login uses a private VellumPix Chrome profile separate from the user\'s normal Chrome; dry-run output includes first-time setup guidance when that path is active. For browser-based image/file uploads, set `browserAttachments:"always"`. For ChatGPT image generation, set `generateImage` to enable the same image wait/download path as CLI --generate-image and read returned paths from `images`. Browser consults can include `browserFollowUps` for a multi-turn ChatGPT review in one conversation. Sessions are stored under `VELLUMPIX_HOME_DIR` (shared with the CLI).',
       inputSchema: z.object(consultInputShape),
       outputSchema: z.object(consultOutputShape),
     },

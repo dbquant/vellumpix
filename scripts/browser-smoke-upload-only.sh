@@ -2,12 +2,12 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CMD=(node "$ROOT/dist/bin/oracle-cli.js" --engine browser --wait --heartbeat 0 --timeout 900 --browser-input-timeout 120000)
-FAST_MODEL="${ORACLE_BROWSER_SMOKE_FAST_MODEL:-gpt-5.5}"
+CMD=(node "$ROOT/dist/bin/vellumpix-cli.js" --engine browser --wait --heartbeat 0 --timeout 900 --browser-input-timeout 120000)
+FAST_MODEL="${VELLUMPIX_BROWSER_SMOKE_FAST_MODEL:-gpt-5.5}"
 
-tmpdir="$(mktemp -d -t oracle-browser-smoke)"
+tmpdir="$(mktemp -d -t vellumpix-browser-smoke)"
 tmpfile="$tmpdir/smoke-attachment.txt"
-upload_log="$(mktemp -t oracle-browser-smoke-upload-log)"
+upload_log="$(mktemp -t vellumpix-browser-smoke-upload-log)"
 trap 'rm -rf "$tmpdir" "$upload_log"' EXIT
 echo "smoke-attachment" >"$tmpfile"
 

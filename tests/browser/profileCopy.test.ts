@@ -20,11 +20,13 @@ describe("copyChromeProfile", () => {
   });
 
   test("fails fast when the required Local State file cannot be copied", async () => {
-    const dest = await mkdtemp(path.join(os.tmpdir(), "oracle-copyprofile-dest-"));
+    const dest = await mkdtemp(path.join(os.tmpdir(), "vellumpix-copyprofile-dest-"));
     tmpDirs.push(dest);
     // A source dir without a `Local State` file must fail loudly, not continue with a
     // profile that will later look unauthenticated.
-    const srcWithoutLocalState = await mkdtemp(path.join(os.tmpdir(), "oracle-copyprofile-src-"));
+    const srcWithoutLocalState = await mkdtemp(
+      path.join(os.tmpdir(), "vellumpix-copyprofile-src-"),
+    );
     tmpDirs.push(srcWithoutLocalState);
 
     await expect(copyChromeProfile(srcWithoutLocalState, dest)).rejects.toThrow(/Local State/);
@@ -34,8 +36,8 @@ describe("copyChromeProfile", () => {
   test.skipIf(process.platform === "win32")(
     "copies the active Local State profile instead of assuming Default",
     async () => {
-      const src = await mkdtemp(path.join(os.tmpdir(), "oracle-copyprofile-src-"));
-      const dest = await mkdtemp(path.join(os.tmpdir(), "oracle-copyprofile-dest-"));
+      const src = await mkdtemp(path.join(os.tmpdir(), "vellumpix-copyprofile-src-"));
+      const dest = await mkdtemp(path.join(os.tmpdir(), "vellumpix-copyprofile-dest-"));
       tmpDirs.push(src, dest);
       await mkdir(path.join(src, "Profile 2"), { recursive: true });
       await mkdir(path.join(src, "Default"), { recursive: true });
@@ -67,8 +69,8 @@ describe("copyChromeProfile", () => {
   test.skipIf(process.platform === "win32")(
     "omits volatile session state while preserving authentication storage (#540)",
     async () => {
-      const src = await mkdtemp(path.join(os.tmpdir(), "oracle-copyprofile-src-"));
-      const dest = await mkdtemp(path.join(os.tmpdir(), "oracle-copyprofile-dest-"));
+      const src = await mkdtemp(path.join(os.tmpdir(), "vellumpix-copyprofile-src-"));
+      const dest = await mkdtemp(path.join(os.tmpdir(), "vellumpix-copyprofile-dest-"));
       tmpDirs.push(src, dest);
       await writeFile(
         path.join(src, "Local State"),
@@ -94,8 +96,8 @@ describe("copyChromeProfile", () => {
   test.skipIf(process.platform === "win32" || process.getuid?.() === 0)(
     "rejects genuine partial authentication copies and cleans the destination (#540)",
     async () => {
-      const src = await mkdtemp(path.join(os.tmpdir(), "oracle-copyprofile-unreadable-"));
-      const dest = await mkdtemp(path.join(os.tmpdir(), "oracle-copyprofile-dest-"));
+      const src = await mkdtemp(path.join(os.tmpdir(), "vellumpix-copyprofile-unreadable-"));
+      const dest = await mkdtemp(path.join(os.tmpdir(), "vellumpix-copyprofile-dest-"));
       tmpDirs.push(src, dest);
       await mkdir(path.join(src, "Default"));
       await writeFile(path.join(src, "Local State"), "{}");
@@ -120,9 +122,9 @@ describe("copyChromeProfile", () => {
   test.skipIf(process.platform === "win32")(
     "tolerates a vanished-file exit 23 (openrsync) and keeps the copied profile (#550)",
     async () => {
-      const fakeBin = await mkdtemp(path.join(os.tmpdir(), "oracle-fakersync-"));
-      const src = await mkdtemp(path.join(os.tmpdir(), "oracle-copyprofile-src-"));
-      const dest = await mkdtemp(path.join(os.tmpdir(), "oracle-copyprofile-dest-"));
+      const fakeBin = await mkdtemp(path.join(os.tmpdir(), "vellumpix-fakersync-"));
+      const src = await mkdtemp(path.join(os.tmpdir(), "vellumpix-copyprofile-src-"));
+      const dest = await mkdtemp(path.join(os.tmpdir(), "vellumpix-copyprofile-dest-"));
       tmpDirs.push(fakeBin, src, dest);
       // Emits openrsync's vanished-file diagnostic and exits 23 after copying.
       const restorePath = await fakeRsync(
@@ -149,9 +151,9 @@ describe("copyChromeProfile", () => {
   test.skipIf(process.platform === "win32")(
     "rejects a vanished-file exit 23 when auth storage did not survive (#550)",
     async () => {
-      const fakeBin = await mkdtemp(path.join(os.tmpdir(), "oracle-fakersync-"));
-      const src = await mkdtemp(path.join(os.tmpdir(), "oracle-copyprofile-src-"));
-      const dest = await mkdtemp(path.join(os.tmpdir(), "oracle-copyprofile-dest-"));
+      const fakeBin = await mkdtemp(path.join(os.tmpdir(), "vellumpix-fakersync-"));
+      const src = await mkdtemp(path.join(os.tmpdir(), "vellumpix-copyprofile-src-"));
+      const dest = await mkdtemp(path.join(os.tmpdir(), "vellumpix-copyprofile-dest-"));
       tmpDirs.push(fakeBin, src, dest);
       // Copies nothing but reports a vanished file: the Cookies that existed in
       // the source cannot land in the destination, so the copy must be refused.

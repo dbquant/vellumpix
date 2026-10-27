@@ -6,11 +6,11 @@ import type {
   SessionTransportMetadata,
   SessionUserErrorMetadata,
 } from "../sessionStore.js";
-import type { OracleResponseMetadata } from "../oracle.js";
+import type { VellumPixResponseMetadata } from "../vellumpix.js";
 import { renderMarkdownAnsi } from "./markdownRenderer.js";
-import { formatFinishLine } from "../oracle/finishLine.js";
+import { formatFinishLine } from "../vellumpix/finishLine.js";
 import { sessionStore, wait } from "../sessionStore.js";
-import { formatTokenCount, formatTokenValue } from "../oracle/runUtils.js";
+import { formatTokenCount, formatTokenValue } from "../vellumpix/runUtils.js";
 import type { BrowserLogger } from "../browser/types.js";
 import { resumeBrowserSession } from "../browser/reattach.js";
 import { retireRecoveredBrowserTarget } from "../browser/recoveryTarget.js";
@@ -173,7 +173,7 @@ export interface ShowStatusOptions {
 }
 
 const CLEANUP_TIP =
-  'Tip: Run "oracle session --clear --hours 24" to prune cached runs (add --all to wipe everything).';
+  'Tip: Run "vellumpix session --clear --hours 24" to prune cached runs (add --all to wipe everything).';
 
 export async function showStatus({
   hours,
@@ -217,7 +217,7 @@ export async function showStatus({
     const sessionsDir = sessionStore.sessionsDir();
     console.log(
       chalk.yellow(
-        `Showing ${entries.length} of ${total} sessions from the requested range. Run "oracle session --clear" or delete entries in ${sessionsDir} to free space, or rerun "oracle status" with a higher --limit <count> (maximum 1000); add --all to include older sessions.`,
+        `Showing ${entries.length} of ${total} sessions from the requested range. Run "vellumpix session --clear" or delete entries in ${sessionsDir} to free space, or rerun "vellumpix status" with a higher --limit <count> (maximum 1000); add --all to include older sessions.`,
       ),
     );
   }
@@ -275,7 +275,7 @@ export async function attachSession(
   }
   const initialStatus = metadata.status;
   const wantsRender = Boolean(options?.renderMarkdown);
-  const isVerbose = Boolean(process.env.ORACLE_VERBOSE_RENDER);
+  const isVerbose = Boolean(process.env.VELLUMPIX_VERBOSE_RENDER);
   const runtime = metadata.browser?.runtime;
   const controllerAlive = isProcessAlive(runtime?.controllerPid);
   const workerAlive = isProcessAlive(metadata.lifecycle?.workerPid);
@@ -708,7 +708,7 @@ export async function attachSession(
   }
 }
 
-export function formatResponseMetadata(metadata?: OracleResponseMetadata): string | null {
+export function formatResponseMetadata(metadata?: VellumPixResponseMetadata): string | null {
   if (!metadata) {
     return null;
   }
@@ -863,11 +863,11 @@ function formatRelativeDuration(referenceIso: string): string | null {
 function printStatusExamples(): void {
   console.log("");
   console.log(chalk.bold("Usage Examples"));
-  console.log(`${chalk.bold("  oracle status --hours 72 --limit 50")}`);
+  console.log(`${chalk.bold("  vellumpix status --hours 72 --limit 50")}`);
   console.log(dim("    Show 72h of history capped at 50 entries."));
-  console.log(`${chalk.bold("  oracle status --clear --hours 168")}`);
+  console.log(`${chalk.bold("  vellumpix status --clear --hours 168")}`);
   console.log(dim("    Delete sessions older than 7 days (use --all to wipe everything)."));
-  console.log(`${chalk.bold("  oracle session <session-id>")}`);
+  console.log(`${chalk.bold("  vellumpix session <session-id>")}`);
   console.log(dim("    Attach to a specific running/completed session to stream its output."));
   console.log(dim(CLEANUP_TIP));
 }

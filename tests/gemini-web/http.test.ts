@@ -54,7 +54,7 @@ test("explains an oversized Google response without exposing request details", a
   const error = new TypeError("fetch failed", { cause: { code: "UND_ERR_HEADERS_OVERFLOW" } });
   vi.spyOn(globalThis, "fetch").mockRejectedValue(error);
   await expect(fetchGeminiWebResource("https://gemini.google.com/app")).rejects.toThrow(
-    "Oracle's default is 64 KiB",
+    "VellumPix's default is 64 KiB",
   );
 });
 
@@ -94,7 +94,7 @@ test("bounds oversized responses and never retries a dispatched POST", async () 
     res.end("too large");
   });
   await expect(fetchGeminiWebResource(url, { method: "POST", body: "prompt" })).rejects.toThrow(
-    "Oracle's default is 64 KiB",
+    "VellumPix's default is 64 KiB",
   );
   expect(calls).toBe(1);
 });

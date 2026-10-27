@@ -4,7 +4,7 @@ import type { BrowserLogger } from "../../src/browser/types.js";
 import { getCookies } from "@steipete/sweet-cookie";
 import { acquireLiveTestLock, releaseLiveTestLock } from "./liveLock.js";
 
-const LIVE = process.env.ORACLE_LIVE_TEST === "1";
+const LIVE = process.env.VELLUMPIX_LIVE_TEST === "1";
 
 async function hasChatGptCookies(): Promise<boolean> {
   const { cookies } = await getCookies({
@@ -122,7 +122,7 @@ const CASES = [
                 break;
               }
               const transient =
-                message.includes("Chrome window closed before oracle finished") ||
+                message.includes("Chrome window closed before vellumpix finished") ||
                 message.includes("Prompt did not appear in conversation before timeout") ||
                 message.includes("Reattach target did not respond");
               if (transient && attempt < 3) {

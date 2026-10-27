@@ -4,14 +4,14 @@ import { activeTaglines, formatIntroLine, pickTagline, TAGLINES } from "../../sr
 describe("taglines", () => {
   test("respects env override for deterministic index", () => {
     const env: Record<string, string> = {};
-    env.ORACLE_TAGLINE_INDEX = "3";
+    env.VELLUMPIX_TAGLINE_INDEX = "3";
     const tagline = pickTagline({ env });
     expect(tagline).toBe(TAGLINES[3]);
   });
 
   test("wraps index modulo tagline length", () => {
     const env: Record<string, string> = {};
-    env.ORACLE_TAGLINE_INDEX = String(TAGLINES.length + 2);
+    env.VELLUMPIX_TAGLINE_INDEX = String(TAGLINES.length + 2);
     const tagline = pickTagline({ env });
     expect(tagline).toBe(TAGLINES[2]);
   });
@@ -35,9 +35,9 @@ describe("taglines", () => {
 
   test("formats intro line with version (plain)", () => {
     const env: Record<string, string> = {};
-    env.ORACLE_TAGLINE_INDEX = "0";
+    env.VELLUMPIX_TAGLINE_INDEX = "0";
     const intro = formatIntroLine("1.2.3", { env, richTty: false });
-    expect(intro.startsWith("🧿 oracle 1.2.3 — ")).toBe(true);
+    expect(intro.startsWith("🪶 vellumpix 1.2.3 — ")).toBe(true);
     expect(intro).toContain(TAGLINES[0]);
   });
 });

@@ -46,12 +46,12 @@ describe("cold Chrome startup", () => {
     async ({ configured, environment, expected }) => {
       const { launchChrome } = await import("../../src/browser/chromeLifecycle.js");
       const { resolveBrowserConfig } = await import("../../src/browser/config.js");
-      const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-stale-launch-log-"));
+      const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-stale-launch-log-"));
       const stale = "DevTools listening on ws://127.0.0.1:1/devtools/browser/stale\n";
       await writeFile(path.join(dir, "chrome-err.log"), stale);
-      vi.stubEnv("ORACLE_BROWSER_PORT", environment);
-      vi.stubEnv("ORACLE_BROWSER_DEBUG_PORT", "");
-      vi.stubEnv("ORACLE_BROWSER_REMOTE_DEBUG_HOST", "");
+      vi.stubEnv("VELLUMPIX_BROWSER_PORT", environment);
+      vi.stubEnv("VELLUMPIX_BROWSER_DEBUG_PORT", "");
+      vi.stubEnv("VELLUMPIX_BROWSER_REMOTE_DEBUG_HOST", "");
       vi.stubEnv("WSL_HOST_IP", "");
       chromeLaunchMock.mockReset();
       chromeLaunchMock.mockImplementation(async (options: { port?: number }) => ({
@@ -82,7 +82,7 @@ describe("cold Chrome startup", () => {
 describe("registerTerminationHooks", () => {
   test("kills Chrome and removes a copied profile on an in-flight signal", async () => {
     const { registerTerminationHooks } = await import("../../src/browser/chromeLifecycle.js");
-    const userDataDir = await mkdtemp(path.join(os.tmpdir(), "oracle-copy-profile-signal-"));
+    const userDataDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-copy-profile-signal-"));
     await writeFile(path.join(userDataDir, "Cookies"), "sensitive");
     const chrome = {
       kill: vi.fn().mockResolvedValue(undefined),
@@ -136,7 +136,7 @@ describe("registerTerminationHooks", () => {
       port: 9222,
     };
     const logger = vi.fn();
-    const userDataDir = "/tmp/oracle-manual-login-profile";
+    const userDataDir = "/tmp/vellumpix-manual-login-profile";
 
     const removeHooks = registerTerminationHooks(
       chrome as unknown as import("chrome-launcher").LaunchedChrome,
@@ -169,7 +169,7 @@ describe("registerTerminationHooks", () => {
     const previousExitCode = process.exitCode;
     const removeHooks = registerTerminationHooks(
       chrome as unknown as import("chrome-launcher").LaunchedChrome,
-      "/tmp/oracle-shared-manual-login-profile",
+      "/tmp/vellumpix-shared-manual-login-profile",
       false,
       logger,
       {
@@ -223,14 +223,14 @@ describe("copied-profile launch flags", () => {
   test("keeps the old cookie mode for existing macOS profiles", async () => {
     const { resolveChromeLaunchOptionsForTest, shouldUseNativeManualLoginKeychain } =
       await import("../../src/browser/chromeLifecycle.js");
-    const profile = await mkdtemp(path.join(os.tmpdir(), "oracle-keychain-mode-"));
+    const profile = await mkdtemp(path.join(os.tmpdir(), "vellumpix-keychain-mode-"));
     try {
       expect(await shouldUseNativeManualLoginKeychain(profile, "darwin")).toBe(true);
       await writeFile(path.join(profile, "Local State"), "{}");
       expect(await shouldUseNativeManualLoginKeychain(profile, "darwin")).toBe(false);
       const legacy = resolveChromeLaunchOptionsForTest([], false, false, "darwin");
       expect(legacy.ignoreDefaultFlags).toBe(false);
-      await writeFile(path.join(profile, ".oracle-native-keychain-v1"), "native-keychain\n");
+      await writeFile(path.join(profile, ".vellumpix-native-keychain-v1"), "native-keychain\n");
       expect(await shouldUseNativeManualLoginKeychain(profile, "darwin")).toBe(true);
       expect(await shouldUseNativeManualLoginKeychain(profile, "linux")).toBe(false);
     } finally {
@@ -268,7 +268,7 @@ describe("hidden-window launch flags", () => {
   test("launchChrome passes --no-startup-window when the resolved config enables no-focus", async () => {
     const { launchChrome } = await import("../../src/browser/chromeLifecycle.js");
     const { resolveBrowserConfig } = await import("../../src/browser/config.js");
-    const userDataDir = await mkdtemp(path.join(os.tmpdir(), "oracle-no-focus-launch-"));
+    const userDataDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-no-focus-launch-"));
     const launchFlags: string[][] = [];
     chromeLaunchMock.mockImplementation(async (options: { chromeFlags?: string[] }) => {
       launchFlags.push(options.chromeFlags ?? []);
@@ -305,21 +305,21 @@ describe("hidden-window launch flags", () => {
     expect(flags).not.toContain("--window-position=-32000,-32000");
   });
 
-  test("adds no-sandbox flags only when ORACLE_CHROME_NO_SANDBOX=1", async () => {
+  test("adds no-sandbox flags only when VELLUMPIX_CHROME_NO_SANDBOX=1", async () => {
     const { buildChromeFlagsForTest } = await import("../../src/browser/chromeLifecycle.js");
-    const previous = process.env.ORACLE_CHROME_NO_SANDBOX;
+    const previous = process.env.VELLUMPIX_CHROME_NO_SANDBOX;
     try {
-      delete process.env.ORACLE_CHROME_NO_SANDBOX;
+      delete process.env.VELLUMPIX_CHROME_NO_SANDBOX;
       expect(buildChromeFlagsForTest(false)).not.toContain("--no-sandbox");
-      process.env.ORACLE_CHROME_NO_SANDBOX = "1";
+      process.env.VELLUMPIX_CHROME_NO_SANDBOX = "1";
       const flags = buildChromeFlagsForTest(false);
       expect(flags).toContain("--no-sandbox");
       expect(flags).toContain("--disable-dev-shm-usage");
     } finally {
       if (previous === undefined) {
-        delete process.env.ORACLE_CHROME_NO_SANDBOX;
+        delete process.env.VELLUMPIX_CHROME_NO_SANDBOX;
       } else {
-        process.env.ORACLE_CHROME_NO_SANDBOX = previous;
+        process.env.VELLUMPIX_CHROME_NO_SANDBOX = previous;
       }
     }
   });
@@ -368,7 +368,7 @@ describe("hidden-window launch flags", () => {
     async () => {
       const { launchChrome } = await import("../../src/browser/chromeLifecycle.js");
       const { resolveBrowserConfig } = await import("../../src/browser/config.js");
-      const userDataDir = await mkdtemp(path.join(os.tmpdir(), "oracle-prelaunch-window-"));
+      const userDataDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-prelaunch-window-"));
       const profileDir = path.join(userDataDir, "Default");
       await mkdir(profileDir, { recursive: true });
       await writeFile(
@@ -390,7 +390,7 @@ describe("hidden-window launch flags", () => {
       let launchFlags: string[] = [];
       chromeLaunchMock.mockImplementation(async (options: { chromeFlags?: string[] }) => {
         markerAtLaunch = JSON.parse(
-          await readFile(path.join(userDataDir, "oracle-window-state.json"), "utf8"),
+          await readFile(path.join(userDataDir, "vellumpix-window-state.json"), "utf8"),
         );
         launchFlags = options.chromeFlags ?? [];
         return { pid: 1234, port: 9222, kill: vi.fn() };
@@ -427,7 +427,7 @@ describe("hidden-window launch flags", () => {
   test("restores the exact pre-hide bounds for a persistent macOS window", async () => {
     const { positionChromeWindowOffscreen, positionChromeWindowOnscreen } =
       await import("../../src/browser/chromeLifecycle.js");
-    const userDataDir = await mkdtemp(path.join(os.tmpdir(), "oracle-window-state-"));
+    const userDataDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-window-state-"));
     const browser = {
       getWindowForTarget: vi.fn().mockResolvedValue({ windowId: 7 }),
       getWindowBounds: vi.fn().mockResolvedValue({
@@ -468,7 +468,7 @@ describe("hidden-window launch flags", () => {
 
   test("preserves an unmarked user-positioned macOS window with negative bounds", async () => {
     const { positionChromeWindowOnscreen } = await import("../../src/browser/chromeLifecycle.js");
-    const userDataDir = await mkdtemp(path.join(os.tmpdir(), "oracle-visible-window-"));
+    const userDataDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-visible-window-"));
     const browser = {
       getWindowForTarget: vi.fn().mockResolvedValue({ windowId: 9 }),
       getWindowBounds: vi.fn().mockResolvedValue({
@@ -496,7 +496,7 @@ describe("hidden-window launch flags", () => {
   test("restores a pre-hide maximized macOS window without forcing normal bounds", async () => {
     const { positionChromeWindowOffscreen, positionChromeWindowOnscreen } =
       await import("../../src/browser/chromeLifecycle.js");
-    const userDataDir = await mkdtemp(path.join(os.tmpdir(), "oracle-maximized-window-"));
+    const userDataDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-maximized-window-"));
     const browser = {
       getWindowForTarget: vi.fn().mockResolvedValue({ windowId: 10 }),
       getWindowBounds: vi.fn().mockResolvedValue({ bounds: { windowState: "maximized" } }),
@@ -1188,7 +1188,7 @@ describe("closeBlankChromeTabs", () => {
     cancellation.abort();
 
     const { BrowserRunCancelledError: CancellationError } =
-      await import("../../src/oracle/errors.js");
+      await import("../../src/vellumpix/errors.js");
     await expect(waiting).rejects.toThrow(CancellationError);
     expect(browser.close).not.toHaveBeenCalled();
   });

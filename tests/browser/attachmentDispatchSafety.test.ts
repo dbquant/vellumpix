@@ -124,7 +124,7 @@ test("does not hide a failed plus probe as a missing control", async () => {
 });
 
 test("rechecks remote context after reading file bytes and before assigning them", async () => {
-  const root = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-transfer-guard-"));
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-transfer-guard-"));
   const file = path.join(root, "synthetic.txt");
   await fs.writeFile(file, "synthetic attachment");
   const runtime = {

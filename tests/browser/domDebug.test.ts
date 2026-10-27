@@ -5,20 +5,20 @@ import path from "node:path";
 import { captureBrowserDiagnostics } from "../../src/browser/domDebug.js";
 import type { BrowserLogger } from "../../src/browser/types.js";
 
-const originalOracleHome = process.env.ORACLE_HOME_DIR;
+const originalVellumPixHome = process.env.VELLUMPIX_HOME_DIR;
 
 afterEach(() => {
-  if (originalOracleHome === undefined) {
-    delete process.env.ORACLE_HOME_DIR;
+  if (originalVellumPixHome === undefined) {
+    delete process.env.VELLUMPIX_HOME_DIR;
   } else {
-    process.env.ORACLE_HOME_DIR = originalOracleHome;
+    process.env.VELLUMPIX_HOME_DIR = originalVellumPixHome;
   }
 });
 
 describe("captureBrowserDiagnostics", () => {
   test("writes DOM and screenshot diagnostics into the session artifact directory", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-dom-debug-"));
-    process.env.ORACLE_HOME_DIR = tmpHome;
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-dom-debug-"));
+    process.env.VELLUMPIX_HOME_DIR = tmpHome;
     const runtime = {
       evaluate: vi.fn().mockResolvedValue({
         result: {

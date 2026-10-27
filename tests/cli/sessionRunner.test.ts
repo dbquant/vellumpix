@@ -6,15 +6,16 @@ import path from "node:path";
 
 import { beforeAll, afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 
-vi.mock("../../src/oracle.ts", async () => {
-  const actual = await vi.importActual<typeof import("../../src/oracle.ts")>("../../src/oracle.ts");
+vi.mock("../../src/vellumpix.ts", async () => {
+  const actual =
+    await vi.importActual<typeof import("../../src/vellumpix.ts")>("../../src/vellumpix.ts");
   return {
     ...actual,
-    runOracle: vi.fn(),
+    runVellumPix: vi.fn(),
   };
 });
 
-vi.mock("../../src/oracle/multiModelRunner.ts", () => ({
+vi.mock("../../src/vellumpix/multiModelRunner.ts", () => ({
   runMultiModelApiSession: vi.fn(),
 }));
 
@@ -44,7 +45,7 @@ const sessionStoreMock = vi.hoisted(() => ({
   filterSessions: vi.fn(),
   getPaths: vi.fn(),
   readModelLog: vi.fn(),
-  sessionsDir: vi.fn().mockReturnValue("/tmp/.oracle/sessions"),
+  sessionsDir: vi.fn().mockReturnValue("/tmp/.vellumpix/sessions"),
 }));
 
 vi.mock("../../src/sessionStore.ts", () => ({
@@ -52,22 +53,22 @@ vi.mock("../../src/sessionStore.ts", () => ({
 }));
 
 import type { SessionMetadata, SessionModelRun } from "../../src/sessionManager.ts";
-import type { ModelName } from "../../src/oracle.ts";
+import type { ModelName } from "../../src/vellumpix.ts";
 import { performSessionRun } from "../../src/cli/sessionRunner.ts";
 import {
   BrowserAutomationError,
   FileValidationError,
-  OracleResponseError,
-  OracleTransportError,
-  runOracle,
-} from "../../src/oracle.ts";
-import { BrowserRunCancelledError } from "../../src/oracle/errors.ts";
+  VellumPixResponseError,
+  VellumPixTransportError,
+  runVellumPix,
+} from "../../src/vellumpix.ts";
+import { BrowserRunCancelledError } from "../../src/vellumpix/errors.ts";
 import {
   runMultiModelApiSession,
   type ModelExecutionResult,
   type MultiModelRunSummary,
-} from "../../src/oracle/multiModelRunner.ts";
-import type { OracleResponse, RunOracleResult } from "../../src/oracle.ts";
+} from "../../src/vellumpix/multiModelRunner.ts";
+import type { VellumPixResponse, RunVellumPixResult } from "../../src/vellumpix.ts";
 import {
   ensureSessionArtifacts,
   runBrowserSessionExecution,
@@ -156,8 +157,10 @@ beforeEach(() => {
     stream: { end: vi.fn() },
   });
   sessionStoreMock.readModelLog.mockResolvedValue("model log body");
-  sessionStoreMock.sessionsDir.mockReturnValue("/tmp/.oracle/sessions");
-  sessionStoreMock.getPaths.mockResolvedValue({ log: "/tmp/.oracle/sessions/sess-1/output.log" });
+  sessionStoreMock.sessionsDir.mockReturnValue("/tmp/.vellumpix/sessions");
+  sessionStoreMock.getPaths.mockResolvedValue({
+    log: "/tmp/.vellumpix/sessions/sess-1/output.log",
+  });
   vi.spyOn(fsPromises, "mkdir").mockResolvedValue(undefined);
   vi.spyOn(fsPromises, "writeFile").mockResolvedValue(undefined);
   vi.spyOn(fsPromises, "appendFile").mockResolvedValue(undefined);
@@ -166,13 +169,13 @@ beforeEach(() => {
 
 describe("performSessionRun", () => {
   test("completes API sessions and records usage", async () => {
-    const liveResult: RunOracleResult = {
+    const liveResult: RunVellumPixResult = {
       mode: "live",
       usage: { inputTokens: 10, outputTokens: 20, reasoningTokens: 0, totalTokens: 30 },
       elapsedMs: 1234,
       response: { id: "resp", usage: {}, output: [] },
     };
-    vi.mocked(runOracle).mockResolvedValue(liveResult);
+    vi.mocked(runVellumPix).mockResolvedValue(liveResult);
 
     await performSessionRun({
       sessionMeta: baseSessionMeta,
@@ -185,7 +188,7 @@ describe("performSessionRun", () => {
     });
 
     expect(sessionStoreMock.updateSession).toHaveBeenCalledTimes(2);
-    expect(vi.mocked(runOracle)).toHaveBeenCalled();
+    expect(vi.mocked(runVellumPix)).toHaveBeenCalled();
     const finalUpdate = sessionStoreMock.updateSession.mock.calls.at(-1)?.[1];
     expect(finalUpdate).toMatchObject({
       status: "completed",
@@ -209,7 +212,7 @@ describe("performSessionRun", () => {
   });
 
   test("writes final assistant output to disk for single-model runs", async () => {
-    const liveResult: RunOracleResult = {
+    const liveResult: RunVellumPixResult = {
       mode: "live",
       usage: { inputTokens: 1, outputTokens: 2, reasoningTokens: 0, totalTokens: 3 },
       elapsedMs: 500,
@@ -219,7 +222,7 @@ describe("performSessionRun", () => {
         output: [{ type: "message", content: [{ type: "output_text", text: "Saved text" }] }],
       },
     };
-    vi.mocked(runOracle).mockResolvedValue(liveResult);
+    vi.mocked(runVellumPix).mockResolvedValue(liveResult);
 
     await performSessionRun({
       sessionMeta: baseSessionMeta,
@@ -457,7 +460,7 @@ describe("performSessionRun", () => {
       .calls;
     const expectedProPath = path.resolve("/tmp/out.gpt-5.2-pro.md");
     const expectedGeminiPath = path.resolve("/tmp/out.gemini-3-pro.md");
-    const expectedManifestPath = path.resolve("/tmp/out.oracle.json");
+    const expectedManifestPath = path.resolve("/tmp/out.vellumpix.json");
     expect(writeCalls).toContainEqual([
       expectedProPath,
       expect.stringContaining("pro answer\n"),
@@ -751,7 +754,7 @@ describe("performSessionRun", () => {
     expect(logsCombined).toContain("key: ANTHROPIC_API_KEY");
     expect(logsCombined).toContain("provider said: invalid x-api-key: [redacted]");
     expect(logsCombined).toContain("fix: refresh ANTHROPIC_API_KEY");
-    expect(logsCombined).toContain("oracle doctor --providers --models claude-4.6-sonnet");
+    expect(logsCombined).toContain("vellumpix doctor --providers --models claude-4.6-sonnet");
     expect(logsCombined).not.toContain("sk-ant-secret123456789");
   });
 
@@ -830,7 +833,7 @@ describe("performSessionRun", () => {
 
     sessionStoreMock.readSession.mockResolvedValue(sessionMeta);
     sessionStoreMock.readModelLog.mockResolvedValue("");
-    const transportError = new OracleTransportError(
+    const transportError = new VellumPixTransportError(
       "model-unavailable",
       "The requested model does not exist for sk-secret123456789",
     );
@@ -978,7 +981,7 @@ describe("performSessionRun", () => {
     (process.stdout as { isTTY?: boolean }).isTTY = false;
 
     const tmpDir = os.tmpdir();
-    const tmpFile = path.join(tmpDir, "oracle-tip.txt");
+    const tmpFile = path.join(tmpDir, "vellumpix-tip.txt");
     fs.writeFileSync(tmpFile, "content");
 
     const summary: MultiModelRunSummary = {
@@ -1159,7 +1162,7 @@ describe("performSessionRun", () => {
   });
 
   test("preserves browser saved files beside write-output without overwriting collisions", async () => {
-    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "oracle-browser-output-"));
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "vellumpix-browser-output-"));
     const canonicalDir = path.join(tmpDir, "session", "artifacts");
     const outputDir = path.join(tmpDir, "output");
     const failureOutputDir = path.join(tmpDir, "failed-output");
@@ -1315,7 +1318,7 @@ describe("performSessionRun", () => {
   });
 
   test("write-output failures warn but keep session successful", async () => {
-    const liveResult: RunOracleResult = {
+    const liveResult: RunVellumPixResult = {
       mode: "live",
       usage: { inputTokens: 5, outputTokens: 5, reasoningTokens: 0, totalTokens: 10 },
       elapsedMs: 300,
@@ -1325,7 +1328,7 @@ describe("performSessionRun", () => {
         output: [{ type: "message", content: [{ type: "output_text", text: "content" }] }],
       },
     };
-    vi.mocked(runOracle).mockResolvedValue(liveResult);
+    vi.mocked(runVellumPix).mockResolvedValue(liveResult);
     const eacces = new Error("EACCES");
     // @ts-expect-error simulate code
     eacces.code = "EACCES";
@@ -1358,7 +1361,7 @@ describe("performSessionRun", () => {
 
   test("refuses to write inside session storage path", async () => {
     const sessionsDir = sessionStoreMock.sessionsDir();
-    const liveResult: RunOracleResult = {
+    const liveResult: RunVellumPixResult = {
       mode: "live",
       usage: { inputTokens: 1, outputTokens: 1, reasoningTokens: 0, totalTokens: 2 },
       elapsedMs: 100,
@@ -1368,7 +1371,7 @@ describe("performSessionRun", () => {
         output: [{ type: "message", content: [{ type: "output_text", text: "blocked" }] }],
       },
     };
-    vi.mocked(runOracle).mockResolvedValue(liveResult);
+    vi.mocked(runVellumPix).mockResolvedValue(liveResult);
 
     await performSessionRun({
       sessionMeta: baseSessionMeta,
@@ -1826,7 +1829,7 @@ describe("performSessionRun", () => {
 
   test("keeps session running when browser connection is lost", async () => {
     const automationError = new BrowserAutomationError(
-      "Chrome DevTools client disconnected before oracle finished; the browser target appears still alive.",
+      "Chrome DevTools client disconnected before vellumpix finished; the browser target appears still alive.",
       {
         stage: "connection-lost",
         recoverableDisconnect: true,
@@ -1890,13 +1893,13 @@ describe("performSessionRun", () => {
     expect(logLines).toContain(
       "Chrome disconnected before completion; keeping session running for reattach.",
     );
-    expect(logLines).toContain("oracle session sess-1 --render");
+    expect(logLines).toContain("vellumpix session sess-1 --render");
     expect(logLines).toContain("Auto-reattach attempt 1");
   });
 
   test("skips auto-reattach when disconnect is classified non-recoverable", async () => {
     const automationError = new BrowserAutomationError(
-      "Chrome window closed before oracle finished. Please keep it open until completion.",
+      "Chrome window closed before vellumpix finished. Please keep it open until completion.",
       {
         stage: "connection-lost",
         recoverableDisconnect: false,
@@ -1936,7 +1939,7 @@ describe("performSessionRun", () => {
 
   test("connection-loss recovery is one-shot by default (no infinite retry loop)", async () => {
     const automationError = new BrowserAutomationError(
-      "Chrome DevTools client disconnected before oracle finished; the browser target appears still alive.",
+      "Chrome DevTools client disconnected before vellumpix finished; the browser target appears still alive.",
       {
         stage: "connection-lost",
         recoverableDisconnect: true,
@@ -1979,7 +1982,7 @@ describe("performSessionRun", () => {
 
   test("auto-reattaches after connection loss and marks session completed", async () => {
     const automationError = new BrowserAutomationError(
-      "Chrome DevTools client disconnected before oracle finished; the browser target appears still alive.",
+      "Chrome DevTools client disconnected before vellumpix finished; the browser target appears still alive.",
       {
         stage: "connection-lost",
         recoverableDisconnect: true,
@@ -2045,7 +2048,7 @@ describe("performSessionRun", () => {
 
   test("marks copied-profile connection loss as non-reattachable", async () => {
     const automationError = new BrowserAutomationError(
-      "Chrome window closed before oracle finished.",
+      "Chrome window closed before vellumpix finished.",
       {
         stage: "connection-lost",
         runtime: {
@@ -2080,12 +2083,12 @@ describe("performSessionRun", () => {
     );
     const logLines = log.mock.calls.map((c) => String(c[0])).join("\n");
     expect(logLines).not.toContain("keeping session running for reattach");
-    expect(logLines).not.toContain("oracle session sess-1 --render");
+    expect(logLines).not.toContain("vellumpix session sess-1 --render");
   });
 
   test("marks early browser disconnect as error before a conversation exists", async () => {
     const automationError = new BrowserAutomationError(
-      "Chrome window closed before oracle reached the composer.",
+      "Chrome window closed before vellumpix reached the composer.",
       {
         stage: "connection-lost",
         runtime: {
@@ -2128,7 +2131,7 @@ describe("performSessionRun", () => {
     expect(logLines).toContain(
       "Chrome disconnected before a ChatGPT conversation was created; marking session error.",
     );
-    expect(logLines).not.toContain("oracle session sess-1 --render");
+    expect(logLines).not.toContain("vellumpix session sess-1 --render");
   });
 
   test("marks browser capture incomplete when assistant response times out", async () => {
@@ -2147,8 +2150,8 @@ describe("performSessionRun", () => {
           tabUrl: "https://chatgpt.com/c/demo",
         },
         diagnostics: {
-          domPath: "/tmp/.oracle/sessions/sess-1/artifacts/assistant-timeout.dom.json",
-          screenshotPath: "/tmp/.oracle/sessions/sess-1/artifacts/assistant-timeout.png",
+          domPath: "/tmp/.vellumpix/sessions/sess-1/artifacts/assistant-timeout.dom.json",
+          screenshotPath: "/tmp/.vellumpix/sessions/sess-1/artifacts/assistant-timeout.png",
         },
       },
     );
@@ -2200,8 +2203,8 @@ describe("performSessionRun", () => {
             message: "Too many requests.",
           },
           diagnostics: expect.objectContaining({
-            domPath: "/tmp/.oracle/sessions/sess-1/artifacts/assistant-timeout.dom.json",
-            screenshotPath: "/tmp/.oracle/sessions/sess-1/artifacts/assistant-timeout.png",
+            domPath: "/tmp/.vellumpix/sessions/sess-1/artifacts/assistant-timeout.dom.json",
+            screenshotPath: "/tmp/.vellumpix/sessions/sess-1/artifacts/assistant-timeout.png",
           }),
         }),
       }),
@@ -2215,8 +2218,8 @@ describe("performSessionRun", () => {
         error: expect.objectContaining({
           details: expect.objectContaining({
             diagnostics: expect.objectContaining({
-              domPath: "/tmp/.oracle/sessions/sess-1/artifacts/assistant-timeout.dom.json",
-              screenshotPath: "/tmp/.oracle/sessions/sess-1/artifacts/assistant-timeout.png",
+              domPath: "/tmp/.vellumpix/sessions/sess-1/artifacts/assistant-timeout.dom.json",
+              screenshotPath: "/tmp/.vellumpix/sessions/sess-1/artifacts/assistant-timeout.png",
             }),
           }),
         }),
@@ -2229,7 +2232,7 @@ describe("performSessionRun", () => {
     expect(logLines).toContain(
       "Assistant response timed out; marking capture incomplete for reattach.",
     );
-    expect(logLines).toContain("oracle session sess-1 --render");
+    expect(logLines).toContain("vellumpix session sess-1 --render");
   });
 
   test("records runtime and guidance when cloudflare challenge is detected", async () => {
@@ -2240,10 +2243,10 @@ describe("performSessionRun", () => {
         runtime: {
           chromePort: 9222,
           chromeHost: "127.0.0.1",
-          userDataDir: "/tmp/oracle-browser-profile",
+          userDataDir: "/tmp/vellumpix-browser-profile",
         },
         reuseProfileHint:
-          'oracle --engine browser --browser-manual-login --browser-manual-login-profile-dir "/tmp/oracle-browser-profile"',
+          'vellumpix --engine browser --browser-manual-login --browser-manual-login-profile-dir "/tmp/vellumpix-browser-profile"',
       },
     );
     vi.mocked(runBrowserSessionExecution).mockRejectedValueOnce(automationError);
@@ -2268,7 +2271,7 @@ describe("performSessionRun", () => {
         config: expect.any(Object),
         runtime: expect.objectContaining({
           chromePort: 9222,
-          userDataDir: "/tmp/oracle-browser-profile",
+          userDataDir: "/tmp/vellumpix-browser-profile",
         }),
       }),
       error: expect.objectContaining({
@@ -2281,9 +2284,9 @@ describe("performSessionRun", () => {
       "Cloudflare challenge detected; browser left running so you can complete the check.",
     );
     expect(logLines).toContain(
-      "Reuse this browser profile with: oracle --engine browser --browser-manual-login",
+      "Reuse this browser profile with: vellumpix --engine browser --browser-manual-login",
     );
-    expect(logLines).not.toContain("oracle session sess-1 --render");
+    expect(logLines).not.toContain("vellumpix session sess-1 --render");
   });
 
   test("does not advertise reattach for a removed copied profile after Cloudflare", async () => {
@@ -2314,7 +2317,7 @@ describe("performSessionRun", () => {
     const logLines = log.mock.calls.map((c) => String(c[0])).join("\n");
     expect(logLines).toContain("Cloudflare challenge detected; copied profile closed and removed.");
     expect(logLines).not.toContain("browser left running");
-    expect(logLines).not.toContain("oracle session sess-1 --render");
+    expect(logLines).not.toContain("vellumpix session sess-1 --render");
   });
 
   test("does not auto-reattach after a copied-profile assistant timeout", async () => {
@@ -2346,7 +2349,7 @@ describe("performSessionRun", () => {
     expect(finalUpdate?.browser?.runtime).toBeUndefined();
     const logLines = log.mock.calls.map((c) => String(c[0])).join("\n");
     expect(logLines).not.toContain("capture incomplete for reattach");
-    expect(logLines).not.toContain("oracle session sess-1 --render");
+    expect(logLines).not.toContain("vellumpix session sess-1 --render");
   });
 
   test("auto-reattaches after assistant timeout when configured", async () => {
@@ -2524,17 +2527,17 @@ describe("performSessionRun", () => {
       expect(logLines).toContain(
         "This run did not return cleanly, but it may still be alive. Reattach:",
       );
-      expect(logLines).toContain("oracle session sess-1 --render");
-      expect(logLines).toContain("oracle session sess-1 --live");
-      expect(logLines).toContain("oracle session sess-1 --harvest");
+      expect(logLines).toContain("vellumpix session sess-1 --render");
+      expect(logLines).toContain("vellumpix session sess-1 --live");
+      expect(logLines).toContain("vellumpix session sess-1 --harvest");
     } finally {
       vi.useRealTimers();
     }
   });
 
-  test("records response metadata when runOracle throws OracleResponseError", async () => {
-    const errorResponse: OracleResponse = { id: "resp-error", output: [], usage: {} };
-    vi.mocked(runOracle).mockRejectedValue(new OracleResponseError("boom", errorResponse));
+  test("records response metadata when runVellumPix throws VellumPixResponseError", async () => {
+    const errorResponse: VellumPixResponse = { id: "resp-error", output: [], usage: {} };
+    vi.mocked(runVellumPix).mockRejectedValue(new VellumPixResponseError("boom", errorResponse));
 
     await expect(
       performSessionRun({
@@ -2565,8 +2568,10 @@ describe("performSessionRun", () => {
     );
   });
 
-  test("captures transport failures when OracleTransportError thrown", async () => {
-    vi.mocked(runOracle).mockRejectedValue(new OracleTransportError("client-timeout", "timeout"));
+  test("captures transport failures when VellumPixTransportError thrown", async () => {
+    vi.mocked(runVellumPix).mockRejectedValue(
+      new VellumPixTransportError("client-timeout", "timeout"),
+    );
 
     await expect(
       performSessionRun({
@@ -2594,7 +2599,9 @@ describe("performSessionRun", () => {
   });
 
   test("stores api-error transport message for later rendering", async () => {
-    vi.mocked(runOracle).mockRejectedValue(new OracleTransportError("api-error", "quota exceeded"));
+    vi.mocked(runVellumPix).mockRejectedValue(
+      new VellumPixTransportError("api-error", "quota exceeded"),
+    );
 
     await expect(
       performSessionRun({
@@ -2616,8 +2623,8 @@ describe("performSessionRun", () => {
     });
   });
 
-  test("captures user errors when OracleUserError thrown", async () => {
-    vi.mocked(runOracle).mockRejectedValue(
+  test("captures user errors when VellumPixUserError thrown", async () => {
+    vi.mocked(runVellumPix).mockRejectedValue(
       new FileValidationError("too large", { path: "foo.txt" }),
     );
 

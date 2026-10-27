@@ -18,7 +18,7 @@ import { submitPrompt } from "../src/browser/actions/promptComposer.ts";
 import { uploadAttachmentViaDataTransfer } from "../src/browser/actions/remoteFileTransfer.ts";
 
 const exec = promisify(execFile);
-const root = await mkdtemp(path.join(os.homedir(), "oracle-no-focus-proof-"));
+const root = await mkdtemp(path.join(os.homedir(), "vellumpix-no-focus-proof-"));
 const logger = Object.assign(() => {}, { verbose: false });
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const foreground = async () => {
@@ -29,11 +29,11 @@ const foreground = async () => {
   return active.pid;
 };
 const observeForeground = process.platform === "darwin";
-if (process.platform === "linux") process.env.ORACLE_CHROME_NO_SANDBOX = "1";
+if (process.platform === "linux") process.env.VELLUMPIX_CHROME_NO_SANDBOX = "1";
 const results = [];
 try {
   const attachmentPath = path.join(root, "synthetic.txt");
-  await writeFile(attachmentPath, "ORACLE_SYNTHETIC_ATTACHMENT\n");
+  await writeFile(attachmentPath, "VELLUMPIX_SYNTHETIC_ATTACHMENT\n");
   for (const noFocus of [false, true]) {
     if (observeForeground) {
       await exec("peekaboo", ["app", "focus", "Finder", "--foreground", "--json"]);
@@ -82,7 +82,7 @@ try {
         return value.result.value;
       };
       await evaluate(`(() => {
-        document.body.innerHTML = '<h1>Oracle synthetic background proof</h1><main><form><textarea id="prompt-textarea" name="prompt-textarea" style="width:500px;height:100px"></textarea><input type="file"><div id="chips"></div><button type="button" data-testid="send-button">Send</button></form><div id="turns"></div></main>';
+        document.body.innerHTML = '<h1>VellumPix synthetic background proof</h1><main><form><textarea id="prompt-textarea" name="prompt-textarea" style="width:500px;height:100px"></textarea><input type="file"><div id="chips"></div><button type="button" data-testid="send-button">Send</button></form><div id="turns"></div></main>';
         window.proof = { sends: [], files: [] };
         document.querySelector('input').onchange = event => {
           for (const file of event.target.files) {
@@ -111,7 +111,7 @@ try {
           activateBeforeTrustedInput: !noFocus,
           baselineTurns: 0,
         },
-        "ORACLE_SYNTHETIC_TEXT",
+        "VELLUMPIX_SYNTHETIC_TEXT",
         logger,
       );
       phase = "attachment";
@@ -130,7 +130,7 @@ try {
           attachmentNavigationUrl: "about:blank",
           baselineTurns: 1,
         },
-        "ORACLE_SYNTHETIC_ATTACHMENT_SEND",
+        "VELLUMPIX_SYNTHETIC_ATTACHMENT_SEND",
         logger,
       );
       const sends = await evaluate("window.proof.sends");

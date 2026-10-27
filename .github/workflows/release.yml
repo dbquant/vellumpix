@@ -63,7 +63,7 @@ jobs:
           VERSION: ${{ inputs.version || github.ref_name }}
           DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
           CI_WORKFLOWS: ci.yml
-          PACKAGE_NAME: "@steipete/oracle"
+          PACKAGE_NAME: "@dbquant/vellumpix"
         run: |
           if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] && [ "$VERSION" = main ]; then export VERSION=; fi
           python3 scripts/release-preflight.py
@@ -88,18 +88,18 @@ jobs:
       - name: Freeze and smoke the exact npm tarball
         env:
           VERSION: ${{ steps.release.outputs.version }}
-          PACKAGE_NAME: "@steipete/oracle"
+          PACKAGE_NAME: "@dbquant/vellumpix"
         run: |
           set -euo pipefail
           mkdir -p release-assets "$RUNNER_TEMP/npm-pack" "$RUNNER_TEMP/npm-smoke" "$RUNNER_TEMP/smoke-home"
           npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP/npm-pack"
-          cp "$RUNNER_TEMP/npm-pack/"*.tgz "release-assets/oracle-${VERSION}.tgz"
-          npm install --prefix "$RUNNER_TEMP/npm-smoke" --ignore-scripts --no-audit --no-fund "$PWD/release-assets/oracle-${VERSION}.tgz"
-          HOME="$RUNNER_TEMP/smoke-home" "$RUNNER_TEMP/npm-smoke/node_modules/.bin/oracle" --version
-          HOME="$RUNNER_TEMP/smoke-home" "$RUNNER_TEMP/npm-smoke/node_modules/.bin/oracle" --help
+          cp "$RUNNER_TEMP/npm-pack/"*.tgz "release-assets/vellumpix-${VERSION}.tgz"
+          npm install --prefix "$RUNNER_TEMP/npm-smoke" --ignore-scripts --no-audit --no-fund "$PWD/release-assets/vellumpix-${VERSION}.tgz"
+          HOME="$RUNNER_TEMP/smoke-home" "$RUNNER_TEMP/npm-smoke/node_modules/.bin/vellumpix" --version
+          HOME="$RUNNER_TEMP/smoke-home" "$RUNNER_TEMP/npm-smoke/node_modules/.bin/vellumpix" --help
           cd release-assets
-          shasum -a 1 "oracle-${VERSION}.tgz" > "oracle-${VERSION}.tgz.sha1"
-          shasum -a 256 "oracle-${VERSION}.tgz" > "oracle-${VERSION}.tgz.sha256"
+          shasum -a 1 "vellumpix-${VERSION}.tgz" > "vellumpix-${VERSION}.tgz.sha1"
+          shasum -a 256 "vellumpix-${VERSION}.tgz" > "vellumpix-${VERSION}.tgz.sha256"
           shasum -a 256 -- *.tgz > SHA256SUMS
           shasum -a 256 -c SHA256SUMS
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -132,7 +132,7 @@ jobs:
         id: publish
         env:
           TAG: ${{ needs.build.outputs.tag }}
-          PACKAGE_NAME: "@steipete/oracle"
+          PACKAGE_NAME: "@dbquant/vellumpix"
           NPM_CONFIG_USERCONFIG: ${{ runner.temp }}/release.npmrc
         run: |
           set -euo pipefail
@@ -153,8 +153,8 @@ jobs:
             console.log(first>=0 && a[first]<b[first] ? "legacy" : "latest");
           ' "$version" "$latest")
           echo "dist_tag=$dist_tag" >> "$GITHUB_OUTPUT"
-          env -u NPM_TOKEN -u NODE_AUTH_TOKEN npm publish "oracle-$version.tgz" --access public --provenance --tag "$dist_tag"
-          expected="sha512-$(openssl dgst -sha512 -binary "oracle-$version.tgz" | base64 -w0)"
+          env -u NPM_TOKEN -u NODE_AUTH_TOKEN npm publish "vellumpix-$version.tgz" --access public --provenance --tag "$dist_tag"
+          expected="sha512-$(openssl dgst -sha512 -binary "vellumpix-$version.tgz" | base64 -w0)"
           actual=
           for _attempt in {1..120}; do
             if actual=$(npm view "$PACKAGE_NAME@$version" dist.integrity 2>"$RUNNER_TEMP/npm-propagation.err"); then
@@ -202,14 +202,3 @@ jobs:
           [[ "$TAG" != *-* ]] || flags+=(--prerelease)
           [[ "$DIST_TAG" = latest ]] || flags+=(--latest=false)
           gh release create "$TAG" payload/release-assets/* --verify-tag --title "$TAG" --notes-file payload/release-notes.md "${flags[@]}"
-
-  homebrew:
-    if: github.event_name == 'push' && needs.npm.outputs.dist_tag == 'latest'
-    needs: [build, publish, npm]
-    permissions:
-      contents: read
-    uses: ./.github/workflows/update-homebrew-tap.yml
-    with:
-      tag: ${{ needs.build.outputs.tag }}
-    secrets:
-      HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}

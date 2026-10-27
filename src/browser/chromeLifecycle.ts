@@ -30,7 +30,7 @@ export async function launchChrome(
   const debugPort = (config.debugPort ?? parseDebugPortEnv()) || (await findEphemeralPort());
   const usingCopiedProfile = Boolean(config.copyProfileSource);
   const detachSharedChrome = shouldDetachSharedChrome(config);
-  const nativeKeychainMarker = path.join(userDataDir, ".oracle-native-keychain-v1");
+  const nativeKeychainMarker = path.join(userDataDir, ".vellumpix-native-keychain-v1");
   const nativeManualLogin =
     config.manualLogin === true &&
     (await shouldUseNativeManualLoginKeychain(userDataDir, process.platform));
@@ -106,7 +106,7 @@ export async function shouldUseNativeManualLoginKeychain(
     access(filePath)
       .then(() => true)
       .catch(() => false);
-  if (await exists(path.join(userDataDir, ".oracle-native-keychain-v1"))) return true;
+  if (await exists(path.join(userDataDir, ".vellumpix-native-keychain-v1"))) return true;
   return !(await exists(path.join(userDataDir, "Local State")));
 }
 
@@ -238,7 +238,7 @@ export async function positionChromeWindowOnscreen(
   }
 }
 
-const CHROME_WINDOW_STATE_FILENAME = "oracle-window-state.json";
+const CHROME_WINDOW_STATE_FILENAME = "vellumpix-window-state.json";
 
 interface SavedChromeWindowState {
   version: 1;
@@ -457,7 +457,7 @@ export function registerTerminationHooks(
         // Ensure reattach hints are written before we exit.
         await opts?.emitRuntimeHint?.().catch(() => undefined);
         if (inFlight) {
-          logger('Session still in flight; reattach with "oracle session <slug>" to continue.');
+          logger('Session still in flight; reattach with "vellumpix session <slug>" to continue.');
         }
       } else {
         try {
@@ -772,14 +772,14 @@ async function connectToBrowserWebSocket(
           new Promise<never>((_, reject) => {
             timeout = setTimeout(() => {
               expired = true;
-              reject(new Error("__oracle_remote_debugging_approval_timeout__"));
+              reject(new Error("__vellumpix_remote_debugging_approval_timeout__"));
             }, remainingMs);
           }),
         ]);
       } catch (error) {
         if (
           error instanceof Error &&
-          error.message === "__oracle_remote_debugging_approval_timeout__"
+          error.message === "__vellumpix_remote_debugging_approval_timeout__"
         ) {
           break;
         }
@@ -800,7 +800,7 @@ async function connectToBrowserWebSocket(
       ? ` Last Chrome response: ${lastApprovalError.message}`
       : "";
   throw new Error(
-    `Oracle waited ${formatApprovalWait(approvalWaitMs)} for Chrome remote debugging approval at ${host}:${port}. Allow the Chrome prompt or retry after toggling remote debugging.${suffix}`,
+    `VellumPix waited ${formatApprovalWait(approvalWaitMs)} for Chrome remote debugging approval at ${host}:${port}. Allow the Chrome prompt or retry after toggling remote debugging.${suffix}`,
   );
 }
 
@@ -996,7 +996,7 @@ function createSessionBoundChromeClient(browser: ChromeClient, sessionId: string
     // chrome-remote-interface defines `send` on the client prototype, so object
     // spread does not preserve it. Bind it explicitly for raw session commands.
     send: typeof browser.send === "function" ? browser.send.bind(browser) : undefined,
-    oraclePageSessionId: sessionId,
+    vellumpixPageSessionId: sessionId,
     Network: bindDomain("Network"),
     Page: bindDomain("Page"),
     Runtime: bindDomain("Runtime"),
@@ -1304,8 +1304,8 @@ function buildChromeFlags(
   }
 
   // Opt-in only: container/CI Chromium often cannot use the sandbox. Callers must
-  // set ORACLE_CHROME_NO_SANDBOX=1 explicitly (never default this on).
-  if (process.env.ORACLE_CHROME_NO_SANDBOX === "1") {
+  // set VELLUMPIX_CHROME_NO_SANDBOX=1 explicitly (never default this on).
+  if (process.env.VELLUMPIX_CHROME_NO_SANDBOX === "1") {
     flags.push("--no-sandbox", "--disable-dev-shm-usage");
   }
 
@@ -1348,7 +1348,7 @@ export function resolveChromeLaunchOptionsForTest(
 }
 
 function parseDebugPortEnv(): number | null {
-  const raw = process.env.ORACLE_BROWSER_PORT ?? process.env.ORACLE_BROWSER_DEBUG_PORT;
+  const raw = process.env.VELLUMPIX_BROWSER_PORT ?? process.env.VELLUMPIX_BROWSER_DEBUG_PORT;
   if (!raw) return null;
   const value = Number.parseInt(raw, 10);
   if (!Number.isFinite(value) || value <= 0 || value > 65535) {

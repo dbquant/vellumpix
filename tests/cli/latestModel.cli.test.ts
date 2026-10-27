@@ -7,20 +7,20 @@ import path from "node:path";
 
 const exec = promisify(execFile);
 test("CLI engine discovery preserves the browser Pro alias but rejects API dispatch", async () => {
-  const home = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-latest-cli-"));
+  const home = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-latest-cli-"));
   const env = {
     ...process.env,
-    ORACLE_HOME_DIR: home,
-    ORACLE_NO_DETACH: "1",
+    VELLUMPIX_HOME_DIR: home,
+    VELLUMPIX_NO_DETACH: "1",
     OPENAI_API_KEY: "",
     OPENROUTER_API_KEY: "",
     AZURE_OPENAI_ENDPOINT: "",
-    ORACLE_ENGINE: "",
+    VELLUMPIX_ENGINE: "",
   };
   const command = [
     "--import",
     "tsx",
-    "bin/oracle-cli.ts",
+    "bin/vellumpix-cli.ts",
     "--model",
     "gpt-6-pro",
     "--prompt",

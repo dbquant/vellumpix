@@ -367,7 +367,7 @@ describe("promptComposer", () => {
         runtime as never,
         (() => undefined) as never,
         undefined,
-        ["oracle-attach-verify.txt"],
+        ["vellumpix-attach-verify.txt"],
         undefined,
         undefined,
         "https://chatgpt.com/",
@@ -536,8 +536,10 @@ describe("promptComposer", () => {
   test("only attachment sends get the longer send-button deadline", () => {
     expect(promptComposer.sendButtonTimeoutMs()).toBe(20_000);
     expect(promptComposer.sendButtonTimeoutMs([])).toBe(20_000);
-    expect(promptComposer.sendButtonTimeoutMs(["oracle-attach-verify.txt"])).toBe(45_000);
-    expect(promptComposer.sendButtonTimeoutMs(["oracle-attach-verify.txt"], 120_000)).toBe(120_000);
+    expect(promptComposer.sendButtonTimeoutMs(["vellumpix-attach-verify.txt"])).toBe(45_000);
+    expect(promptComposer.sendButtonTimeoutMs(["vellumpix-attach-verify.txt"], 120_000)).toBe(
+      120_000,
+    );
   });
 
   test("fails before staging an attachment prompt when the pre-upload page identity is missing", async () => {
@@ -961,7 +963,7 @@ describe("promptComposer", () => {
           if (expression.includes("button.scrollIntoView")) {
             return { result: { value: { status: "point", x: 10, y: 20 } } };
           }
-          if (expression.includes("oracle-post-click-composer-probe")) {
+          if (expression.includes("vellumpix-post-click-composer-probe")) {
             const elapsed = clickedAt === null ? 0 : Date.now() - clickedAt;
             return { result: { value: elapsed < 2_500 } };
           }

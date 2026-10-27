@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 
 export default defineConfig({
   test: {
-    setupFiles: ["tests/setup-env.ts", "tests/cli/runOracle/setup.ts"],
+    setupFiles: ["tests/setup-env.ts", "tests/cli/runVellumPix/setup.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
@@ -19,10 +19,10 @@ export default defineConfig({
         "src/browser/pageActions.ts",
         "src/browser/chromeLifecycle.ts",
         "src/browserMode.ts",
-        "src/oracle.ts",
-        "src/oracle/modelRunner.ts",
-        "src/oracle/stringifier.ts",
-        "src/oracle/types.ts",
+        "src/vellumpix.ts",
+        "src/vellumpix/modelRunner.ts",
+        "src/vellumpix/stringifier.ts",
+        "src/vellumpix/types.ts",
         "src/types/**",
       ],
     },

@@ -56,7 +56,7 @@ test("remote Gemini executes the real web client against a recorded protocol fix
         ],
       },
     });
-    expect(result.answerText).toBe("ORACLE_REMOTE_GEMINI_392_OK");
+    expect(result.answerText).toBe("VELLUMPIX_REMOTE_GEMINI_392_OK");
     expect(getCookies).toHaveBeenCalledOnce();
     expect(requests).toHaveLength(2);
     expect(requests.every((url) => url.startsWith("https://gemini.google.com/"))).toBe(true);

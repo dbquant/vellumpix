@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { resolveRunOptionsFromConfig } from "../src/cli/runOptions.js";
-import { estimateRequestTokens } from "../src/oracle/tokenEstimate.js";
-import { DEFAULT_MODEL, MODEL_CONFIGS } from "../src/oracle/config.js";
+import { estimateRequestTokens } from "../src/vellumpix/tokenEstimate.js";
+import { DEFAULT_MODEL, MODEL_CONFIGS } from "../src/vellumpix/config.js";
 
 describe("resolveRunOptionsFromConfig", () => {
   const basePrompt = "This prompt is comfortably above twenty characters.";
@@ -35,8 +35,8 @@ describe("resolveRunOptionsFromConfig", () => {
     expect(runOptions.model).toBe("claude-4.6-sonnet");
   });
 
-  it("lets ORACLE_ENGINE=api override a browser config default for API-only models", () => {
-    const env = { ORACLE_ENGINE: "api" } as NodeJS.ProcessEnv;
+  it("lets VELLUMPIX_ENGINE=api override a browser config default for API-only models", () => {
+    const env = { VELLUMPIX_ENGINE: "api" } as NodeJS.ProcessEnv;
     const { runOptions, resolvedEngine } = resolveRunOptionsFromConfig({
       prompt: basePrompt,
       model: "gemini-3.1-pro",
@@ -136,9 +136,9 @@ describe("resolveRunOptionsFromConfig", () => {
     expect(runOptions.maxFileSizeBytes).toBe(2_097_152);
   });
 
-  it("lets ORACLE_MAX_FILE_SIZE_BYTES override config", () => {
+  it("lets VELLUMPIX_MAX_FILE_SIZE_BYTES override config", () => {
     const env = {} as NodeJS.ProcessEnv;
-    env.ORACLE_MAX_FILE_SIZE_BYTES = "3145728";
+    env.VELLUMPIX_MAX_FILE_SIZE_BYTES = "3145728";
     const { runOptions } = resolveRunOptionsFromConfig({
       prompt: basePrompt,
       userConfig: { maxFileSizeBytes: 2_097_152 },
@@ -208,11 +208,11 @@ describe("resolveRunOptionsFromConfig", () => {
     expect(runOptions.model).toBe("gemini-3-pro");
   });
 
-  it("honors ORACLE_ENGINE=browser instead of auto-selecting Azure API", () => {
+  it("honors VELLUMPIX_ENGINE=browser instead of auto-selecting Azure API", () => {
     const env = {
       AZURE_OPENAI_ENDPOINT: "https://example-resource.openai.azure.com/",
       AZURE_OPENAI_DEPLOYMENT: "configured-gpt",
-      ORACLE_ENGINE: "browser",
+      VELLUMPIX_ENGINE: "browser",
     } as NodeJS.ProcessEnv;
     const { runOptions, resolvedEngine } = resolveRunOptionsFromConfig({
       prompt: basePrompt,

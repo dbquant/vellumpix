@@ -13,16 +13,16 @@ import {
   writeBinaryBrowserArtifact,
   __test__,
 } from "../../src/browser/artifacts.js";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 
 describe("browser session artifacts", () => {
   afterEach(() => {
-    setOracleHomeDirOverrideForTest(null);
+    setVellumPixHomeDirOverrideForTest(null);
   });
 
   test("writes Deep Research reports into the session artifacts directory", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-artifacts-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-artifacts-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
 
     const artifact = await saveDeepResearchReportArtifact({
       sessionId: "steam-export-audit",
@@ -44,8 +44,8 @@ describe("browser session artifacts", () => {
   });
 
   test("does not save tool-call placeholders as Deep Research reports", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-artifacts-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-artifacts-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
 
     await expect(
       saveDeepResearchReportArtifact({
@@ -56,8 +56,8 @@ describe("browser session artifacts", () => {
   });
 
   test("does not save Deep Research planning panels as reports", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-artifacts-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-artifacts-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
 
     await expect(
       saveDeepResearchReportArtifact({
@@ -69,8 +69,8 @@ describe("browser session artifacts", () => {
   });
 
   test("writes a transcript with prompt, answer, conversation URL, and artifact references", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-transcript-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-transcript-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
 
     const transcript = await saveBrowserTranscriptArtifact({
       sessionId: "browser-answer",
@@ -97,8 +97,8 @@ describe("browser session artifacts", () => {
   });
 
   test("writes binary file artifacts into the session artifacts directory", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-file-artifacts-"));
-    setOracleHomeDirOverrideForTest(tmpHome);
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-file-artifacts-"));
+    setVellumPixHomeDirOverrideForTest(tmpHome);
 
     const artifact = await writeBinaryBrowserArtifact({
       sessionId: "browser-files",
@@ -142,7 +142,7 @@ describe("browser session artifacts", () => {
   });
 
   test("validates ZIP files from bounded file windows", async () => {
-    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-zip-file-validation-"));
+    const tmpHome = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-zip-file-validation-"));
     const emptyZip = Buffer.from([
       0x50, 0x4b, 0x05, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

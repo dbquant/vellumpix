@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { resolveBrowserNoFocus } from "../../src/browser/config.js";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 
 const serveRemote = vi.hoisted(() => vi.fn(async (_options: Record<string, unknown>) => {}));
 const spawn = vi.hoisted(() =>
@@ -20,19 +20,19 @@ vi.mock("../../src/remote/server.js", async (importOriginal) => ({
 
 let home: string;
 beforeEach(async () => {
-  home = await mkdtemp(path.join(os.tmpdir(), "oracle-bridge-no-focus-"));
-  setOracleHomeDirOverrideForTest(home);
+  home = await mkdtemp(path.join(os.tmpdir(), "vellumpix-bridge-no-focus-"));
+  setVellumPixHomeDirOverrideForTest(home);
   serveRemote.mockClear();
   spawn.mockClear();
   vi.spyOn(console, "log").mockImplementation(() => {});
 });
 afterEach(async () => {
   vi.restoreAllMocks();
-  setOracleHomeDirOverrideForTest(null);
+  setVellumPixHomeDirOverrideForTest(null);
   await rm(home, { recursive: true, force: true });
 });
 
-// A bridge host is an oracle serve host: its own flag or config decides, then the default.
+// A bridge host is an vellumpix serve host: its own flag or config decides, then the default.
 test.each([
   { hostConfig: undefined, flag: undefined, expected: resolveBrowserNoFocus({}) },
   { hostConfig: false, flag: undefined, expected: false },

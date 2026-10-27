@@ -48,7 +48,7 @@ function mockClientFactory() {
   return {
     responses: {
       stream: async (body) => {
-        if (process.env.ORACLE_TEST_FAIL_MODEL === body.model) {
+        if (process.env.VELLUMPIX_TEST_FAIL_MODEL === body.model) {
           throw new Error(`mock failure for ${body.model}`);
         }
         return new MockStream(makeResponse(body));

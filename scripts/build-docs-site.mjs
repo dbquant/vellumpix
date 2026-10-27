@@ -9,16 +9,16 @@ import { css, faviconSvg, js, preThemeScript, themeToggleHtml } from "./docs-sit
 const root = process.cwd();
 const docsDir = path.join(root, "docs");
 const outDir = path.join(root, "dist", "docs-site");
-const repoBase = "https://github.com/steipete/oracle";
+const repoBase = "https://github.com/dbquant/vellumpix";
 const repoEditBase = `${repoBase}/edit/main/docs`;
 const cname = readCname();
 const siteBase = cname ? `https://${cname}` : "";
 
-const productName = "oracle";
+const productName = "vellumpix";
 const productTagline = "Whisper your prompt to a mythical pro agent";
 const productDescription =
-  "Oracle bundles your prompt and files so a Pro AI — GPT-5.5 Pro, Gemini 3 Pro, Claude Opus, and friends — can answer with real repository context. CLI, MCP, browser, and API in one tool.";
-const brewInstall = "brew install steipete/tap/oracle";
+  "VellumPix bundles your prompt and files so a Pro AI — GPT-5.5 Pro, Gemini 3 Pro, Claude Opus, and friends — can answer with real repository context. CLI, MCP, browser, and API in one tool.";
+const npmInstall = "npm i -g @dbquant/vellumpix";
 const codeTheme = "github-dark-dimmed";
 const highlighter = await createHighlighter({
   themes: [codeTheme],
@@ -176,7 +176,7 @@ function docsInstallHint() {
   if (typeof installLine !== "undefined") return installLine;
   if (typeof installCmd !== "undefined") return installCmd;
   if (typeof installSnippet !== "undefined") return installSnippet;
-  if (typeof brewInstall !== "undefined") return brewInstall;
+  if (typeof npmInstall !== "undefined") return npmInstall;
   return "";
 }
 
@@ -539,14 +539,14 @@ function homeHero(page) {
           <a class="btn btn-ghost" href="${repoBase}" rel="noopener">GitHub</a>
           <div class="home-install" aria-label="Install with Homebrew">
             <span class="prompt" aria-hidden="true">$</span>
-            <code>${escapeHtml(brewInstall)}</code>
+            <code>${escapeHtml(npmInstall)}</code>
           </div>
         </div>
         <div class="home-services" aria-label="Supported models">
           ${services.map((s) => `<span${s.pro ? ' class="pill-pro"' : ""}>${escapeHtml(s.name)}</span>`).join("")}
         </div>
         <p class="muted"><a href="${installRel}">Other install options →</a></p>
-        <img class="home-visual" src="social-card.png" width="1200" height="630" alt="oracle command-line preview">
+        <img class="home-visual" src="social-card.png" width="1200" height="630" alt="vellumpix command-line preview">
       </header>`;
 }
 
@@ -621,7 +621,7 @@ function layout({ page, html, toc, prev, next, sectionName }) {
       <div class="sidebar-head">
         <a class="brand" href="${hrefToOutRel("index.html", page.outRel)}" aria-label="${productName} docs home">
           <span class="mark" aria-hidden="true"></span>
-          <span><strong>${escapeHtml(productName)}</strong><small>askoracle.sh</small></span>
+          <span><strong>${escapeHtml(productName)}</strong><small>github.com/dbquant/vellumpix</small></span>
         </a>
         ${themeToggleHtml()}
       </div>

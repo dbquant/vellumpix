@@ -27,7 +27,7 @@ import {
 import { materializeStagedFallbackBundle } from "../browser/prompt.js";
 import { checkRemoteHealth } from "./health.js";
 import { parseHostPort } from "../bridge/connection.js";
-import { BrowserRunCancelledError } from "../oracle/errors.js";
+import { BrowserRunCancelledError } from "../vellumpix/errors.js";
 import { resolveSiblingImagePath } from "../browser/chatgptImages.js";
 import { resolveBrowserProvider, resolveRemoteBrowserModel } from "../browser/provider.js";
 import type { BrowserExecutorOptions } from "../browser/executor.js";
@@ -80,7 +80,7 @@ export function createRemoteBrowserExecutor({ host, token, runOptions }: RemoteE
           health.capabilities.artifactProtocolVersion !== 1)
       ) {
         throw new Error(
-          "Remote host cannot capture and transfer generated images; upgrade Oracle on the host and retry. The image request was not sent.",
+          "Remote host cannot capture and transfer generated images; upgrade VellumPix on the host and retry. The image request was not sent.",
         );
       }
       if (callerSignal && health.capabilities?.runCancellation !== true)
@@ -388,7 +388,7 @@ function handleEvent(params: {
             return;
           }
           const message = error instanceof Error ? error.message : String(error);
-          const fallback = `Oracle captured the browser text response, but bridge artifact transfer failed for ${displayFilename}. Open the ChatGPT browser on the bridge host, download the ZIP/file shown in the current response, and copy it to a cloud-readable path. Reason: ${message}`;
+          const fallback = `VellumPix captured the browser text response, but bridge artifact transfer failed for ${displayFilename}. Open the ChatGPT browser on the bridge host, download the ZIP/file shown in the current response, and copy it to a cloud-readable path. Reason: ${message}`;
           params.options.log?.(`[browser] ${fallback}`);
           params.onArtifactFailure(fallback);
         }),
@@ -522,7 +522,7 @@ async function downloadArtifactToFile(params: {
             .catch(reject);
           return;
         }
-        const headerSha = String(res.headers["x-oracle-artifact-sha256"] ?? "");
+        const headerSha = String(res.headers["x-vellumpix-artifact-sha256"] ?? "");
         if (headerSha && headerSha !== params.descriptor.sha256) {
           res.resume();
           reject(new Error("artifact sha256 header mismatch"));

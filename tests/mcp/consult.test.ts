@@ -6,7 +6,7 @@ import { z } from "zod";
 import { sessionStore, type SessionModelRun } from "../../src/sessionStore.js";
 import { applyConsultPreset } from "../../src/mcp/consultPresets.ts";
 import { consultInputSchema } from "../../src/mcp/types.ts";
-import { setOracleHomeDirOverrideForTest } from "../../src/oracleHome.js";
+import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
 import {
   buildConsultBrowserConfig,
   buildConsultDryRunResolved,
@@ -20,10 +20,10 @@ import {
 
 describe("summarizeModelRunsForConsult", () => {
   test("starts a detached consult and returns a durable session id", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
-    const previousNoDetach = process.env.ORACLE_NO_DETACH;
-    delete process.env.ORACLE_NO_DETACH;
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
+    const previousNoDetach = process.env.VELLUMPIX_NO_DETACH;
+    delete process.env.VELLUMPIX_NO_DETACH;
     try {
       const launchDetached = vi.fn(
         async ({ prepare }: { prepare: (pid: number) => Promise<void> }) => {
@@ -67,16 +67,16 @@ describe("summarizeModelRunsForConsult", () => {
         options: { waitPreference: false },
       });
     } finally {
-      if (previousNoDetach === undefined) delete process.env.ORACLE_NO_DETACH;
-      else process.env.ORACLE_NO_DETACH = previousNoDetach;
-      setOracleHomeDirOverrideForTest(null);
+      if (previousNoDetach === undefined) delete process.env.VELLUMPIX_NO_DETACH;
+      else process.env.VELLUMPIX_NO_DETACH = previousNoDetach;
+      setVellumPixHomeDirOverrideForTest(null);
       rmSync(home, { recursive: true, force: true });
     }
   });
 
   test("keeps detached dry-runs non-mutating when detaching is disabled", async () => {
-    const previousNoDetach = process.env.ORACLE_NO_DETACH;
-    process.env.ORACLE_NO_DETACH = "1";
+    const previousNoDetach = process.env.VELLUMPIX_NO_DETACH;
+    process.env.VELLUMPIX_NO_DETACH = "1";
     try {
       const launchDetached = vi.fn();
       const result = await runConsultTool(
@@ -98,8 +98,8 @@ describe("summarizeModelRunsForConsult", () => {
       expect(result.structuredContent).toMatchObject({ status: "dry-run", dryRun: true });
       expect(launchDetached).not.toHaveBeenCalled();
     } finally {
-      if (previousNoDetach === undefined) delete process.env.ORACLE_NO_DETACH;
-      else process.env.ORACLE_NO_DETACH = previousNoDetach;
+      if (previousNoDetach === undefined) delete process.env.VELLUMPIX_NO_DETACH;
+      else process.env.VELLUMPIX_NO_DETACH = previousNoDetach;
     }
   });
 
@@ -331,7 +331,7 @@ describe("summarizeModelRunsForConsult", () => {
           debugPort: 9224,
           keepBrowser: true,
           manualLogin: true,
-          manualLoginProfileDir: "/tmp/oracle-profile",
+          manualLoginProfileDir: "/tmp/vellumpix-profile",
           thinkingTime: "high" as never,
           researchMode: "deep",
           archiveConversations: "never",
@@ -348,7 +348,7 @@ describe("summarizeModelRunsForConsult", () => {
       debugPort: 9224,
       keepBrowser: true,
       manualLogin: true,
-      manualLoginProfileDir: "/tmp/oracle-profile",
+      manualLoginProfileDir: "/tmp/vellumpix-profile",
       thinkingTime: "extended",
       researchMode: "deep",
       archiveConversations: "never",
@@ -542,7 +542,7 @@ describe("summarizeModelRunsForConsult", () => {
         },
       },
       env: {
-        ORACLE_BROWSER_PROFILE_DIR: "/tmp/env-profile",
+        VELLUMPIX_BROWSER_PROFILE_DIR: "/tmp/env-profile",
       },
       runModel: "claude-3.7-sonnet",
       inputModel: "claude-3.7-sonnet",
@@ -578,7 +578,7 @@ describe("summarizeModelRunsForConsult", () => {
         browserBundleFiles: true,
         browserBundleFormat: "zip",
         browserFollowUps: ["challenge", "final"],
-        generateImage: "/tmp/oracle-image.png",
+        generateImage: "/tmp/vellumpix-image.png",
       },
       browserConfig: {
         desiredModel: "GPT-5.5 Pro",
@@ -587,7 +587,7 @@ describe("summarizeModelRunsForConsult", () => {
         researchMode: "off",
         keepBrowser: false,
         manualLogin: true,
-        manualLoginProfileDir: "/tmp/oracle-profile",
+        manualLoginProfileDir: "/tmp/vellumpix-profile",
         chatgptUrl: "https://chatgpt.com/",
       },
     });
@@ -603,8 +603,8 @@ describe("summarizeModelRunsForConsult", () => {
         attachments: "always",
         bundleFiles: true,
         bundleFormat: "zip",
-        profileDir: "/tmp/oracle-profile",
-        imageOutputPath: "/tmp/oracle-image.png",
+        profileDir: "/tmp/vellumpix-profile",
+        imageOutputPath: "/tmp/vellumpix-image.png",
       },
     });
     expect(resolved.guidance.join("\n")).toContain("signed-in ChatGPT profile");
@@ -618,13 +618,13 @@ describe("summarizeModelRunsForConsult", () => {
       "browser bundle format: zip",
     );
     expect(formatConsultDryRunResolved(resolved).join("\n")).toContain(
-      "image output: /tmp/oracle-image.png",
+      "image output: /tmp/vellumpix-image.png",
     );
   });
 
   test("returns resolved dry-run details from the registered MCP consult tool", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
     const imagePath = path.join(home, "generated", "from-mcp.png");
     try {
       const handlers: Array<(input: unknown) => Promise<unknown>> = [];
@@ -674,14 +674,14 @@ describe("summarizeModelRunsForConsult", () => {
       });
       expect(result.content[0]?.text).toContain("[dry-run] MCP resolved request:");
     } finally {
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
       rmSync(home, { recursive: true, force: true });
     }
   });
 
   test("rejects an MCP consult image path outside the generated output directory", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       const handlers: Array<(input: unknown) => Promise<unknown>> = [];
       registerConsultTool({
@@ -708,18 +708,18 @@ describe("summarizeModelRunsForConsult", () => {
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toMatch(/generated output directory/);
     } finally {
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
       rmSync(home, { recursive: true, force: true });
     }
   });
 
   test("allows image output over a remote browser service", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
-    const prevHost = process.env.ORACLE_REMOTE_HOST;
-    const prevToken = process.env.ORACLE_REMOTE_TOKEN;
-    process.env.ORACLE_REMOTE_HOST = "remote.example:8080";
-    process.env.ORACLE_REMOTE_TOKEN = "remote-token";
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
+    const prevHost = process.env.VELLUMPIX_REMOTE_HOST;
+    const prevToken = process.env.VELLUMPIX_REMOTE_TOKEN;
+    process.env.VELLUMPIX_REMOTE_HOST = "remote.example:8080";
+    process.env.VELLUMPIX_REMOTE_TOKEN = "remote-token";
     try {
       const handlers: Array<(input: unknown) => Promise<unknown>> = [];
       registerConsultTool({
@@ -746,18 +746,18 @@ describe("summarizeModelRunsForConsult", () => {
       expect(result.isError).not.toBe(true);
       expect(result.content[0]?.text).toContain("image-aware wait/download path");
     } finally {
-      if (prevHost === undefined) delete process.env.ORACLE_REMOTE_HOST;
-      else process.env.ORACLE_REMOTE_HOST = prevHost;
-      if (prevToken === undefined) delete process.env.ORACLE_REMOTE_TOKEN;
-      else process.env.ORACLE_REMOTE_TOKEN = prevToken;
-      setOracleHomeDirOverrideForTest(null);
+      if (prevHost === undefined) delete process.env.VELLUMPIX_REMOTE_HOST;
+      else process.env.VELLUMPIX_REMOTE_HOST = prevHost;
+      if (prevToken === undefined) delete process.env.VELLUMPIX_REMOTE_TOKEN;
+      else process.env.VELLUMPIX_REMOTE_TOKEN = prevToken;
+      setVellumPixHomeDirOverrideForTest(null);
       rmSync(home, { recursive: true, force: true });
     }
   });
 
   test("rejects image output when consult resolves to the API engine", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "oracle-home-"));
-    setOracleHomeDirOverrideForTest(home);
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-home-"));
+    setVellumPixHomeDirOverrideForTest(home);
     try {
       const handlers: Array<(input: unknown) => Promise<unknown>> = [];
       registerConsultTool({
@@ -784,7 +784,7 @@ describe("summarizeModelRunsForConsult", () => {
       expect(result.isError).toBe(true);
       expect(result.content[0]?.text).toMatch(/requires engine:"browser"/);
     } finally {
-      setOracleHomeDirOverrideForTest(null);
+      setVellumPixHomeDirOverrideForTest(null);
       rmSync(home, { recursive: true, force: true });
     }
   });

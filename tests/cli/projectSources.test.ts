@@ -16,13 +16,13 @@ vi.mock("../../src/browser/projectSourcesRunner.js", () => ({
 }));
 
 describe("project sources CLI helpers", () => {
-  const originalProfileDir = process.env.ORACLE_BROWSER_PROFILE_DIR;
+  const originalProfileDir = process.env.VELLUMPIX_BROWSER_PROFILE_DIR;
 
   afterEach(() => {
     if (originalProfileDir === undefined) {
-      delete process.env.ORACLE_BROWSER_PROFILE_DIR;
+      delete process.env.VELLUMPIX_BROWSER_PROFILE_DIR;
     } else {
-      process.env.ORACLE_BROWSER_PROFILE_DIR = originalProfileDir;
+      process.env.VELLUMPIX_BROWSER_PROFILE_DIR = originalProfileDir;
     }
   });
 
@@ -61,7 +61,7 @@ describe("project sources CLI helpers", () => {
   });
 
   test("resolves files without reading their contents into memory", async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), "oracle-project-sources-test-"));
+    const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-project-sources-test-"));
     try {
       await writeFile(path.join(dir, "context.md"), "PROJECT_SOURCE_OK\n", "utf8");
       const files = await resolveProjectSourceFiles(["context.md"], {
@@ -85,7 +85,7 @@ describe("project sources CLI helpers", () => {
       options: {
         browserKeepBrowser: true,
         browserManualLogin: true,
-        browserManualLoginProfileDir: "/tmp/oracle-profile",
+        browserManualLoginProfileDir: "/tmp/vellumpix-profile",
       },
       projectUrl: "https://chatgpt.com/g/g-p-123/project?tab=sources",
       configuredBrowser: {
@@ -98,15 +98,15 @@ describe("project sources CLI helpers", () => {
       chatgptUrl: "https://chatgpt.com/g/g-p-123/project?tab=sources",
       keepBrowser: true,
       manualLogin: true,
-      manualLoginProfileDir: "/tmp/oracle-profile",
+      manualLoginProfileDir: "/tmp/vellumpix-profile",
       desiredModel: null,
       modelStrategy: "ignore",
       researchMode: "off",
     });
   });
 
-  test("uses ORACLE_BROWSER_PROFILE_DIR as the local signed-in profile for MCP-style calls", async () => {
-    process.env.ORACLE_BROWSER_PROFILE_DIR = "/tmp/env-oracle-profile";
+  test("uses VELLUMPIX_BROWSER_PROFILE_DIR as the local signed-in profile for MCP-style calls", async () => {
+    process.env.VELLUMPIX_BROWSER_PROFILE_DIR = "/tmp/env-vellumpix-profile";
     const config = await buildProjectSourcesBrowserConfig({
       options: {},
       projectUrl: "https://chatgpt.com/g/g-p-123/project?tab=sources",
@@ -114,7 +114,7 @@ describe("project sources CLI helpers", () => {
     });
     expect(config).toMatchObject({
       manualLogin: true,
-      manualLoginProfileDir: "/tmp/env-oracle-profile",
+      manualLoginProfileDir: "/tmp/env-vellumpix-profile",
       cookieSync: false,
       desiredModel: null,
       modelStrategy: "ignore",

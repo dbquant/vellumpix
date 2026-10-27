@@ -17,10 +17,10 @@ describe("zero-arg TUI entry", () => {
   test("shows help when no args (no TUI)", async () => {
     const originalArgv = process.argv;
     const originalTty = process.stdout.isTTY;
-    process.argv = ["node", "bin/oracle-cli.js"]; // mimics zero-arg user input
+    process.argv = ["node", "bin/vellumpix-cli.js"]; // mimics zero-arg user input
     Object.defineProperty(process.stdout, "isTTY", { value: true, configurable: true });
 
-    await import("../../bin/oracle-cli.js");
+    await import("../../bin/vellumpix-cli.js");
 
     // Commander wires the action async; poll briefly to avoid flakiness on slower runners.
     for (let i = 0; i < 10 && launchTuiMock.mock.calls.length === 0; i += 1) {
@@ -37,11 +37,11 @@ describe("zero-arg TUI entry", () => {
   test("invokes launchTui via subcommand", async () => {
     const originalArgv = process.argv;
     const originalTty = process.stdout.isTTY;
-    process.argv = ["node", "bin/oracle-cli.js", "tui"];
+    process.argv = ["node", "bin/vellumpix-cli.js", "tui"];
     Object.defineProperty(process.stdout, "isTTY", { value: true, configurable: true });
 
     try {
-      await import("../../bin/oracle-cli.js");
+      await import("../../bin/vellumpix-cli.js");
       await vi.waitFor(() => expect(launchTuiMock).toHaveBeenCalled(), { timeout: 5_000 });
     } finally {
       process.argv = originalArgv;

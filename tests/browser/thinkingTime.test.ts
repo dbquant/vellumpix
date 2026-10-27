@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ThinkingTimeLevel } from "../../src/oracle/types.js";
+import type { ThinkingTimeLevel } from "../../src/vellumpix/types.js";
 import {
   ThinkingTierUnavailableError,
   buildThinkingTimeExpressionForTest,

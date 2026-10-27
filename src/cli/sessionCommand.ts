@@ -107,7 +107,7 @@ export async function handleSessionCommand(
     command.getOptionValue?.("browserTab") ??
     command.getOptionValue?.("browserTabRef");
   if (allOptions.verboseRender) {
-    process.env.ORACLE_VERBOSE_RENDER = "1";
+    process.env.VELLUMPIX_VERBOSE_RENDER = "1";
   }
   const renderRequested = Boolean(allOptions.render || allOptions.renderMarkdown);
   const autoRender = !renderRequested && process.stdout.isTTY;
@@ -130,7 +130,7 @@ export async function handleSessionCommand(
   }
   if (sessionId === "clear" || sessionId === "clean") {
     console.error(
-      'Session cleanup now uses --clear. Run "oracle session --clear --hours <n>" instead.',
+      'Session cleanup now uses --clear. Run "vellumpix session --clear --hours <n>" instead.',
     );
     process.exitCode = 1;
     return;
@@ -221,7 +221,7 @@ export function formatSessionCleanupMessage(
 ): string {
   const deletedLabel = `${result.deleted} ${result.deleted === 1 ? "session" : "sessions"}`;
   const remainingLabel = `${result.remaining} ${result.remaining === 1 ? "session" : "sessions"} remain`;
-  const hint = 'Run "oracle session --clear --all" to delete everything.';
+  const hint = 'Run "vellumpix session --clear --all" to delete everything.';
   return `Deleted ${deletedLabel} (${scope}). ${remainingLabel}.\n${hint}`;
 }
 

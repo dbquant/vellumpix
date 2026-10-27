@@ -12,13 +12,13 @@ import {
   detachedSessionCancellationPath,
   launchDetachedSession,
   requestDetachedSessionCancellation,
-  resolveOracleCliEntrypoint,
+  resolveVellumPixCliEntrypoint,
   waitForDetachedSessionCancellation,
 } from "../../src/cli/detachedSession.js";
 
 describe("detached session launcher", () => {
   test("observes a cancellation requested before the worker starts waiting", async () => {
-    const sessionDir = await mkdtemp(path.join(os.tmpdir(), "oracle-cancel-marker-"));
+    const sessionDir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-cancel-marker-"));
     const markerPath = detachedSessionCancellationPath(sessionDir, 4242);
     const stop = new AbortController();
 
@@ -40,21 +40,26 @@ describe("detached session launcher", () => {
   test("uses a hidden detached Node child with a gated session handoff", () => {
     const spec = buildDetachedSessionSpawnSpec({
       sessionId: "long-pro-session",
-      cliEntrypoint: "C:\\oracle\\dist\\bin\\oracle-cli.js",
+      cliEntrypoint: "C:\\vellumpix\\dist\\bin\\vellumpix-cli.js",
       env: { EXISTING: "1" },
       nodeExecutable: "C:\\node\\node.exe",
     });
 
     expect(spec).toMatchObject({
       command: "C:\\node\\node.exe",
-      args: ["--", "C:\\oracle\\dist\\bin\\oracle-cli.js", "--exec-session", "long-pro-session"],
+      args: [
+        "--",
+        "C:\\vellumpix\\dist\\bin\\vellumpix-cli.js",
+        "--exec-session",
+        "long-pro-session",
+      ],
       options: {
         detached: true,
         stdio: ["pipe", "ignore", "ignore"],
         windowsHide: true,
         env: {
           EXISTING: "1",
-          ORACLE_DETACHED_START_GATE: "1",
+          VELLUMPIX_DETACHED_START_GATE: "1",
         },
       },
     });
@@ -64,8 +69,8 @@ describe("detached session launcher", () => {
     const moduleUrl = pathToFileURL(
       path.join(process.cwd(), "dist", "src", "cli", "detachedSession.js"),
     ).href;
-    expect(resolveOracleCliEntrypoint(moduleUrl)).toBe(
-      path.join(process.cwd(), "dist", "bin", "oracle-cli.js"),
+    expect(resolveVellumPixCliEntrypoint(moduleUrl)).toBe(
+      path.join(process.cwd(), "dist", "bin", "vellumpix-cli.js"),
     );
   });
 

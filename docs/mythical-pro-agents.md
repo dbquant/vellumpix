@@ -1,9 +1,9 @@
 ---
 title: Mythical Pro Agents
-description: "The frontier 'Pro' model lineup Oracle speaks to — GPT-5.5 Pro, Gemini 3.1 Pro, Claude Opus, Deep Research — and when to reach for each."
+description: "The frontier 'Pro' model lineup VellumPix speaks to — GPT-5.5 Pro, Gemini 3.1 Pro, Claude Opus, Deep Research — and when to reach for each."
 ---
 
-The headline frontier models — the ones marked **Pro** — are slow, expensive, and gated behind separate consumer subscriptions or per-token bills. Oracle is the single CLI that talks to all of them with the same flags, the same session store, and the same bundling rules.
+The headline frontier models — the ones marked **Pro** — are slow, expensive, and gated behind separate consumer subscriptions or per-token bills. VellumPix is the single CLI that talks to all of them with the same flags, the same session store, and the same bundling rules.
 
 ## The lineup
 
@@ -30,10 +30,10 @@ Plus any **OpenRouter** id — e.g. `minimax/minimax-m2`, `openai/gpt-4o-mini`, 
 
 ### GPT-5.5 Pro (default)
 
-The current "Oracle of last resort." Slow (10 minutes typical, hour+ for huge bundles), expensive on API, free if you have ChatGPT Pro. Best for: **long-form architecture review, multi-file refactors, gnarly bugs that need to chew on the whole repo.**
+The current "VellumPix of last resort." Slow (10 minutes typical, hour+ for huge bundles), expensive on API, free if you have ChatGPT Pro. Best for: **long-form architecture review, multi-file refactors, gnarly bugs that need to chew on the whole repo.**
 
 ```bash
-oracle --engine browser --model gpt-5.5-pro \
+vellumpix --engine browser --model gpt-5.5-pro \
   -p "Plan the auth migration end-to-end" \
   --file "src/auth/**" --file "docs/auth.md"
 ```
@@ -43,7 +43,7 @@ oracle --engine browser --model gpt-5.5-pro \
 Free in browser mode if you're signed into `gemini.google.com` in Chrome. Also the path for **YouTube transcript analysis** (`--youtube`) and **image generation/edit** (`--generate-image`, `--edit-image`).
 
 ```bash
-oracle --engine browser --model gemini-3.1-pro \
+vellumpix --engine browser --model gemini-3.1-pro \
   --prompt "a minimalist eye-of-providence logo, vector" \
   --generate-image out.png --aspect 1:1
 ```
@@ -53,7 +53,7 @@ oracle --engine browser --model gemini-3.1-pro \
 API-only. Best at sustained reasoning over a single tightly-scoped problem; lower hallucination rate on tricky code than Pro GPT models in our experience. Use when the task is "reason carefully" rather than "write a lot."
 
 ```bash
-oracle -p "Audit this state machine for unreachable transitions" \
+vellumpix -p "Audit this state machine for unreachable transitions" \
   --model claude-4.1-opus --file "src/state/**"
 ```
 
@@ -62,25 +62,25 @@ oracle -p "Audit this state machine for unreachable transitions" \
 When the answer matters, ask three:
 
 ```bash
-oracle -p "Will this migration corrupt user data under concurrent writes?" \
+vellumpix -p "Will this migration corrupt user data under concurrent writes?" \
   --models gpt-5.5-pro,gemini-3.1-pro,claude-4.1-opus \
   --file "migrations/0042_user_schema.sql" \
   --file "src/db/**"
 ```
 
-Oracle aggregates per-model cost in the run summary. See [Multi-model](multimodel.md).
+VellumPix aggregates per-model cost in the run summary. See [Multi-model](multimodel.md).
 
 ## Deep Research (browser only)
 
 Browser mode can flip ChatGPT into Deep Research mode for cited reports:
 
 ```bash
-oracle --engine browser --model gpt-5.5-pro \
+vellumpix --engine browser --model gpt-5.5-pro \
   --browser-research deep \
   -p "Survey approaches for embedded vector search in a Rust app, with citations"
 ```
 
-The captured report lands at `~/.oracle/sessions/<id>/artifacts/deep-research-report.md`. Deep Research can run for an hour or more — Oracle stores the session and reattaches.
+The captured report lands at `~/.vellumpix/sessions/<id>/artifacts/deep-research-report.md`. Deep Research can run for an hour or more — VellumPix stores the session and reattaches.
 
 ## Thinking time
 
@@ -95,7 +95,7 @@ Pro / Thinking models in browser mode accept a `--browser-thinking-time` knob:
 | `heavy`      | Matching Heavy row; otherwise keep the current tier |
 
 ```bash
-oracle --engine browser --model gpt-5.5-pro \
+vellumpix --engine browser --model gpt-5.5-pro \
   --browser-thinking-time extended \
   -p "Refactor this hot path" --file "src/render/**"
 ```

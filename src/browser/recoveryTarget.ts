@@ -199,8 +199,8 @@ async function retireOwnedBrowserTarget(
     retired = true;
     logger(
       options.terminalStatus === "completed"
-        ? "Retired Oracle-owned browser tab after saving the recovered answer."
-        : "Retired Oracle-owned browser tab after cancellation.",
+        ? "Retired VellumPix-owned browser tab after saving the recovered answer."
+        : "Retired VellumPix-owned browser tab after cancellation.",
     );
   } catch (error) {
     logger(

@@ -1,6 +1,9 @@
 import { z } from "zod";
-import { THINKING_TIME_INPUT_VALUES, normalizeThinkingTimeLevel } from "../oracle/thinkingTime.js";
-import type { ThinkingTimeLevel } from "../oracle/types.js";
+import {
+  THINKING_TIME_INPUT_VALUES,
+  normalizeThinkingTimeLevel,
+} from "../vellumpix/thinkingTime.js";
+import type { ThinkingTimeLevel } from "../vellumpix/types.js";
 
 export const CONSULT_PRESETS = ["chatgpt-pro-heavy"] as const;
 

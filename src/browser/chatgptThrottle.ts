@@ -1,5 +1,5 @@
 import type { BrowserLogger, ChromeClient } from "./types.js";
-import { BrowserAutomationError } from "../oracle/errors.js";
+import { BrowserAutomationError } from "../vellumpix/errors.js";
 
 /**
  * Detection for ChatGPT's own rate-limit notice.

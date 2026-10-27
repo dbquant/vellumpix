@@ -6,14 +6,14 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
-const CLI_ENTRY = path.join(process.cwd(), "bin", "oracle-cli.ts");
+const CLI_ENTRY = path.join(process.cwd(), "bin", "vellumpix-cli.ts");
 const CLI_TIMEOUT = 15_000;
 
 describe("provider doctor CLI", () => {
   test(
     "prints redacted provider readiness without a prompt",
     async () => {
-      const oracleHome = await mkdtemp(path.join(os.tmpdir(), "oracle-doctor-"));
+      const vellumpixHome = await mkdtemp(path.join(os.tmpdir(), "vellumpix-doctor-"));
       const env = {
         ...process.env,
         // biome-ignore lint/style/useNamingConvention: env var name
@@ -23,7 +23,7 @@ describe("provider doctor CLI", () => {
         // biome-ignore lint/style/useNamingConvention: env var name
         AZURE_OPENAI_API_KEY: "az-doctor-key",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: oracleHome,
+        VELLUMPIX_HOME_DIR: vellumpixHome,
       };
 
       const { stdout } = await execFileAsync(
@@ -49,7 +49,7 @@ describe("provider doctor CLI", () => {
       expect(stdout).toContain("azure: ignored");
       expect(stdout).not.toContain("sk-doctor-openai-key");
 
-      await rm(oracleHome, { recursive: true, force: true });
+      await rm(vellumpixHome, { recursive: true, force: true });
     },
     CLI_TIMEOUT,
   );
@@ -57,7 +57,7 @@ describe("provider doctor CLI", () => {
   test(
     "prints a route plan from the root command without a prompt",
     async () => {
-      const oracleHome = await mkdtemp(path.join(os.tmpdir(), "oracle-route-"));
+      const vellumpixHome = await mkdtemp(path.join(os.tmpdir(), "vellumpix-route-"));
       const env = {
         ...process.env,
         // biome-ignore lint/style/useNamingConvention: env var name
@@ -65,7 +65,7 @@ describe("provider doctor CLI", () => {
         // biome-ignore lint/style/useNamingConvention: env var name
         AZURE_OPENAI_ENDPOINT: "https://example-resource.openai.azure.com/",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: oracleHome,
+        VELLUMPIX_HOME_DIR: vellumpixHome,
       };
 
       const { stdout } = await execFileAsync(
@@ -80,7 +80,7 @@ describe("provider doctor CLI", () => {
       expect(stdout).toContain("azure: ignored");
       expect(stdout).not.toContain("sk-route-openai-key");
 
-      await rm(oracleHome, { recursive: true, force: true });
+      await rm(vellumpixHome, { recursive: true, force: true });
     },
     CLI_TIMEOUT,
   );
@@ -101,7 +101,7 @@ describe("provider doctor CLI", () => {
         // biome-ignore lint/style/useNamingConvention: env var name
         AZURE_OPENAI_DEPLOYMENT: "",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: "/dev/null",
+        VELLUMPIX_HOME_DIR: "/dev/null",
       };
 
       const { stdout } = await execFileAsync(
@@ -133,7 +133,7 @@ describe("provider doctor CLI", () => {
         // biome-ignore lint/style/useNamingConvention: env var name
         AZURE_OPENAI_DEPLOYMENT: "",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: "/dev/null",
+        VELLUMPIX_HOME_DIR: "/dev/null",
       };
 
       const { stdout } = await execFileAsync(
@@ -157,9 +157,12 @@ describe("provider doctor CLI", () => {
   test(
     "root route models ignore configured default model",
     async () => {
-      const oracleHome = await mkdtemp(path.join(os.tmpdir(), "oracle-route-models-config-"));
-      await mkdir(oracleHome, { recursive: true });
-      await writeFile(path.join(oracleHome, "config.json"), JSON.stringify({ model: "gpt-5.1" }));
+      const vellumpixHome = await mkdtemp(path.join(os.tmpdir(), "vellumpix-route-models-config-"));
+      await mkdir(vellumpixHome, { recursive: true });
+      await writeFile(
+        path.join(vellumpixHome, "config.json"),
+        JSON.stringify({ model: "gpt-5.1" }),
+      );
       const env = {
         ...process.env,
         // biome-ignore lint/style/useNamingConvention: env var name
@@ -171,7 +174,7 @@ describe("provider doctor CLI", () => {
         // biome-ignore lint/style/useNamingConvention: env var name
         AZURE_OPENAI_DEPLOYMENT: "",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: oracleHome,
+        VELLUMPIX_HOME_DIR: vellumpixHome,
       };
 
       const { stdout } = await execFileAsync(
@@ -184,7 +187,7 @@ describe("provider doctor CLI", () => {
       expect(stdout).toContain("gemini-3-pro: ok");
       expect(stdout).not.toContain("gpt-5.1");
 
-      await rm(oracleHome, { recursive: true, force: true });
+      await rm(vellumpixHome, { recursive: true, force: true });
     },
     CLI_TIMEOUT,
   );
@@ -192,7 +195,7 @@ describe("provider doctor CLI", () => {
   test(
     "prints machine-parseable provider JSON without the banner",
     async () => {
-      const oracleHome = await mkdtemp(path.join(os.tmpdir(), "oracle-doctor-json-"));
+      const vellumpixHome = await mkdtemp(path.join(os.tmpdir(), "vellumpix-doctor-json-"));
       const env = {
         ...process.env,
         // biome-ignore lint/style/useNamingConvention: env var name
@@ -204,7 +207,7 @@ describe("provider doctor CLI", () => {
         // biome-ignore lint/style/useNamingConvention: env var name
         AZURE_OPENAI_DEPLOYMENT: "",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: oracleHome,
+        VELLUMPIX_HOME_DIR: vellumpixHome,
       };
 
       const { stdout } = await execFileAsync(
@@ -214,11 +217,11 @@ describe("provider doctor CLI", () => {
       );
 
       expect(stdout.trimStart().startsWith("{")).toBe(true);
-      expect(stdout).not.toContain("🧿 oracle");
+      expect(stdout).not.toContain("🪶 vellumpix");
       const parsed = JSON.parse(stdout) as { providers: Array<{ model: string; ok: boolean }> };
       expect(parsed.providers).toEqual([expect.objectContaining({ model: "gpt-5.4", ok: true })]);
 
-      await rm(oracleHome, { recursive: true, force: true });
+      await rm(vellumpixHome, { recursive: true, force: true });
     },
     CLI_TIMEOUT,
   );
@@ -226,7 +229,7 @@ describe("provider doctor CLI", () => {
   test(
     "keeps provider JSON parseable with root flags before the subcommand",
     async () => {
-      const oracleHome = await mkdtemp(path.join(os.tmpdir(), "oracle-doctor-json-leading-"));
+      const vellumpixHome = await mkdtemp(path.join(os.tmpdir(), "vellumpix-doctor-json-leading-"));
       const env = {
         ...process.env,
         // biome-ignore lint/style/useNamingConvention: env var name
@@ -234,7 +237,7 @@ describe("provider doctor CLI", () => {
         // biome-ignore lint/style/useNamingConvention: env var name
         AZURE_OPENAI_ENDPOINT: "https://example-resource.openai.azure.com/",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: oracleHome,
+        VELLUMPIX_HOME_DIR: vellumpixHome,
       };
 
       const { stdout } = await execFileAsync(
@@ -255,11 +258,11 @@ describe("provider doctor CLI", () => {
       );
 
       expect(stdout.trimStart().startsWith("{")).toBe(true);
-      expect(stdout).not.toContain("🧿 oracle");
+      expect(stdout).not.toContain("🪶 vellumpix");
       const parsed = JSON.parse(stdout) as { providers: Array<{ model: string; ok: boolean }> };
       expect(parsed.providers).toEqual([expect.objectContaining({ model: "gpt-5.4", ok: true })]);
 
-      await rm(oracleHome, { recursive: true, force: true });
+      await rm(vellumpixHome, { recursive: true, force: true });
     },
     CLI_TIMEOUT,
   );
@@ -267,10 +270,10 @@ describe("provider doctor CLI", () => {
   test(
     "provider doctor falls back to Azure config when env endpoint is empty",
     async () => {
-      const oracleHome = await mkdtemp(path.join(os.tmpdir(), "oracle-doctor-azure-config-"));
-      await mkdir(oracleHome, { recursive: true });
+      const vellumpixHome = await mkdtemp(path.join(os.tmpdir(), "vellumpix-doctor-azure-config-"));
+      await mkdir(vellumpixHome, { recursive: true });
       await writeFile(
-        path.join(oracleHome, "config.json"),
+        path.join(vellumpixHome, "config.json"),
         JSON.stringify({
           azure: {
             endpoint: "https://configured-resource.openai.azure.com/",
@@ -287,7 +290,7 @@ describe("provider doctor CLI", () => {
         // biome-ignore lint/style/useNamingConvention: env var name
         AZURE_OPENAI_DEPLOYMENT: "",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: oracleHome,
+        VELLUMPIX_HOME_DIR: vellumpixHome,
       };
 
       const { stdout } = await execFileAsync(
@@ -301,7 +304,7 @@ describe("provider doctor CLI", () => {
       expect(stdout).toContain("base: configured-resource.openai.azure.com");
       expect(stdout).toContain("azure deployment: gpt-prod");
 
-      await rm(oracleHome, { recursive: true, force: true });
+      await rm(vellumpixHome, { recursive: true, force: true });
     },
     CLI_TIMEOUT,
   );
@@ -309,7 +312,7 @@ describe("provider doctor CLI", () => {
   test(
     "root route prints forced Azure readiness instead of throwing raw validation",
     async () => {
-      const oracleHome = await mkdtemp(path.join(os.tmpdir(), "oracle-route-azure-"));
+      const vellumpixHome = await mkdtemp(path.join(os.tmpdir(), "vellumpix-route-azure-"));
       const env = {
         ...process.env,
         // biome-ignore lint/style/useNamingConvention: env var name
@@ -321,7 +324,7 @@ describe("provider doctor CLI", () => {
         // biome-ignore lint/style/useNamingConvention: env var name
         AZURE_OPENAI_DEPLOYMENT: "",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: oracleHome,
+        VELLUMPIX_HOME_DIR: vellumpixHome,
       };
 
       let stdout = "";
@@ -340,7 +343,7 @@ describe("provider doctor CLI", () => {
       expect(stdout).toContain("provider: Azure OpenAI");
       expect(stdout).toContain("--provider azure requires --azure-endpoint");
 
-      await rm(oracleHome, { recursive: true, force: true });
+      await rm(vellumpixHome, { recursive: true, force: true });
     },
     CLI_TIMEOUT,
   );
@@ -348,10 +351,10 @@ describe("provider doctor CLI", () => {
   test(
     "root route falls back to Azure config when env endpoint is empty",
     async () => {
-      const oracleHome = await mkdtemp(path.join(os.tmpdir(), "oracle-route-azure-config-"));
-      await mkdir(oracleHome, { recursive: true });
+      const vellumpixHome = await mkdtemp(path.join(os.tmpdir(), "vellumpix-route-azure-config-"));
+      await mkdir(vellumpixHome, { recursive: true });
       await writeFile(
-        path.join(oracleHome, "config.json"),
+        path.join(vellumpixHome, "config.json"),
         JSON.stringify({
           azure: {
             endpoint: "https://configured-resource.openai.azure.com/",
@@ -368,7 +371,7 @@ describe("provider doctor CLI", () => {
         // biome-ignore lint/style/useNamingConvention: env var name
         AZURE_OPENAI_DEPLOYMENT: "",
         // biome-ignore lint/style/useNamingConvention: env var name
-        ORACLE_HOME_DIR: oracleHome,
+        VELLUMPIX_HOME_DIR: vellumpixHome,
       };
 
       const { stdout } = await execFileAsync(
@@ -383,7 +386,7 @@ describe("provider doctor CLI", () => {
       expect(stdout).toContain("base: configured-resource.openai.azure.com");
       expect(stdout).toContain("azure deployment: gpt-prod");
 
-      await rm(oracleHome, { recursive: true, force: true });
+      await rm(vellumpixHome, { recursive: true, force: true });
     },
     CLI_TIMEOUT,
   );

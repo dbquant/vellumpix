@@ -10,8 +10,8 @@ vi.mock("node:fs/promises", async (importOriginal) => {
 });
 
 test("an interrupted owner write never publishes partial ownership and permits retry", async () => {
-  const profile = await mkdtemp(path.join(os.tmpdir(), "oracle-lock-init-"));
-  const lock = path.join(profile, "oracle-tab-leases.lock");
+  const profile = await mkdtemp(path.join(os.tmpdir(), "vellumpix-lock-init-"));
+  const lock = path.join(profile, "vellumpix-tab-leases.lock");
   const actual = await vi.importActual<typeof import("node:fs/promises")>("node:fs/promises");
   vi.mocked(writeFile).mockImplementationOnce(async (destination) => {
     await actual.writeFile(destination, "{partial");
@@ -32,15 +32,15 @@ test("an interrupted owner write never publishes partial ownership and permits r
 });
 
 test("recovers an aged ownerless lock after a crash during its temporary owner write", async () => {
-  const profile = await mkdtemp(path.join(os.tmpdir(), "oracle-lock-crash-"));
-  const lock = path.join(profile, "oracle-tab-leases.lock");
+  const profile = await mkdtemp(path.join(os.tmpdir(), "vellumpix-lock-crash-"));
+  const lock = path.join(profile, "vellumpix-tab-leases.lock");
   try {
     await mkdir(lock);
     await writeFile(path.join(lock, "crashed-owner.tmp"), "{partial");
     await utimes(lock, new Date(0), new Date(0));
     const lease = await acquireBrowserTabLease(profile, {});
     await lease.release();
-    expect(await readdir(profile)).toEqual(["oracle-tab-leases.json"]);
+    expect(await readdir(profile)).toEqual(["vellumpix-tab-leases.json"]);
   } finally {
     await rm(profile, { recursive: true, force: true });
   }

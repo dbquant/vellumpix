@@ -29,7 +29,7 @@ import {
 } from "../domDebug.js";
 import { buildClickDispatcher } from "./domEvents.js";
 import { buildReadCompletionAnnouncementExpression } from "./completionAnnouncement.js";
-import { BrowserAutomationError } from "../../oracle/errors.js";
+import { BrowserAutomationError } from "../../vellumpix/errors.js";
 
 const ASSISTANT_POLL_TIMEOUT_ERROR = "assistant-response-watchdog-timeout";
 const STOP_CONTROL_SELECTOR = STOP_BUTTON_SELECTORS.join(", ");
@@ -54,8 +54,8 @@ export interface TerminalGateConfig {
 }
 
 const TERMINAL_GATE_CONFIG: TerminalGateConfig = {
-  barConfirmCycles: readPositiveIntEnv("ORACLE_BAR_CONFIRM_CYCLES", 3),
-  minStableMs: readPositiveIntEnv("ORACLE_TERMINAL_MIN_STABLE_MS", 1_200),
+  barConfirmCycles: readPositiveIntEnv("VELLUMPIX_BAR_CONFIRM_CYCLES", 3),
+  minStableMs: readPositiveIntEnv("VELLUMPIX_TERMINAL_MIN_STABLE_MS", 1_200),
 };
 
 export interface TerminalGateState {

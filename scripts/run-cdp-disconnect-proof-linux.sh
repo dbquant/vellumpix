@@ -9,15 +9,15 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-IMAGE="${ORACLE_LINUX_PROOF_IMAGE:-node:24-bookworm}"
+IMAGE="${VELLUMPIX_LINUX_PROOF_IMAGE:-node:24-bookworm}"
 
 echo "[linux-proof] image=${IMAGE}"
 echo "[linux-proof] mounting ${ROOT} read-only; clean install inside container"
 
 docker run --rm \
-  --name "oracle-cdp-linux-proof-$$" \
+  --name "vellumpix-cdp-linux-proof-$$" \
   -v "${ROOT}:/src:ro" \
-  -w /tmp/oracle-proof \
+  -w /tmp/vellumpix-proof \
   "${IMAGE}" \
   bash -lc '
     set -euo pipefail
@@ -31,9 +31,9 @@ docker run --rm \
     fi
     echo "[linux-proof] chromium=${CHROME_BIN}"
     # Copy sources without host node_modules / dist (darwin binaries).
-    mkdir -p /tmp/oracle-proof
+    mkdir -p /tmp/vellumpix-proof
     tar -C /src --exclude=node_modules --exclude=dist --exclude=.git -cf - . \
-      | tar -C /tmp/oracle-proof -xf -
+      | tar -C /tmp/vellumpix-proof -xf -
     corepack enable
     corepack prepare pnpm@latest --activate
     pnpm install --frozen-lockfile

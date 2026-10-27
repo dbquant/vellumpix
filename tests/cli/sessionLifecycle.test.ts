@@ -13,7 +13,7 @@ describe("session lifecycle formatting", () => {
       engine: "api",
       detached: true,
       workerPid: 1234,
-      reattachCommand: "oracle session sess-123",
+      reattachCommand: "vellumpix session sess-123",
     });
     const meta = {
       id: "sess-123",
@@ -33,7 +33,7 @@ describe("session lifecycle formatting", () => {
       "Mode: api background",
       "Models: 2 parallel",
       "Detach: yes, polling",
-      "Reattach: oracle session sess-123",
+      "Reattach: vellumpix session sess-123",
     ]);
     expect(formatSessionExecutionLabel(meta)).toBe("api/bg");
     expect(lifecycle.workerPid).toBe(1234);
@@ -43,7 +43,7 @@ describe("session lifecycle formatting", () => {
     const lifecycle = buildSessionLifecycle({
       engine: "browser",
       detached: false,
-      reattachCommand: "oracle session browser-1",
+      reattachCommand: "vellumpix session browser-1",
     });
     const meta = {
       id: "browser-1",

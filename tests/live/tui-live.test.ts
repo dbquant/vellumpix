@@ -2,14 +2,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
 import { describe, expect, it } from "vitest";
-import { ptyAvailable, runOracleTuiWithPty } from "../util/pty.js";
+import { ptyAvailable, runVellumPixTuiWithPty } from "../util/pty.js";
 
-const LIVE = process.env.ORACLE_LIVE_TEST === "1" && Boolean(process.env.OPENAI_API_KEY);
+const LIVE = process.env.VELLUMPIX_LIVE_TEST === "1" && Boolean(process.env.OPENAI_API_KEY);
 const liveDescribe = LIVE && ptyAvailable ? describe : describe.skip;
 
 liveDescribe("live TUI flow (API multi-model)", () => {
-  it("runs ask-oracle via TUI, selects an extra model, and writes a session", async () => {
-    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "oracle-tui-live-"));
+  it("runs ask-vellumpix via TUI, selects an extra model, and writes a session", async () => {
+    const homeDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-tui-live-"));
     // Preseed a session so the TUI has something to display even if the live run is interrupted early.
     const seededId = "preseed-live";
     const sessionDir = path.join(homeDir, "sessions", seededId);
@@ -37,7 +37,7 @@ liveDescribe("live TUI flow (API multi-model)", () => {
       output,
       exitCode,
       homeDir: usedHome,
-    } = await runOracleTuiWithPty({
+    } = await runVellumPixTuiWithPty({
       steps: [
         { match: "Paste your prompt text", write: "Live TUI multi-model smoke\n" },
         { match: "Engine", write: "\r" }, // accept default API

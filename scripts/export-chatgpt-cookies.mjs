@@ -16,7 +16,7 @@ const { cookies } = await getCookies({
   timeoutMs: 10_000,
 });
 
-// CDP CookieParam shape only; drop sweet-cookie metadata that Oracle ignores.
+// CDP CookieParam shape only; drop sweet-cookie metadata that VellumPix ignores.
 const payload = cookies.map(
   ({ name, value, domain, path, secure, httpOnly, sameSite, expires }) => {
     const cookie = {

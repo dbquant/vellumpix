@@ -6,7 +6,7 @@ Past issue
 
 Mitigations implemented
 
-- Start the list with a selectable row (“ask oracle”) so focus never begins on a header.
+- Start the list with a selectable row (“ask vellumpix”) so focus never begins on a header.
 - Render table headers as disabled choices instead of separators so navigation skips them cleanly.
 - Keep paging to on-screen “Older/Newer” actions; rely on those instead of PageUp/PageDown.
 

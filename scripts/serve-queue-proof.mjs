@@ -17,7 +17,7 @@ import { Launcher } from "chrome-launcher";
 import CDP from "chrome-remote-interface";
 
 const repo = fileURLToPath(new URL("..", import.meta.url));
-const cli = path.join(repo, "dist/bin/oracle-cli.js");
+const cli = path.join(repo, "dist/bin/vellumpix-cli.js");
 const option = (name) => {
   const index = process.argv.indexOf(name);
   return index < 0 ? undefined : process.argv[index + 1];
@@ -25,9 +25,9 @@ const option = (name) => {
 const captures = option("--captures");
 const baseline = option("--baseline-cli");
 const guardOnly = process.argv.includes("--guard-only");
-const root = await fs.mkdtemp(path.join(os.homedir(), "oracle-serve-queue-proof-"));
-const previousHome = process.env.ORACLE_HOME_DIR;
-process.env.ORACLE_HOME_DIR = path.join(root, "integration-home");
+const root = await fs.mkdtemp(path.join(os.homedir(), "vellumpix-serve-queue-proof-"));
+const previousHome = process.env.VELLUMPIX_HOME_DIR;
+process.env.VELLUMPIX_HOME_DIR = path.join(root, "integration-home");
 const { runBrowserMode } = await import("../dist/src/browser/index.js");
 const { acquireProfileRunLock, writeChromePid, writeDevToolsActivePort } =
   await import("../dist/src/browser/profileState.js");
@@ -41,7 +41,7 @@ const chromePath = [
   "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
 ].find((p) => p && existsSync(p));
 assert.ok(chromePath, "Chrome/Chromium is required");
-const token = "oracle-queue-synthetic-proof";
+const token = "vellumpix-queue-synthetic-proof";
 const profile = path.join(root, "profile");
 const guardFile = path.join(root, "guard.txt");
 await fs.writeFile(guardFile, "Synthetic guard cancellation attachment");
@@ -89,24 +89,24 @@ async function unusedPort() {
   await new Promise((r) => server.close(r));
   return port;
 }
-const page = (name) => `<!doctype html><meta charset="utf-8"><title>Oracle queue fixture</title>
+const page = (name) => `<!doctype html><meta charset="utf-8"><title>VellumPix queue fixture</title>
 <style>body{font:18px system-ui;margin:30px}textarea{width:600px;height:100px}button{padding:8px}article{padding:12px}</style>
-<h1>Oracle queue fixture</h1><p>Synthetic ${name} run; no provider account.</p><span id="run-name">${name}</span>
+<h1>VellumPix queue fixture</h1><p>Synthetic ${name} run; no provider account.</p><span id="run-name">${name}</span>
 <button data-testid="profile-button">Synthetic profile</button><button data-testid="model-switcher-dropdown-button">GPT-5.5</button>
 <a class="__menu-item" aria-label="Synthetic Chat" href="/c/borrowed-fixture">Synthetic Chat</a>
 <main><div id="turns"></div><form><textarea id="prompt-textarea" name="prompt-textarea" placeholder="Ask anything"></textarea><button type="button" id="composer-plus-btn" aria-expanded="false">+</button><input type="file" id="upload"><div id="chips"></div><button type="button" data-testid="send-button">Send</button></form></main>
 <script>
 const name=${JSON.stringify(name)};let sends=0;const files=[];
-window.__oracleProofListeners=new Map();window.__oracleProofArmed=false;
+window.__vellumpixProofListeners=new Map();window.__vellumpixProofArmed=false;
 const add=window.addEventListener.bind(window), remove=window.removeEventListener.bind(window);
 window.addEventListener=(type,handler,...args)=>{
  add(type,handler,...args);
- if(window.__oracleProofArmed&&['keydown','keyup','click','beforeinput','input','change'].includes(type)){
-  const listeners=window.__oracleProofListeners.get(type)||new Set();listeners.add(handler);window.__oracleProofListeners.set(type,listeners);
+ if(window.__vellumpixProofArmed&&['keydown','keyup','click','beforeinput','input','change'].includes(type)){
+  const listeners=window.__vellumpixProofListeners.get(type)||new Set();listeners.add(handler);window.__vellumpixProofListeners.set(type,listeners);
  }
 
 };
-window.removeEventListener=(type,handler,...args)=>{window.__oracleProofListeners.get(type)?.delete(handler);return remove(type,handler,...args);};
+window.removeEventListener=(type,handler,...args)=>{window.__vellumpixProofListeners.get(type)?.delete(handler);return remove(type,handler,...args);};
 document.querySelector('#composer-plus-btn').onclick=event=>event.currentTarget.setAttribute('aria-expanded',String(event.currentTarget.getAttribute('aria-expanded')!=='true'));
 document.addEventListener('keydown',event=>{if(event.key==='Escape')document.querySelector('#composer-plus-btn').setAttribute('aria-expanded','false');});
 document.querySelector('#upload').onchange=event=>{for(const file of event.target.files){files.push(file.name);const chip=document.createElement('div');chip.dataset.testid='attachment-chip';chip.textContent=file.name;document.querySelector('#chips').append(chip);}event.target.value='';};
@@ -167,7 +167,7 @@ const interceptedTargets = new Set();
 function child(name, args, home, extra = {}) {
   const process = spawn(globalThis.process.execPath, args, {
     cwd: repo,
-    env: { ...globalThis.process.env, ORACLE_HOME_DIR: home, ...extra },
+    env: { ...globalThis.process.env, VELLUMPIX_HOME_DIR: home, ...extra },
     stdio: ["ignore", "pipe", "pipe"],
   });
   const run = { name, process, output: "", done: false, code: null };
@@ -214,7 +214,7 @@ async function startService(name, queued) {
     profile,
   ];
   if (queued) args.push("--max-concurrent-runs", "4", "--max-queued-runs", "2");
-  const run = child(name, args, home, { ORACLE_BROWSER_MAX_CONCURRENT_TABS: "2" });
+  const run = child(name, args, home, { VELLUMPIX_BROWSER_MAX_CONCURRENT_TABS: "2" });
   const health = async () =>
     fetch(`http://127.0.0.1:${port}/health`, {
       headers: { Authorization: `Bearer ${token}` },
@@ -280,7 +280,7 @@ async function targetFor(name) {
   return (await CDP.List({ port: chrome.port })).find((t) => t.url.includes(`/c/queue-${name}`));
 }
 const registry = async () =>
-  JSON.parse(await fs.readFile(path.join(profile, "oracle-tab-leases.json"), "utf8")).leases;
+  JSON.parse(await fs.readFile(path.join(profile, "vellumpix-tab-leases.json"), "utf8")).leases;
 async function delayedProxy(kind) {
   let release;
   let observed;
@@ -351,7 +351,7 @@ async function delayedProxy(kind) {
   return handle;
 }
 // Delay only the acknowledgement: the renderer has finished installing the guard,
-// while Oracle still awaits the real CDP response. Cleanup RPCs remain usable.
+// while VellumPix still awaits the real CDP response. Cleanup RPCs remain usable.
 async function guardResponseProxy() {
   let selected = null,
     held = null;
@@ -406,7 +406,7 @@ async function guardResponseProxy() {
                 ? expression.includes("const guard = { sawKeyDown: false, clicked: false")
                 : stage === "prompt"
                   ? expression.includes("guard.fallback = text")
-                  : expression.includes("window.__oracleAttachmentDispatchGuard = guard");
+                  : expression.includes("window.__vellumpixAttachmentDispatchGuard = guard");
           if (match) candidates.add(message.id);
         }
         if (remote.readyState === WebSocket.OPEN) remote.send(data.toString());
@@ -793,13 +793,13 @@ try {
       async () =>
         (
           await inspector.Runtime.evaluate({
-            expression: "Boolean(window.__oracleProofListeners)",
+            expression: "Boolean(window.__vellumpixProofListeners)",
             returnByValue: true,
           })
         ).result.value,
       "guard fixture ready",
     );
-    await inspector.Runtime.evaluate({ expression: "window.__oracleProofArmed = true" });
+    await inspector.Runtime.evaluate({ expression: "window.__vellumpixProofArmed = true" });
     guardProxy.arm(stage, route);
     const controller = makeController();
     const pending = startIntegration({
@@ -824,7 +824,7 @@ try {
       }, `${stage} guard installed`);
       const activeGuards = (
         await inspector.Runtime.evaluate({
-          expression: `Object.keys(window.__oracleAttachmentInputGuards ?? {}).length + Object.keys(window.__oracleAttachmentPromptGuards ?? {}).length + Object.keys(window.__oracleAttachmentPlusGuards ?? {}).length + Number(Boolean(window.__oracleAttachmentDispatchGuard))`,
+          expression: `Object.keys(window.__vellumpixAttachmentInputGuards ?? {}).length + Object.keys(window.__vellumpixAttachmentPromptGuards ?? {}).length + Object.keys(window.__vellumpixAttachmentPlusGuards ?? {}).length + Number(Boolean(window.__vellumpixAttachmentDispatchGuard))`,
           returnByValue: true,
         })
       ).result.value;
@@ -836,13 +836,13 @@ try {
       const observed = (
         await inspector.Runtime.evaluate({
           expression: `({
-        listeners: [...window.__oracleProofListeners.values()].reduce((sum, set) => sum + set.size, 0),
-        remaining: [...window.__oracleProofListeners].filter(([, set]) => set.size).map(([type, set]) => [type, [...set].map(fn => fn.name)]),
-        file: Object.keys(window.__oracleAttachmentInputGuards ?? {}).length,
-        prompt: Object.keys(window.__oracleAttachmentPromptGuards ?? {}).length,
-        plus: Object.keys(window.__oracleAttachmentPlusGuards ?? {}).length,
-        nodes: Object.keys(window.__oracleAttachmentPlusNodes ?? {}).length,
-        send: Boolean(window.__oracleAttachmentDispatchGuard)
+        listeners: [...window.__vellumpixProofListeners.values()].reduce((sum, set) => sum + set.size, 0),
+        remaining: [...window.__vellumpixProofListeners].filter(([, set]) => set.size).map(([type, set]) => [type, [...set].map(fn => fn.name)]),
+        file: Object.keys(window.__vellumpixAttachmentInputGuards ?? {}).length,
+        prompt: Object.keys(window.__vellumpixAttachmentPromptGuards ?? {}).length,
+        plus: Object.keys(window.__vellumpixAttachmentPlusGuards ?? {}).length,
+        nodes: Object.keys(window.__vellumpixAttachmentPlusNodes ?? {}).length,
+        send: Boolean(window.__vellumpixAttachmentDispatchGuard)
       })`,
           returnByValue: true,
         })
@@ -1044,6 +1044,6 @@ try {
   fixture.closeAllConnections();
   await new Promise((r) => fixture.close(r));
   await fs.rm(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
-  if (previousHome === undefined) delete process.env.ORACLE_HOME_DIR;
-  else process.env.ORACLE_HOME_DIR = previousHome;
+  if (previousHome === undefined) delete process.env.VELLUMPIX_HOME_DIR;
+  else process.env.VELLUMPIX_HOME_DIR = previousHome;
 }

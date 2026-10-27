@@ -1,7 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import type { UserConfig } from "../../../src/config.js";
-import { DEFAULT_MODEL } from "../../../src/oracle/config.js";
-import type { RunOracleOptions } from "../../../src/oracle.js";
+import { DEFAULT_MODEL } from "../../../src/vellumpix/config.js";
+import type { RunVellumPixOptions } from "../../../src/vellumpix.js";
 
 const promptMock = vi.fn();
 const performSessionRunMock = vi.fn();
@@ -35,7 +35,7 @@ vi.mock("../../../src/sessionStore.ts", () => ({
     listSessions: listSessionsMock,
     deleteOlderThan: vi.fn(),
     getPaths: getPathsMock,
-    sessionsDir: vi.fn().mockReturnValue("/tmp/.oracle/sessions"),
+    sessionsDir: vi.fn().mockReturnValue("/tmp/.vellumpix/sessions"),
   },
   pruneOldSessions: pruneOldSessionsMock,
 }));
@@ -46,7 +46,7 @@ const tui = await import("../../../src/cli/tui/index.ts");
 const originalCI = process.env.CI;
 const originalSshConnection = process.env.SSH_CONNECTION;
 
-describe("askOracleFlow", () => {
+describe("askVellumPixFlow", () => {
   beforeEach(() => {
     // Make notification defaults deterministic (CI disables by default).
     process.env.CI = "";
@@ -86,7 +86,7 @@ describe("askOracleFlow", () => {
     const logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
 
     const config: UserConfig = {};
-    await tui.askOracleFlow("0.4.1", config);
+    await tui.askVellumPixFlow("0.4.1", config);
 
     expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("Cancelled"));
     expect(performSessionRunMock).not.toHaveBeenCalled();
@@ -102,7 +102,7 @@ describe("askOracleFlow", () => {
     });
 
     const config: UserConfig = {};
-    await tui.askOracleFlow("0.4.1", config);
+    await tui.askVellumPixFlow("0.4.1", config);
 
     expect(ensureSessionStorageMock).toHaveBeenCalled();
     expect(initializeSessionMock).toHaveBeenCalledWith(
@@ -124,9 +124,9 @@ describe("askOracleFlow", () => {
     });
 
     const config: UserConfig = {};
-    await tui.askOracleFlow("0.4.1", config);
+    await tui.askVellumPixFlow("0.4.1", config);
 
-    const creationArgs = initializeSessionMock.mock.calls[0]?.[0] as RunOracleOptions & {
+    const creationArgs = initializeSessionMock.mock.calls[0]?.[0] as RunVellumPixOptions & {
       models?: string[];
     };
     expect(creationArgs.models).toEqual([DEFAULT_MODEL, "gemini-3-pro"]);

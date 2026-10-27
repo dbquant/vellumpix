@@ -13,7 +13,7 @@ import { Launcher } from "chrome-launcher";
 import CDP from "chrome-remote-interface";
 
 const repo = fileURLToPath(new URL("..", import.meta.url));
-const root = await fs.mkdtemp(path.join(os.homedir(), "oracle-response-proof-"));
+const root = await fs.mkdtemp(path.join(os.homedir(), "vellumpix-response-proof-"));
 const chromePath = [process.env.CHROME_PATH, "/usr/bin/chromium", "/usr/bin/google-chrome"].find(
   (candidate) => candidate && existsSync(candidate),
 );
@@ -25,7 +25,7 @@ const option = (name) => {
 const captures = option("--captures");
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const states = new Map();
-const marker = "ORACLE_RECOVERED_SYNTHETIC_RESPONSE";
+const marker = "VELLUMPIX_RECOVERED_SYNTHETIC_RESPONSE";
 const baseline = "Previous synthetic answer; this must never become the new result.";
 const userTurn = (id, text) =>
   `<article data-testid="conversation-turn-${id}" data-turn="user"><div data-message-author-role="user" data-message-id="user-${id}">${text}</div></article>`;
@@ -175,7 +175,7 @@ try {
       const home = path.join(root, name);
       await fs.mkdir(home);
       const args = [
-        path.join(repo, "dist/bin/oracle-cli.js"),
+        path.join(repo, "dist/bin/vellumpix-cli.js"),
         "--engine",
         "browser",
         "--model",
@@ -228,7 +228,7 @@ try {
       let output = "";
       const child = spawn(process.execPath, args, {
         cwd: repo,
-        env: { ...process.env, ORACLE_HOME_DIR: home, ORACLE_CHROME_NO_SANDBOX: "1" },
+        env: { ...process.env, VELLUMPIX_HOME_DIR: home, VELLUMPIX_CHROME_NO_SANDBOX: "1" },
         stdio: ["ignore", "pipe", "pipe"],
       });
       child.stdout.on("data", (data) => {

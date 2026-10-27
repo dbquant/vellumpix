@@ -3,7 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { randomBytes } from "node:crypto";
 import chalk from "chalk";
-import { getOracleHomeDir } from "../../oracleHome.js";
+import { getVellumPixHomeDir } from "../../vellumpixHome.js";
 import {
   parseHostPort,
   normalizeHostPort,
@@ -71,7 +71,7 @@ export async function runBridgeHost(options: BridgeHostCliOptions): Promise<void
   const { hostname: bindHost, port: bindPort } = parseHostPort(bindRaw);
 
   const writeConnectionPath =
-    options.writeConnection?.trim() || path.join(getOracleHomeDir(), "bridge-connection.json");
+    options.writeConnection?.trim() || path.join(getVellumPixHomeDir(), "bridge-connection.json");
   const token = await resolveBridgeHostToken(options.token, options.respawn, writeConnectionPath);
 
   const sshTarget = options.ssh?.trim();
@@ -161,7 +161,7 @@ export async function runBridgeHost(options: BridgeHostCliOptions): Promise<void
     console.log(message);
   };
 
-  // Like oracle serve, the host decides its window policy: its flag, then its config, then the
+  // Like vellumpix serve, the host decides its window policy: its flag, then its config, then the
   // default. Clients cannot change it.
   const { config } = await loadUserConfig();
   const noFocus = resolveBrowserNoFocus({
@@ -347,10 +347,10 @@ async function spawnBridgeHostInBackground({
   sshExtraArgs?: string;
   browserNoFocus?: boolean;
 }): Promise<void> {
-  const oracleHome = getOracleHomeDir();
-  await fs.mkdir(oracleHome, { recursive: true, mode: 0o700 });
-  const logPath = path.join(oracleHome, "bridge-host.log");
-  const pidPath = path.join(oracleHome, "bridge-host.pid");
+  const vellumpixHome = getVellumPixHomeDir();
+  await fs.mkdir(vellumpixHome, { recursive: true, mode: 0o700 });
+  const logPath = path.join(vellumpixHome, "bridge-host.log");
+  const pidPath = path.join(vellumpixHome, "bridge-host.pid");
 
   const logHandle = await fs.open(logPath, "a", 0o600);
   const stdio: Array<"ignore" | number> = ["ignore", logHandle.fd, logHandle.fd];

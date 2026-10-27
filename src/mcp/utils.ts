@@ -1,17 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
-import type { RunOracleOptions } from "../oracle.js";
+import type { RunVellumPixOptions } from "../vellumpix.js";
 import type { EngineMode } from "../cli/engine.js";
 import type { UserConfig } from "../config.js";
 import { resolveRunOptionsFromConfig } from "../cli/runOptions.js";
-import { getOracleHomeDir } from "../oracleHome.js";
+import { getVellumPixHomeDir } from "../vellumpixHome.js";
 import { Launcher } from "chrome-launcher";
 
-const ALLOW_EXTERNAL_OUTPUT_ENV = "ORACLE_MCP_ALLOW_EXTERNAL_OUTPUT";
+const ALLOW_EXTERNAL_OUTPUT_ENV = "VELLUMPIX_MCP_ALLOW_EXTERNAL_OUTPUT";
 const MCP_OUTPUT_DIRNAME = "generated";
 
 /**
- * Whether MCP callers may write generated images outside the dedicated Oracle
+ * Whether MCP callers may write generated images outside the dedicated VellumPix
  * output directory. Off by default: MCP clients are less trusted than CLI users.
  */
 export function isExternalMcpOutputAllowed(env: NodeJS.ProcessEnv = process.env): boolean {
@@ -22,7 +22,7 @@ export function isExternalMcpOutputAllowed(env: NodeJS.ProcessEnv = process.env)
 /**
  * Resolve `target` through symlinks for the portion that exists on disk, then
  * re-append the not-yet-created remainder. A lexical `path.resolve` is not
- * enough: a symlinked parent under the Oracle home (e.g. `~/.oracle/generated`
+ * enough: a symlinked parent under the VellumPix home (e.g. `~/.vellumpix/generated`
  * -> `/tmp/evil`) would pass a string-prefix check while the actual write lands
  * outside the boundary. realpath-ing the deepest existing ancestor closes that.
  */
@@ -59,10 +59,10 @@ function resolveThroughSymlinks(target: string): string {
 }
 
 /**
- * Constrain an MCP-supplied output path to ORACLE_HOME_DIR/generated and return
- * its canonical absolute form. This keeps agent writes away from Oracle config,
+ * Constrain an MCP-supplied output path to VELLUMPIX_HOME_DIR/generated and return
+ * its canonical absolute form. This keeps agent writes away from VellumPix config,
  * session metadata, and browser profile state. Existing symlinks are resolved
- * before the boundary check. Set ORACLE_MCP_ALLOW_EXTERNAL_OUTPUT to opt into
+ * before the boundary check. Set VELLUMPIX_MCP_ALLOW_EXTERNAL_OUTPUT to opt into
  * arbitrary output paths as an explicit operator decision.
  */
 export function resolveMcpOutputPath(
@@ -74,8 +74,8 @@ export function resolveMcpOutputPath(
   if (isExternalMcpOutputAllowed(env)) {
     return resolved;
   }
-  const oracleHome = resolveThroughSymlinks(getOracleHomeDir());
-  const root = path.join(oracleHome, MCP_OUTPUT_DIRNAME);
+  const vellumpixHome = resolveThroughSymlinks(getVellumPixHomeDir());
+  const root = path.join(vellumpixHome, MCP_OUTPUT_DIRNAME);
   const realTarget = resolveThroughSymlinks(resolved);
   if (realTarget.startsWith(`${root}${path.sep}`)) {
     return realTarget;
@@ -116,7 +116,7 @@ export function mapConsultToRunOptions({
   outputPath?: string;
   userConfig?: UserConfig;
   env?: NodeJS.ProcessEnv;
-}): { runOptions: RunOracleOptions; resolvedEngine: EngineMode } {
+}): { runOptions: RunVellumPixOptions; resolvedEngine: EngineMode } {
   // Normalize CLI-style inputs through the shared resolver so config/env defaults apply,
   // then overlay MCP-only overrides such as explicit search toggles.
   const mergedModels =
@@ -173,7 +173,7 @@ export function ensureBrowserAvailable(
   if (engine !== "browser") {
     return null;
   }
-  const remoteHost = options?.remoteHost?.trim() || process.env.ORACLE_REMOTE_HOST?.trim();
+  const remoteHost = options?.remoteHost?.trim() || process.env.VELLUMPIX_REMOTE_HOST?.trim();
   if (remoteHost) {
     return null;
   }
