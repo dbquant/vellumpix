@@ -191,7 +191,10 @@ async function prove(mode) {
       output += chunk;
     });
     clientDone = new Promise((resolve) => client.on("exit", resolve));
-    const timeout = setTimeout(() => client.kill("SIGKILL"), 20_000);
+    // Full Windows CI runs hundreds of isolated Vitest workers; process startup can be
+    // starved for more than 20 seconds even though the synthetic refusal is immediate
+    // once the CLI is scheduled.
+    const timeout = setTimeout(() => client.kill("SIGKILL"), 45_000);
     const code = await clientDone;
     clearTimeout(timeout);
     assert.equal(code, 1, `${mode}: expected synthetic endpoint refusal`);
@@ -226,7 +229,7 @@ async function prove(mode) {
       retry.stderr.on("data", (chunk) => {
         retryOutput += chunk;
       });
-      const retryTimeout = setTimeout(() => retry.kill("SIGKILL"), 20_000);
+      const retryTimeout = setTimeout(() => retry.kill("SIGKILL"), 45_000);
       const retryCode = await new Promise((resolve) => retry.on("exit", resolve));
       clearTimeout(retryTimeout);
       assert.equal(retryCode, 1, `${mode}: expected second synthetic refusal`);

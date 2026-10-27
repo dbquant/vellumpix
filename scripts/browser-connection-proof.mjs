@@ -60,11 +60,11 @@ const port = server.address().port;
 const moduleUrl = new URL("../dist/src/browser/chromeLifecycle.js", import.meta.url).href;
 const source = `
 import assert from 'node:assert/strict';
-const {listRemoteChromeTargets,connectToRemoteChromeTarget,openBackgroundChromeWindow,createChromePageTarget}=await import(${JSON.stringify(moduleUrl)});
+const {listRemoteChromeTargets,connectToRemoteChromeTarget,openBackgroundChromeTab,createChromePageTarget}=await import(${JSON.stringify(moduleUrl)});
 const endpoint={host:'127.0.0.1',port:${port},browserWSEndpoint:'ws://127.0.0.1:${port}/devtools/browser/proof'};
 for(let n=0;n<3;n++) {
   await listRemoteChromeTargets(endpoint);
-  await openBackgroundChromeWindow(endpoint.host, endpoint.port, 'about:blank');
+  await openBackgroundChromeTab(endpoint.host, endpoint.port, 'about:blank');
   await createChromePageTarget(endpoint.port, () => {}, endpoint.host, {background: true});
   const page=await connectToRemoteChromeTarget(endpoint.host,endpoint.port,()=>{},{...endpoint,targetId:'saved'});
   const result=await page.client.Runtime.evaluate({expression:'synthetic delayed response'});
@@ -91,7 +91,11 @@ try {
   assert.equal(evaluations, 3, "active socket must keep delayed commands alive");
   assert.equal(createdTargets.length, 6);
   assert.ok(createdTargets.every((target) => target.background === true));
-  assert.equal(createdTargets.filter((target) => target.newWindow === true).length, 3);
+  assert.equal(
+    createdTargets.filter((target) => target.newWindow === true).length,
+    0,
+    "background targets must stay in the shared browser window",
+  );
   assert.equal(handshakes, 1, "all steps must use one browser handshake");
   console.log(
     "PASS: one WebSocket handshake, background run/cleanup targets, three complete multi-step operations, natural idle process exit",
