@@ -40,6 +40,8 @@ describe("resolveBrowserConfig", () => {
     expect(resolved.profileLockTimeoutMs).toBe(300_000);
     expect(resolved.attachmentTimeoutMs).toBe(45_000);
     expect(resolved.maxConcurrentTabs).toBe(3);
+    expect(resolved.maxRetainedThreadTabs).toBe(3);
+    expect(resolved.threadTabIdleTimeoutMs).toBe(1_200_000);
     expect(resolved.researchMode).toBe("off");
     expect(resolved.archiveConversations).toBe("auto");
   });
@@ -58,6 +60,8 @@ describe("resolveBrowserConfig", () => {
       browserTabRef: "current",
       debug: true,
       maxConcurrentTabs: 5,
+      maxRetainedThreadTabs: 2,
+      threadTabIdleTimeoutMs: 600_000,
       researchMode: "deep",
       archiveConversations: "never",
     });
@@ -68,6 +72,8 @@ describe("resolveBrowserConfig", () => {
     expect(resolved.cookieSync).toBe(false);
     expect(resolved.headless).toBe(true);
     expect(resolved.desiredModel).toBe("Custom");
+    expect(resolved.maxRetainedThreadTabs).toBe(2);
+    expect(resolved.threadTabIdleTimeoutMs).toBe(600_000);
     expect(resolved.chromeProfile).toBe("Profile 1");
     expect(resolved.chromePath).toBe("/Applications/Chrome");
     expect(resolved.browserTabRef).toBe("current");

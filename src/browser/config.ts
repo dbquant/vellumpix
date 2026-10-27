@@ -33,6 +33,9 @@ export const DEFAULT_CHATGPT_COOKIE_NAMES = [
   "__cflb",
 ];
 
+export const DEFAULT_MAX_RETAINED_THREAD_TABS = 3;
+export const DEFAULT_THREAD_TAB_IDLE_TIMEOUT_MS = 20 * 60 * 1000;
+
 export const DEFAULT_BROWSER_CONFIG: ResolvedBrowserConfig = {
   browserProvider: "auto",
   browserFallbackProvider: process.platform === "win32" ? "chrome" : "edge",
@@ -55,6 +58,8 @@ export const DEFAULT_BROWSER_CONFIG: ResolvedBrowserConfig = {
   reuseChromeWaitMs: 10_000,
   profileLockTimeoutMs: 300_000,
   maxConcurrentTabs: DEFAULT_MAX_CONCURRENT_CHATGPT_TABS,
+  maxRetainedThreadTabs: DEFAULT_MAX_RETAINED_THREAD_TABS,
+  threadTabIdleTimeoutMs: DEFAULT_THREAD_TAB_IDLE_TIMEOUT_MS,
   autoReattachDelayMs: 0,
   autoReattachIntervalMs: 0,
   autoReattachTimeoutMs: 120_000,
@@ -94,6 +99,12 @@ export function resolveBrowserConfig(
     (process.env.VELLUMPIX_BROWSER_ALLOW_COOKIE_ERRORS ?? "").trim() === "1";
   const envMaxConcurrentTabs = parseMaxConcurrentTabs(
     process.env.VELLUMPIX_BROWSER_MAX_CONCURRENT_TABS,
+  );
+  const envMaxRetainedThreadTabs = parsePositiveInteger(
+    process.env.VELLUMPIX_BROWSER_MAX_RETAINED_THREAD_TABS,
+  );
+  const envThreadTabIdleTimeoutMs = parseOptionalDuration(
+    process.env.VELLUMPIX_BROWSER_THREAD_TAB_IDLE_TIMEOUT,
   );
   const rawUrl = config?.chatgptUrl ?? config?.url ?? DEFAULT_BROWSER_CONFIG.url;
   const normalizedUrl = normalizeChatgptUrl(
@@ -162,6 +173,14 @@ export function resolveBrowserConfig(
     maxConcurrentTabs: normalizeMaxConcurrentTabs(
       config?.maxConcurrentTabs ?? envMaxConcurrentTabs ?? DEFAULT_BROWSER_CONFIG.maxConcurrentTabs,
     ),
+    maxRetainedThreadTabs:
+      parsePositiveInteger(config?.maxRetainedThreadTabs) ??
+      envMaxRetainedThreadTabs ??
+      DEFAULT_BROWSER_CONFIG.maxRetainedThreadTabs,
+    threadTabIdleTimeoutMs:
+      parseOptionalDuration(config?.threadTabIdleTimeoutMs) ??
+      envThreadTabIdleTimeoutMs ??
+      DEFAULT_BROWSER_CONFIG.threadTabIdleTimeoutMs,
     autoReattachDelayMs: config?.autoReattachDelayMs ?? DEFAULT_BROWSER_CONFIG.autoReattachDelayMs,
     autoReattachIntervalMs:
       config?.autoReattachIntervalMs ?? DEFAULT_BROWSER_CONFIG.autoReattachIntervalMs,
@@ -203,6 +222,23 @@ export function resolveBrowserConfig(
     manualLoginCookieSync:
       config?.manualLoginCookieSync ?? DEFAULT_BROWSER_CONFIG.manualLoginCookieSync,
   };
+}
+
+function parsePositiveInteger(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  const parsed = typeof value === "number" ? value : Number.parseInt(String(value), 10);
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function parseOptionalDuration(value: unknown): number | undefined {
+  if (value === undefined || value === null || value === "") return undefined;
+  if (typeof value === "number") return Number.isFinite(value) && value >= 0 ? value : undefined;
+  try {
+    const parsed = parseDuration(String(value), Number.NaN);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function normalizeResearchMode(value: unknown): "off" | "search" | "deep" {

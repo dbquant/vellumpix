@@ -26,6 +26,23 @@ export function getThreadRunLockDir(threadId: string): string {
   return path.join(getThreadsDir(), normalizeThreadId(threadId), "run.lock");
 }
 
+/**
+ * Conservatively report whether a Thread may still be running. Invalid lock
+ * records fail closed so target-cache cleanup never closes a page another
+ * controller could own.
+ */
+export async function isThreadRunLockActive(threadId: string): Promise<boolean> {
+  const lockDir = getThreadRunLockDir(threadId);
+  try {
+    await fs.access(lockDir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return false;
+    return true;
+  }
+  const owner = await readOwner(lockDir);
+  return owner ? ownerIsAlive(owner) : true;
+}
+
 async function readOwner(lockDir: string): Promise<ThreadRunLockOwner | null> {
   try {
     const parsed = JSON.parse(

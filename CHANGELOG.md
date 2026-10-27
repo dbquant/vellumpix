@@ -12,3 +12,4 @@
 - 新增 Windows PowerShell 同会话多轮生图测试脚本，可脱离 Codex 直接验证会话复用、Session 父子链与图片产物完整性，并提供不联网、不提交请求的 `-PlanOnly` 模式。
 - 持久化 Thread 现在优先复用仍指向同一 ChatGPT 会话的 Edge/Chrome 标签页，失效时安全新建；新增跨进程 Thread 独占锁，并支持在续聊时正确应用 `noFocus` 等当前浏览器设置。
 - 同会话 PowerShell 测试脚本新增 target 复用及 `noFocus` 断言，可直接发现多轮任务意外新增标签页或抢占前台的回归。
+- 新增 Thread 浏览器标签 LRU 缓存：默认仅保留最近 3 个会话 target，空闲 20 分钟自动回收，并保护所有运行中或持锁任务；历史会话仍可通过持久化 URL 恢复。

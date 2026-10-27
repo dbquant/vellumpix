@@ -152,6 +152,8 @@ interface CliOptions extends OptionValues {
   browserAttachmentTimeout?: string;
   browserProfileLockTimeout?: string;
   browserMaxConcurrentTabs?: string;
+  browserMaxRetainedThreadTabs?: string;
+  browserThreadTabIdleTimeout?: string;
   browserCookieWait?: string;
   browserCookieSync?: boolean;
   browserNoCookieSync?: boolean;
@@ -751,6 +753,18 @@ program
     new Option(
       "--browser-max-concurrent-tabs <n>",
       "Soft limit for concurrent ChatGPT tabs sharing one manual-login profile (default 3).",
+    ).hideHelp(),
+  )
+  .addOption(
+    new Option(
+      "--browser-max-retained-thread-tabs <n>",
+      "Maximum idle Thread conversation tabs retained as an LRU cache (default 3).",
+    ).hideHelp(),
+  )
+  .addOption(
+    new Option(
+      "--browser-thread-tab-idle-timeout <ms|s|m|h>",
+      "Close retained Thread tabs after this idle time (default 20m; 0 disables idle expiry).",
     ).hideHelp(),
   )
   .addOption(
@@ -3085,6 +3099,14 @@ function printDebugHelp(cliName: string): void {
     [
       "--browser-max-concurrent-tabs <n>",
       "Soft limit for parallel tabs sharing one manual-login profile (default 3).",
+    ],
+    [
+      "--browser-max-retained-thread-tabs <n>",
+      "Maximum idle Thread conversation tabs retained as an LRU cache (default 3).",
+    ],
+    [
+      "--browser-thread-tab-idle-timeout <ms|s|m|h>",
+      "Close retained Thread tabs after this idle time (default 20m; 0 disables idle expiry).",
     ],
     [
       "--browser-auto-reattach-delay <ms|s|m|h>",

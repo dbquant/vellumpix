@@ -64,6 +64,7 @@ import { formatElapsed } from "../vellumpix/format.js";
 import { formatBrowserReattachGuidance } from "./reattachGuidance.js";
 import { BrowserRunCancelledError } from "../vellumpix/errors.js";
 import { acquireThreadRunLock, type ThreadRunLock } from "../threadRunLock.js";
+import { pruneThreadBrowserTargetCache } from "../browser/threadTargetCache.js";
 
 const isTty = process.stdout.isTTY;
 const dim = (text: string): string => (isTty ? kleur.dim(text) : text);
@@ -268,6 +269,16 @@ export async function performSessionRun({
         transport: undefined,
         error: undefined,
       });
+      if (sessionMeta.options.threadId) {
+        await pruneThreadBrowserTargetCache({
+          threadId: sessionMeta.options.threadId,
+          runtime: result.runtime,
+          config: browserConfig,
+          logger: log,
+        }).catch((error) => {
+          log(`WARNING: Unable to prune the Thread browser-tab cache: ${formatError(error)}`);
+        });
+      }
       return;
     }
     const multiModels = Array.isArray(runOptions.models) ? runOptions.models.filter(Boolean) : [];

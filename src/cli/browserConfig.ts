@@ -79,6 +79,8 @@ export interface BrowserFlagOptions {
   browserReuseWait?: string;
   browserProfileLockTimeout?: string;
   browserMaxConcurrentTabs?: string;
+  browserMaxRetainedThreadTabs?: string;
+  browserThreadTabIdleTimeout?: string;
   browserAutoReattachDelay?: string;
   browserAutoReattachInterval?: string;
   browserAutoReattachTimeout?: string;
@@ -327,6 +329,17 @@ export async function buildBrowserConfig(
       ? parseBrowserDuration(options.browserProfileLockTimeout, "--browser-profile-lock-timeout", 0)
       : undefined,
     maxConcurrentTabs: parseMaxConcurrentTabs(options.browserMaxConcurrentTabs),
+    maxRetainedThreadTabs: parsePositiveIntegerOption(
+      options.browserMaxRetainedThreadTabs,
+      "--browser-max-retained-thread-tabs",
+    ),
+    threadTabIdleTimeoutMs: options.browserThreadTabIdleTimeout
+      ? parseBrowserDuration(
+          options.browserThreadTabIdleTimeout,
+          "--browser-thread-tab-idle-timeout",
+          20 * 60 * 1000,
+        )
+      : undefined,
     autoReattachDelayMs: options.browserAutoReattachDelay
       ? parseBrowserDuration(options.browserAutoReattachDelay, "--browser-auto-reattach-delay", 0)
       : undefined,
@@ -452,6 +465,18 @@ function parseMaxConcurrentTabs(raw?: string): number | undefined {
     throw new Error(`Invalid browser max concurrent tabs: ${raw}. Expected a positive integer.`);
   }
   return Math.trunc(value);
+}
+
+function parsePositiveIntegerOption(
+  raw: string | undefined,
+  optionName: string,
+): number | undefined {
+  if (!raw) return undefined;
+  const value = Number.parseInt(raw, 10);
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`Invalid ${optionName}: ${raw}. Expected a positive integer.`);
+  }
+  return value;
 }
 
 function parseBrowserDuration(raw: string, optionName: string, fallbackMs: number): number {

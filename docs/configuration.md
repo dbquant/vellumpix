@@ -42,6 +42,8 @@ JSON5 parsing, so trailing commas and comments are allowed.
     reuseChromeWaitMs: 10000, // wait for a shared Chrome profile to appear before launching (parallel runs)
     profileLockTimeoutMs: 300000, // wait for the manual-login profile lock before sending (parallel runs)
     maxConcurrentTabs: 3, // soft limit for concurrent ChatGPT tabs using one manual-login profile (or set VELLUMPIX_BROWSER_MAX_CONCURRENT_TABS)
+    maxRetainedThreadTabs: 3, // warm LRU cache of completed Thread conversation tabs
+    threadTabIdleTimeoutMs: 1200000, // close cached Thread tabs after 20m idle; 0 disables idle expiry
     autoReattachDelayMs: 0, // delay before starting periodic auto-reattach attempts (0 = disabled)
     autoReattachIntervalMs: 0, // interval between auto-reattach attempts (0 = disabled)
     autoReattachTimeoutMs: 120000, // time budget per auto-reattach attempt (default: 2m)

@@ -610,6 +610,7 @@ interface TargetConnectMessages {
 }
 
 export interface RemoteTargetInfo {
+  id?: string;
   targetId?: string;
   type?: string;
   url?: string;

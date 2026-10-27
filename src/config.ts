@@ -54,6 +54,10 @@ export interface BrowserConfigDefaults {
   profileLockTimeoutMs?: number;
   /** Soft limit for concurrent ChatGPT tabs sharing one manual-login profile. */
   maxConcurrentTabs?: number;
+  /** Maximum idle Thread conversation tabs retained as a warm LRU cache. */
+  maxRetainedThreadTabs?: number;
+  /** Close an idle retained Thread tab after this many milliseconds. */
+  threadTabIdleTimeoutMs?: number;
   /** Delay before starting periodic auto-reattach attempts after a timeout. */
   autoReattachDelayMs?: number;
   /** Interval between auto-reattach attempts (0 disables). */
