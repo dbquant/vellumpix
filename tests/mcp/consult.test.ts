@@ -517,7 +517,7 @@ describe("summarizeModelRunsForConsult", () => {
     expect(config.thinkingTime).toBeUndefined();
   });
 
-  test("defaults an explicit historical Pro target to Pro effort", () => {
+  test("routes the retired GPT-5.5 Pro browser target to Sol without forcing Pro effort", () => {
     const config = buildConsultBrowserConfig({
       userConfig: {},
       env: {},
@@ -526,8 +526,8 @@ describe("summarizeModelRunsForConsult", () => {
     });
 
     expect(config).toMatchObject({
-      desiredModel: "GPT-5.5",
-      thinkingTime: "pro",
+      desiredModel: "GPT-5.6 Sol",
+      thinkingTime: undefined,
     });
   });
 
@@ -663,9 +663,9 @@ describe("summarizeModelRunsForConsult", () => {
         dryRun: true,
         resolved: {
           resolvedEngine: "browser",
-          model: "gpt-5.5-pro",
+          model: "gpt-5.6-sol",
           browser: expect.objectContaining({
-            desiredModel: "GPT-5.5",
+            desiredModel: "GPT-5.6 Sol",
             thinkingTime: "extended",
             modelStrategy: "select",
             imageOutputPath: path.join(realpathSync(home), "generated", "from-mcp.png"),
