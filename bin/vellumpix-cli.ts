@@ -2320,23 +2320,36 @@ async function runRootCommand(options: CliOptions): Promise<void> {
   const sessionMode: SessionMode = engine === "browser" ? "browser" : "api";
   const browserConfig = await (async (): Promise<BrowserSessionConfig | undefined> => {
     if (sessionMode !== "browser") return undefined;
-    if (browserFollowup) {
-      return browserFollowup.browserConfig;
-    }
     const { buildBrowserConfig, resolveBrowserModelLabel } =
       await import("../src/cli/browserConfig.js");
-    const config = await buildBrowserConfig({
+    const requestedConfig = await buildBrowserConfig({
       ...options,
       remoteHost: remoteHost ?? undefined,
       model: activeModel,
       browserRequestedModel: cliModelArg,
       browserModelLabel: resolveBrowserModelLabel(cliModelArg, activeModel),
     });
-    config.modelIsImplicitDefault =
+    requestedConfig.modelIsImplicitDefault =
       optionUsesDefault("model") && !userConfig.model && !options.browserModelLabel;
-    return resolvedOptions.browserResumeConversationUrl
-      ? { ...config, resumeConversationUrl: resolvedOptions.browserResumeConversationUrl }
-      : config;
+    if (browserFollowup) {
+      return {
+        ...browserFollowup.browserConfig,
+        ...requestedConfig,
+        browserTabRef: browserFollowup.browserConfig.browserTabRef,
+        browserTabRefPolicy: browserFollowup.browserConfig.browserTabRefPolicy,
+        resumeConversationUrl: browserFollowup.resumeConversationUrl,
+        researchMode: "off",
+        archiveConversations: "never",
+        keepBrowser: activeThreadId ? true : requestedConfig.keepBrowser,
+      };
+    }
+    const resolvedConfig = resolvedOptions.browserResumeConversationUrl
+      ? {
+          ...requestedConfig,
+          resumeConversationUrl: resolvedOptions.browserResumeConversationUrl,
+        }
+      : requestedConfig;
+    return activeThreadId ? { ...resolvedConfig, keepBrowser: true } : resolvedConfig;
   })();
 
   if (previewMode) {

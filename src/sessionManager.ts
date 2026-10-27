@@ -42,6 +42,8 @@ export interface BrowserSessionConfig {
   chromeCookiePath?: string | null;
   attachRunning?: boolean;
   browserTabRef?: string | null;
+  /** Whether an unavailable/mismatched stored tab may fall back to a fresh tab. */
+  browserTabRefPolicy?: "strict" | "prefer";
   chatgptUrl?: string | null;
   url?: string;
   timeoutMs?: number;

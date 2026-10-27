@@ -8,6 +8,7 @@ import {
   formatBrowserTurnTranscript,
   isLocalChromeHostForTest,
   maybeArchiveCompletedConversationForTest,
+  preferredTabMatchesConversation,
   resolveRemoteTabLeaseProfileDirForTest,
   runBrowserMode,
   runSubmissionWithRecoveryForTest,
@@ -17,6 +18,24 @@ import {
 import { resolveBrowserConfig } from "../../src/browser/config.js";
 import { redactBrowserConfigForDebugLog } from "../../src/browser/configLogging.js";
 import { BrowserAutomationError } from "../../src/vellumpix/errors.js";
+
+describe("durable Thread tab preference", () => {
+  test("reuses only a tab that still shows the expected conversation", () => {
+    expect(
+      preferredTabMatchesConversation(
+        "https://chatgpt.com/c/conversation-a",
+        "https://chatgpt.com/c/conversation-a",
+      ),
+    ).toBe(true);
+    expect(
+      preferredTabMatchesConversation(
+        "https://chatgpt.com/c/conversation-b",
+        "https://chatgpt.com/c/conversation-a",
+      ),
+    ).toBe(false);
+    expect(preferredTabMatchesConversation("about:blank", undefined)).toBe(false);
+  });
+});
 
 describe("generated image response failures", () => {
   test("completes image generation when a detached gallery appears without answer text", async () => {

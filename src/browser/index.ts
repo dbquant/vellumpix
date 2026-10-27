@@ -848,6 +848,15 @@ export async function runBrowserMode(options: BrowserRunOptions): Promise<Browse
   }
 }
 
+export function preferredTabMatchesConversation(
+  tabUrl: string | null | undefined,
+  resumeConversationUrl: string | null | undefined,
+): boolean {
+  const expectedConversationId = extractConversationIdFromUrl(resumeConversationUrl ?? "");
+  const actualConversationId = extractConversationIdFromUrl(tabUrl ?? "");
+  return Boolean(expectedConversationId && actualConversationId === expectedConversationId);
+}
+
 async function runBrowserModeInternal(
   options: BrowserRunOptions,
   cancellation: BrowserCancellation,
@@ -1128,6 +1137,7 @@ async function runBrowserModeInternal(
   let client: ChromeClient | null = null;
   let isolatedTargetId: string | null = null;
   let ownsTarget = true;
+  let attachedExistingTab = false;
   const startedAt = Date.now();
   let answerText = "";
   let answerMarkdown = "";
@@ -1146,24 +1156,46 @@ async function runBrowserModeInternal(
     try {
       if (config.browserTabRef) {
         const tabRef = config.browserTabRef;
-        const attached = await cancellation.acquire(
-          () =>
+        try {
+          const candidate = await cancellation.call(() =>
             connectToExistingChatGptTab({
               host: chromeHost,
               port: chrome.port,
               ref: tabRef,
             }),
-          (attached) => attached.client.close(),
-        );
-        client = cancellation.client(attached.client);
-        isolatedTargetId = attached.targetId ?? null;
-        lastTargetId = attached.targetId ?? undefined;
-        lastUrl = attached.tab.url || lastUrl;
-        ownsTarget = false;
-        logger(
-          `Attached to existing ChatGPT tab ${attached.targetId}${attached.tab.url ? ` (${attached.tab.url})` : ""}`,
-        );
-      } else {
+          );
+          if (
+            config.browserTabRefPolicy === "prefer" &&
+            !preferredTabMatchesConversation(candidate.tab.url, config.resumeConversationUrl)
+          ) {
+            await candidate.client.close().catch(() => undefined);
+            logger(
+              `[browser] Stored Thread tab ${tabRef} no longer shows the expected conversation; opening a fresh tab.`,
+            );
+          } else {
+            const attached = await cancellation.acquire(
+              () => Promise.resolve(candidate),
+              (value) => value.client.close(),
+            );
+            client = cancellation.client(attached.client);
+            isolatedTargetId = attached.targetId ?? null;
+            lastTargetId = attached.targetId ?? undefined;
+            lastUrl = attached.tab.url || lastUrl;
+            ownsTarget = false;
+            attachedExistingTab = true;
+            logger(
+              `Attached to existing ChatGPT tab ${attached.targetId}${attached.tab.url ? ` (${attached.tab.url})` : ""}`,
+            );
+          }
+        } catch (error) {
+          if (config.browserTabRefPolicy !== "prefer") throw error;
+          const message = error instanceof Error ? error.message : String(error);
+          logger(
+            `[browser] Stored Thread tab ${tabRef} is unavailable (${message}); opening a fresh tab.`,
+          );
+        }
+      }
+      if (!client) {
         const strictTabIsolation = Boolean(manualLogin && reusedChrome);
         const devtoolsRetries = manualLogin ? 6 : 0;
         const connection = await cancellation.acquire(
@@ -1261,7 +1293,7 @@ async function runBrowserModeInternal(
       domainEnablers.push(DOM.enable());
     }
     await Promise.all(domainEnablers);
-    if (config.browserTabRef) await claimBrowserTarget(Runtime, targetClaimId);
+    if (attachedExistingTab) await claimBrowserTarget(Runtime, targetClaimId);
     if (!config.headless && config.hideWindow) {
       await positionChromeWindowOffscreen(client, userDataDir, logger);
     } else if (!config.headless) {
@@ -1351,7 +1383,7 @@ async function runBrowserModeInternal(
       );
     }
 
-    if (config.browserTabRef) {
+    if (attachedExistingTab) {
       if (isResumingConversation) {
         await raceWithDisconnect(
           navigateToChatGPT(Page, Runtime, config.resumeConversationUrl as string, logger),
@@ -1430,7 +1462,7 @@ async function runBrowserModeInternal(
     const chatMode = await raceWithDisconnect(
       ensureChatMode(Runtime, Input, config.inputTimeoutMs, logger, {
         resetWorkConversation:
-          config.browserTabRef && !isResumingConversation
+          attachedExistingTab && !isResumingConversation
             ? async () => {
                 await navigateToChatGPT(Page, Runtime, config.url, logger);
                 await ensureNotBlocked(Runtime, config.headless, logger);
@@ -2934,8 +2966,8 @@ async function runRemoteBrowserMode(
     }
     if (config.browserTabRef) {
       const tabRef = config.browserTabRef;
-      const attached = await cancellation.acquire(
-        () =>
+      try {
+        const candidate = await cancellation.call(() =>
           connectToExistingChatGptTab({
             host,
             port,
@@ -2943,17 +2975,38 @@ async function runRemoteBrowserMode(
             approvalWaitMs: config.approvalWaitMs,
             ref: tabRef,
           }),
-        (attached) => attached.client.close(),
-      );
-      client = cancellation.client(attached.client);
-      remoteTargetId = attached.targetId ?? null;
-      lastUrl = attached.tab.url || lastUrl;
-      attachedExistingTab = true;
-      ownsTarget = false;
-      logger(
-        `Attached to existing remote ChatGPT tab ${attached.targetId}${attached.tab.url ? ` (${attached.tab.url})` : ""}`,
-      );
-    } else {
+        );
+        if (
+          config.browserTabRefPolicy === "prefer" &&
+          !preferredTabMatchesConversation(candidate.tab.url, config.resumeConversationUrl)
+        ) {
+          await candidate.client.close().catch(() => undefined);
+          logger(
+            `[browser] Stored Thread tab ${tabRef} no longer shows the expected conversation; opening a fresh remote tab.`,
+          );
+        } else {
+          const attached = await cancellation.acquire(
+            () => Promise.resolve(candidate),
+            (value) => value.client.close(),
+          );
+          client = cancellation.client(attached.client);
+          remoteTargetId = attached.targetId ?? null;
+          lastUrl = attached.tab.url || lastUrl;
+          attachedExistingTab = true;
+          ownsTarget = false;
+          logger(
+            `Attached to existing remote ChatGPT tab ${attached.targetId}${attached.tab.url ? ` (${attached.tab.url})` : ""}`,
+          );
+        }
+      } catch (error) {
+        if (config.browserTabRefPolicy !== "prefer") throw error;
+        const message = error instanceof Error ? error.message : String(error);
+        logger(
+          `[browser] Stored Thread tab ${tabRef} is unavailable (${message}); opening a fresh remote tab.`,
+        );
+      }
+    }
+    if (!client) {
       connection = await cancellation.acquire(
         () =>
           connectToRemoteChrome(host, port, logger, "about:blank", browserWSEndpoint, {
@@ -2995,7 +3048,7 @@ async function runRemoteBrowserMode(
       domainEnablers.push(DOM.enable());
     }
     await Promise.all(domainEnablers);
-    if (config.browserTabRef) await claimBrowserTarget(Runtime, targetClaimId);
+    if (attachedExistingTab) await claimBrowserTarget(Runtime, targetClaimId);
     removeDialogHandler = installJavaScriptDialogAutoDismissal(Page, logger);
     const focusEmulated = await enableFocusEmulation(client, logger, "remote target");
     await activateWithoutFocusEmulation(Page, config.noFocus, focusEmulated, logger);

@@ -85,6 +85,8 @@ export interface BrowserAutomationConfig {
   chromeCookiePath?: string | null;
   attachRunning?: boolean;
   browserTabRef?: string | null;
+  /** Explicit tab refs are strict; durable Thread refs use prefer and safely fall back. */
+  browserTabRefPolicy?: "strict" | "prefer";
   url?: string;
   chatgptUrl?: string | null;
   timeoutMs?: number;
@@ -269,6 +271,7 @@ export type ResolvedBrowserConfig = Required<
     | "remoteChromeProfileRoot"
     | "thinkingTime"
     | "modelStrategy"
+    | "browserTabRefPolicy"
     | "maxConcurrentTabs"
     | "researchMode"
     | "copyProfileSource"
@@ -282,6 +285,7 @@ export type ResolvedBrowserConfig = Required<
   chromeCookiePath?: string | null;
   attachRunning?: boolean;
   browserTabRef?: string | null;
+  browserTabRefPolicy: "strict" | "prefer";
   desiredModel?: string | null;
   modelIsImplicitDefault?: boolean;
   modelStrategy?: BrowserModelStrategy;

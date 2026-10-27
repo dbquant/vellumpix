@@ -52,7 +52,7 @@ describe("browser follow-up resolution", () => {
           researchMode: "deep",
           archiveConversations: "auto",
         },
-        runtime: { conversationId: "resume-me" },
+        runtime: { conversationId: "resume-me", chromeTargetId: "live-tab" },
       },
     };
     const store = { readSession: vi.fn(async () => metadata) };
@@ -64,12 +64,33 @@ describe("browser follow-up resolution", () => {
       browserConfig: {
         manualLogin: true,
         manualLoginProfileDir: "/tmp/vellumpix-profile",
-        browserTabRef: null,
+        browserTabRef: "live-tab",
+        browserTabRefPolicy: "prefer",
         researchMode: "off",
         archiveConversations: "never",
         resumeConversationUrl: "https://chatgpt.com/c/resume-me",
       },
     });
+  });
+
+  test("falls back to a fresh tab policy when the parent has no live target id", async () => {
+    const metadata: SessionMetadata = {
+      ...baseMetadata,
+      id: "browser-without-target",
+      mode: "browser",
+      model: "gpt-5.5-pro",
+      browser: {
+        config: { manualLogin: true, browserTabRef: "stale-explicit-value" },
+        runtime: { conversationId: "resume-without-target" },
+      },
+    };
+
+    const resolved = await resolveBrowserFollowupReference("browser-without-target", {
+      readSession: vi.fn(async () => metadata),
+    });
+
+    expect(resolved?.browserConfig.browserTabRef).toBeNull();
+    expect(resolved?.browserConfig.browserTabRefPolicy).toBe("strict");
   });
 
   test("leaves stored API sessions on the existing API follow-up path", async () => {

@@ -63,6 +63,7 @@ import { computeFileSha256, sanitizeArtifactFilename } from "../browser/artifact
 import { formatElapsed } from "../vellumpix/format.js";
 import { formatBrowserReattachGuidance } from "./reattachGuidance.js";
 import { BrowserRunCancelledError } from "../vellumpix/errors.js";
+import { acquireThreadRunLock, type ThreadRunLock } from "../threadRunLock.js";
 
 const isTty = process.stdout.isTTY;
 const dim = (text: string): string => (isTty ? kleur.dim(text) : text);
@@ -157,10 +158,15 @@ export async function performSessionRun({
     );
     throw cancellationError;
   };
+  let threadRunLock: ThreadRunLock | null = null;
   try {
     if (mode === "browser") {
       if (!browserConfig) {
         throw new Error("Missing browser configuration for session.");
+      }
+      if (sessionMeta.options.threadId) {
+        threadRunLock = await acquireThreadRunLock(sessionMeta.options.threadId, sessionMeta.id);
+        log(`Thread lock acquired: ${sessionMeta.options.threadId}`);
       }
       if (modelForStatus) {
         await sessionStore.updateModelRun(sessionMeta.id, modelForStatus, {
@@ -890,6 +896,14 @@ export async function performSessionRun({
       });
     }
     throw error;
+  } finally {
+    if (threadRunLock) {
+      const lock = threadRunLock;
+      threadRunLock = null;
+      await lock.release().catch((error) => {
+        log(`WARNING: Unable to release Thread lock: ${formatError(error)}`);
+      });
+    }
   }
 }
 

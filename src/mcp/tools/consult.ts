@@ -711,22 +711,34 @@ export async function runConsultTool(
 
   let browserConfig: BrowserSessionConfig | undefined;
   if (resolvedEngine === "browser") {
-    browserConfig = browserFollowup
-      ? browserFollowup.browserConfig
-      : buildConsultBrowserConfig({
-          userConfig,
-          env: process.env,
-          runModel: runOptions.model,
-          inputModel: model,
-          browserModelLabel,
-          browserThinkingTime,
-          browserModelStrategy,
-          browserResearchMode,
-          browserArchive,
-          browserKeepBrowser,
-          browserProvider,
-          browserFallbackProvider,
-        });
+    const requestedBrowserConfig = buildConsultBrowserConfig({
+      userConfig,
+      env: process.env,
+      runModel: runOptions.model,
+      inputModel: model,
+      browserModelLabel,
+      browserThinkingTime,
+      browserModelStrategy,
+      browserResearchMode,
+      browserArchive,
+      browserKeepBrowser,
+      browserProvider,
+      browserFallbackProvider,
+    });
+    const resolvedBrowserConfig = browserFollowup
+      ? {
+          ...browserFollowup.browserConfig,
+          ...requestedBrowserConfig,
+          browserTabRef: browserFollowup.browserConfig.browserTabRef,
+          browserTabRefPolicy: browserFollowup.browserConfig.browserTabRefPolicy,
+          resumeConversationUrl: browserFollowup.resumeConversationUrl,
+          researchMode: "off" as const,
+          archiveConversations: "never" as const,
+        }
+      : requestedBrowserConfig;
+    browserConfig = activeThreadId
+      ? { ...resolvedBrowserConfig, keepBrowser: true }
+      : resolvedBrowserConfig;
   }
 
   if (dryRun) {

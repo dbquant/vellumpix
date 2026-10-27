@@ -42,6 +42,7 @@ export const DEFAULT_BROWSER_CONFIG: ResolvedBrowserConfig = {
   chromeCookiePath: null,
   attachRunning: false,
   browserTabRef: null,
+  browserTabRefPolicy: "strict",
   url: CHATGPT_URL,
   chatgptUrl: CHATGPT_URL,
   timeoutMs: 1_200_000,
@@ -182,6 +183,7 @@ export function resolveBrowserConfig(
     chromeCookiePath: config?.chromeCookiePath ?? DEFAULT_BROWSER_CONFIG.chromeCookiePath,
     attachRunning: config?.attachRunning ?? DEFAULT_BROWSER_CONFIG.attachRunning,
     browserTabRef: config?.browserTabRef ?? DEFAULT_BROWSER_CONFIG.browserTabRef,
+    browserTabRefPolicy: config?.browserTabRefPolicy === "prefer" ? "prefer" : "strict",
     debug: config?.debug ?? DEFAULT_BROWSER_CONFIG.debug,
     allowCookieErrors:
       config?.allowCookieErrors ?? envAllowCookieErrors ?? DEFAULT_BROWSER_CONFIG.allowCookieErrors,

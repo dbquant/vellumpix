@@ -127,7 +127,9 @@ vellumpix thread list
 vellumpix thread show brand-winter-canal
 ```
 
-`--thread` starts a new conversation when the thread is empty. Otherwise it scans newest-to-oldest for a recoverable saved ChatGPT conversation and creates a child session from it. This fallback keeps a transient failed run from hiding an earlier usable conversation. Archived threads reject new runs until reactivated.
+`--thread` starts a new conversation when the thread is empty. Otherwise it scans newest-to-oldest for a recoverable saved ChatGPT conversation and creates a child session from it. When the previous browser target is still live and still displays that conversation, VellumPix reuses the same tab; if the target was closed, disappeared with a browser restart, or now displays another conversation, it opens a fresh tab and resumes the saved URL. Thread browser runs keep the private automation browser alive so the target remains reusable.
+
+One browser run may control a thread at a time. A cross-process lock rejects a second CLI or MCP run with the active Session ID instead of letting two prompts race in one page. Different threads can still use separate tabs concurrently. The newest-to-oldest recovery scan keeps a transient failed run from hiding an earlier usable conversation. Archived threads reject new runs until reactivated.
 
 Use separate threads for parallel creative directions. Resuming an older session inside one ChatGPT conversation is not a true branch because the web conversation still contains its later turns.
 

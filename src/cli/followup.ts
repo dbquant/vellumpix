@@ -91,7 +91,8 @@ export async function resolveBrowserFollowupReference(
     model,
     browserConfig: {
       ...parentBrowserConfig,
-      browserTabRef: null,
+      browserTabRef: metadata.browser?.runtime?.chromeTargetId ?? null,
+      browserTabRefPolicy: metadata.browser?.runtime?.chromeTargetId ? "prefer" : "strict",
       resumeConversationUrl,
       researchMode: "off",
       archiveConversations: "never",

@@ -10,3 +10,4 @@
 - 适配 ChatGPT 新版生图 DOM，支持图片回复识别、下载，以及文稿会话续聊。
 - 新增持久化 Thread 任务线：CLI 与 MCP 均可把多轮生图/文稿 Session 映射到同一 ChatGPT 会话，支持历史查询、跨调用恢复、标签检索及归档。
 - 新增 Windows PowerShell 同会话多轮生图测试脚本，可脱离 Codex 直接验证会话复用、Session 父子链与图片产物完整性，并提供不联网、不提交请求的 `-PlanOnly` 模式。
+- 持久化 Thread 现在优先复用仍指向同一 ChatGPT 会话的 Edge/Chrome 标签页，失效时安全新建；新增跨进程 Thread 独占锁，并支持在续聊时正确应用 `noFocus` 等当前浏览器设置。
