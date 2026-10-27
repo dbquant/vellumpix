@@ -13,6 +13,8 @@ This is the curated cheatsheet. The authoritative source is always `vellumpix --
 | `vellumpix status`                | List recent sessions (see [Sessions](sessions.md)).                |
 | `vellumpix session <id>`          | Replay or block on a stored session.                               |
 | `vellumpix restart <id>`          | Re-run with the same prompt + files.                               |
+| `vellumpix thread list`           | List durable task lines and their ChatGPT conversation mappings.   |
+| `vellumpix thread show <id>`      | Show one thread's sessions, image count, and conversation URL.     |
 | `vellumpix docs check`            | Check documented flags against CLI help metadata.                  |
 | `vellumpix serve`                 | Run the remote browser host (see [Browser Mode](browser-mode.md)). |
 | `vellumpix bridge claude-config`  | Emit a `.mcp.json` for Claude Code (see [MCP](mcp.md)).            |
@@ -29,6 +31,7 @@ This is the curated cheatsheet. The authoritative source is always `vellumpix --
 | `-m, --model <name>`              | Single model. See [Mythical Pro Agents](mythical-pro-agents.md).                                                                    |
 | `--models <list>`                 | Comma-separated multi-model run (API only).                                                                                         |
 | `--slug <name>`                   | Stable session slug.                                                                                                                |
+| `--thread <id>`                   | Attach to a durable task line and resume its latest recoverable ChatGPT conversation.                                               |
 | `--render`                        | Print the assembled bundle to stdout.                                                                                               |
 | `--copy`                          | Copy the bundle to the clipboard.                                                                                                   |
 | `--write-output <path>`           | Save the final answer to a file; multi-model runs add per-model files plus `<stem>.vellumpix.json`.                                 |
@@ -42,6 +45,10 @@ This is the curated cheatsheet. The authoritative source is always `vellumpix --
 | ------------------------------- | ----------------------------------------------------------------------- |
 | `--followup <id\|slug\|resp_…>` | Continue a saved ChatGPT browser or OpenAI/Azure Responses API session. |
 | `--followup-model <model>`      | Pick API lineage when the parent used `--models`.                       |
+
+Use `vellumpix thread create <id> --title <title> [--tag <tags...>]` to create a named task line. `thread archive` hides one without deleting sessions or ChatGPT history; `thread activate` restores it. Distinct threads can run concurrently. Keep one thread linear—create another thread when two creative directions must not share later conversation history.
+
+Adopt an older session with `vellumpix thread attach <id> <session>`; VellumPix follows its stored parent links and imports the complete lineage from root to the selected session.
 
 ## Run control
 

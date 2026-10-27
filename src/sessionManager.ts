@@ -281,6 +281,8 @@ export interface StoredRunOptions {
   followupSessionId?: string;
   /** Optional model selector used with --followup-model for multi-model parent sessions. */
   followupModel?: string;
+  /** Stable task-line identifier used to group sessions that share one workflow. */
+  threadId?: string;
   maxInput?: number;
   system?: string;
   maxOutput?: number;
@@ -769,6 +771,7 @@ export async function initializeSession(
       previousResponseId: options.previousResponseId,
       followupSessionId: options.followupSessionId,
       followupModel: options.followupModel,
+      threadId: options.threadId,
       effectiveModelId: options.effectiveModelId,
       modelOverrides: options.modelOverrides,
       maxInput: options.maxInput,

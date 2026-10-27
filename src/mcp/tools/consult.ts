@@ -43,6 +43,9 @@ import { normalizeThinkingTimeLevel } from "../../vellumpix/thinkingTime.js";
 import type { ThinkingTimeLevel } from "../../vellumpix/types.js";
 import { launchDetachedSession } from "../../cli/detachedSession.js";
 import { buildSessionLifecycle } from "../../cli/sessionLifecycle.js";
+import { resolveBrowserFollowupReference } from "../../cli/followup.js";
+import { resolveThreadResumeSessionId } from "../../threadSummary.js";
+import { threadStore } from "../../threadStore.js";
 
 // Shared fields are composed into explicit schemas when registering tools.
 const consultInputShape = {
@@ -168,6 +171,18 @@ const consultInputShape = {
     .string()
     .optional()
     .describe("Optional human-friendly session id (used for later `vellumpix sessions` lookups)."),
+  threadId: z
+    .string()
+    .optional()
+    .describe(
+      "Durable task thread id. An empty thread starts a new ChatGPT conversation; an existing thread resumes its latest saved conversation and appends this session.",
+    ),
+  resumeSessionId: z
+    .string()
+    .optional()
+    .describe(
+      "Resume one historical ChatGPT browser session directly. Cannot be combined with threadId.",
+    ),
 } satisfies z.ZodRawShape;
 
 export const consultModelSummaryShape = z.object({
@@ -245,6 +260,7 @@ const consultDryRunResolvedShape = z.object({
 
 export const consultOutputShape = {
   sessionId: z.string().optional(),
+  threadId: z.string().optional(),
   status: z.string(),
   output: z.string(),
   dryRun: z.boolean().optional(),
@@ -587,7 +603,15 @@ export async function runConsultTool(
     waitForCompletion = true,
     dryRun,
     slug,
+    threadId,
+    resumeSessionId,
   } = parsedInput;
+  if (threadId && resumeSessionId) {
+    return {
+      isError: true,
+      content: textContent("threadId cannot be combined with resumeSessionId."),
+    };
+  }
   const { config: userConfig } = await loadUserConfig();
   let runOptions: RunVellumPixOptions;
   let resolvedEngine: EngineMode;
@@ -619,22 +643,90 @@ export async function runConsultTool(
     requestLog(level, { text, bytes: Buffer.byteLength(text, "utf8") }).catch(() => {});
 
   const resolvedRemote = resolveRemoteServiceConfig({ userConfig, env: process.env });
+  let activeThreadId: string | undefined;
+  let resumeReference = resumeSessionId;
+  if (threadId) {
+    const thread = await threadStore.readThread(threadId);
+    if (!thread) {
+      return {
+        isError: true,
+        content: textContent(
+          `Thread "${threadId}" not found. Create it first with the threads tool (action=create).`,
+        ),
+      };
+    }
+    if (thread.status === "archived") {
+      return {
+        isError: true,
+        content: textContent(
+          `Thread "${thread.id}" is archived. Reactivate it with the threads tool before resuming.`,
+        ),
+      };
+    }
+    activeThreadId = thread.id;
+    resumeReference = await resolveThreadResumeSessionId(thread, sessionStore);
+    if (!resumeReference && resolvedEngine !== "browser") {
+      return {
+        isError: true,
+        content: textContent(
+          `Thread "${thread.id}" is empty. Start it with engine:"browser" so it can capture a ChatGPT conversation.`,
+        ),
+      };
+    }
+  }
+
+  let browserFollowup: Awaited<ReturnType<typeof resolveBrowserFollowupReference>> = null;
+  if (resumeReference) {
+    if (models && models.length > 0) {
+      return {
+        isError: true,
+        content: textContent("Historical browser resume cannot be combined with models."),
+      };
+    }
+    try {
+      browserFollowup = await resolveBrowserFollowupReference(resumeReference, sessionStore);
+    } catch (error) {
+      return {
+        isError: true,
+        content: textContent(error instanceof Error ? error.message : String(error)),
+      };
+    }
+    if (!browserFollowup) {
+      return {
+        isError: true,
+        content: textContent(
+          `Session "${resumeReference}" is not a resumable ChatGPT browser session.`,
+        ),
+      };
+    }
+    resolvedEngine = "browser";
+    runOptions = {
+      ...runOptions,
+      model: browserFollowup.model,
+      models: undefined,
+      effectiveModelId: browserFollowup.model,
+      browserResumeConversationUrl: browserFollowup.resumeConversationUrl,
+    };
+  }
+
   let browserConfig: BrowserSessionConfig | undefined;
   if (resolvedEngine === "browser") {
-    browserConfig = buildConsultBrowserConfig({
-      userConfig,
-      env: process.env,
-      runModel: runOptions.model,
-      inputModel: model,
-      browserModelLabel,
-      browserThinkingTime,
-      browserModelStrategy,
-      browserResearchMode,
-      browserArchive,
-      browserKeepBrowser,
-      browserProvider,
-      browserFallbackProvider,
-    });
+    browserConfig = browserFollowup
+      ? browserFollowup.browserConfig
+      : buildConsultBrowserConfig({
+          userConfig,
+          env: process.env,
+          runModel: runOptions.model,
+          inputModel: model,
+          browserModelLabel,
+          browserThinkingTime,
+          browserModelStrategy,
+          browserResearchMode,
+          browserArchive,
+          browserKeepBrowser,
+          browserProvider,
+          browserFallbackProvider,
+        });
   }
 
   if (dryRun) {
@@ -728,6 +820,9 @@ export async function runConsultTool(
       ...runOptions,
       mode: resolvedEngine,
       slug,
+      threadId: activeThreadId,
+      followupSessionId: browserFollowup?.sessionId,
+      browserResumeConversationUrl: browserFollowup?.resumeConversationUrl,
       browserConfig,
       waitPreference: waitForCompletion,
     },
@@ -761,6 +856,7 @@ export async function runConsultTool(
         ),
         structuredContent: {
           sessionId: sessionMeta.id,
+          threadId: activeThreadId,
           status: started.status,
           output: "",
           models: summarizeModelRunsForConsult(started.models),
@@ -838,6 +934,7 @@ export async function runConsultTool(
       content: textContent([summary, logTail || "(log empty)"].join("\n").trim()),
       structuredContent: {
         sessionId: sessionMeta.id,
+        threadId: activeThreadId,
         status: finalMeta.status,
         output: logTail ?? "",
         models: modelsSummary,

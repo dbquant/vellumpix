@@ -7,6 +7,7 @@ import { sessionStore, type SessionModelRun } from "../../src/sessionStore.js";
 import { applyConsultPreset } from "../../src/mcp/consultPresets.ts";
 import { consultInputSchema } from "../../src/mcp/types.ts";
 import { setVellumPixHomeDirOverrideForTest } from "../../src/vellumpixHome.js";
+import { threadStore } from "../../src/threadStore.js";
 import {
   buildConsultBrowserConfig,
   buildConsultDryRunResolved,
@@ -100,6 +101,59 @@ describe("summarizeModelRunsForConsult", () => {
     } finally {
       if (previousNoDetach === undefined) delete process.env.VELLUMPIX_NO_DETACH;
       else process.env.VELLUMPIX_NO_DETACH = previousNoDetach;
+    }
+  });
+
+  test("resolves a durable thread to its latest ChatGPT conversation", async () => {
+    const home = mkdtempSync(path.join(tmpdir(), "vellumpix-thread-resume-"));
+    setVellumPixHomeDirOverrideForTest(home);
+    try {
+      const thread = await threadStore.createThread({
+        id: "campaign-key-visual",
+        title: "Campaign key visual",
+      });
+      const parent = await sessionStore.createSession(
+        {
+          prompt: "Create the first image",
+          model: "gpt-5.5-pro",
+          mode: "browser",
+          threadId: thread.id,
+          browserConfig: { url: "https://chatgpt.com/", manualLogin: true },
+        },
+        process.cwd(),
+      );
+      await sessionStore.updateSession(parent.id, {
+        status: "completed",
+        browser: {
+          config: parent.browser?.config,
+          runtime: {
+            conversationId: "thread-conversation",
+            tabUrl: "https://chatgpt.com/c/thread-conversation",
+          },
+        },
+      });
+
+      const before = await sessionStore.listSessions();
+      const result = await runConsultTool(
+        {
+          prompt: "Make a rainy-night revision",
+          files: [],
+          engine: "browser",
+          threadId: thread.id,
+          dryRun: true,
+        },
+        { log: vi.fn(async () => undefined) },
+      );
+
+      expect(result.isError).not.toBe(true);
+      expect(result.structuredContent).toMatchObject({
+        status: "dry-run",
+        resolved: { resolvedEngine: "browser" },
+      });
+      expect(await sessionStore.listSessions()).toHaveLength(before.length);
+    } finally {
+      setVellumPixHomeDirOverrideForTest(null);
+      rmSync(home, { recursive: true, force: true });
     }
   });
 

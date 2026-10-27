@@ -20,6 +20,7 @@ import {
   getSessionPaths,
   getSessionsDir,
 } from "./sessionManager.js";
+import { threadStore } from "./threadStore.js";
 type InitializeSessionOptionsType = Parameters<typeof initializeSession>[0];
 
 export interface SessionStore {
@@ -61,13 +62,20 @@ class FileSessionStore implements SessionStore {
     return ensureSessionStorage();
   }
 
-  createSession(
+  async createSession(
     options: InitializeSessionOptionsType,
     cwd: string,
     notifications?: SessionNotifications,
     baseSlugOverride?: string,
   ): Promise<SessionMetadata> {
-    return initializeSession(options, cwd, notifications, baseSlugOverride);
+    if (options.threadId) {
+      await threadStore.ensureThread(options.threadId);
+    }
+    const metadata = await initializeSession(options, cwd, notifications, baseSlugOverride);
+    if (options.threadId) {
+      await threadStore.attachSession(options.threadId, metadata.id);
+    }
+    return metadata;
   }
 
   readSession(sessionId: string): Promise<SessionMetadata | null> {

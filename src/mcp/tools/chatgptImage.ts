@@ -65,6 +65,14 @@ const chatGptImageInputShape = {
     .optional()
     .describe("Preview the resolved image run without touching the browser."),
   slug: z.string().optional().describe("Optional human-friendly session id."),
+  threadId: z
+    .string()
+    .optional()
+    .describe("Durable image task thread to start or resume across MCP calls."),
+  resumeSessionId: z
+    .string()
+    .optional()
+    .describe("Resume one historical ChatGPT image session directly."),
 } satisfies z.ZodRawShape;
 
 const chatGptImageOutputShape = {
@@ -118,6 +126,8 @@ export function buildChatGptImageConsultInput(input: ChatGptImageInput): Consult
     generateImage: outputPath,
     dryRun: input.dryRun,
     slug: input.slug,
+    threadId: input.threadId,
+    resumeSessionId: input.resumeSessionId,
   };
 }
 

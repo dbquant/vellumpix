@@ -83,6 +83,17 @@ vellumpix status --hours 72
 
 Use `vellumpix session` to reattach to a run, `vellumpix restart` to repeat one, or `--followup` to continue a supported API or ChatGPT conversation with more context. See [sessions](docs/sessions.md) and [follow-ups](docs/followup.md) for the lifecycle and provider limits.
 
+For long-lived image or writing work, group runs into a durable task thread. The first run starts a ChatGPT conversation; later runs with the same thread id reopen the latest recoverable conversation automatically:
+
+```bash
+vellumpix thread create brand-winter-canal --title "Brand winter canal" --tag image campaign
+vellumpix --thread brand-winter-canal --engine browser -p "Create the first key visual"
+vellumpix --thread brand-winter-canal -p "Keep the composition and change it to a rainy night"
+vellumpix thread show brand-winter-canal
+```
+
+Threads are stored under `~/.vellumpix/threads`; each record keeps the root, head, and complete session sequence while the sessions retain the ChatGPT conversation id, URL, transcript, and generated artifacts.
+
 ## Multiple models and automation
 
 `--models` runs an API panel and records per-model usage, cost, output, and partial failures in one session. `vellumpix doctor --providers` inspects readiness for the selected models without exposing credentials. The [multi-model guide](docs/multimodel.md) covers routing and output files.

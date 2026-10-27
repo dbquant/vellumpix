@@ -40,6 +40,7 @@ describe("chatgpt_image MCP tool", () => {
       outputPath: "/tmp/screenshot-bg.png",
       aspectRatio: "9:16",
       browserThinkingTime: "extended",
+      threadId: "campaign-key-visual",
     });
 
     expect(input).toMatchObject({
@@ -48,6 +49,7 @@ describe("chatgpt_image MCP tool", () => {
       files: ["reference.png"],
       browserAttachments: "always",
       browserThinkingTime: "extended",
+      threadId: "campaign-key-visual",
     });
     expect(input.prompt).toContain("aspect ratio 9:16");
   });

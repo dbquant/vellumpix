@@ -93,6 +93,9 @@ import {
 } from "../src/cli/perfTrace.js";
 import { resolveBrowserFollowupReference } from "../src/cli/followup.js";
 import { BrowserRunCancelledError } from "../src/vellumpix/errors.js";
+import { registerThreadCommands } from "../src/cli/threadCommand.js";
+import { resolveThreadResumeSessionId } from "../src/threadSummary.js";
+import { threadStore } from "../src/threadStore.js";
 
 interface CliOptions extends OptionValues {
   prompt?: string;
@@ -123,6 +126,7 @@ interface CliOptions extends OptionValues {
   execSession?: string;
   followup?: string;
   followupModel?: string;
+  thread?: string;
   notify?: boolean;
   notifySound?: boolean;
   renderMarkdown?: boolean;
@@ -409,6 +413,10 @@ program
   .option(
     "--followup-model <model>",
     "For multi-model API sessions, choose which model response to continue from.",
+  )
+  .option(
+    "--thread <id>",
+    "Attach this run to a durable task thread; resume its latest ChatGPT conversation when available.",
   )
   .option(
     "-f, --file <paths...>",
@@ -1275,6 +1283,8 @@ docsCommand
     }
     process.exitCode = result.issues.length > 0 ? 1 : 0;
   });
+
+registerThreadCommands(program);
 
 program
   .command("session [id]")
@@ -2238,6 +2248,30 @@ async function runRootCommand(options: CliOptions): Promise<void> {
     options.browserAttachmentTimeout = attachmentTimeoutEnv;
   }
 
+  let activeThreadId: string | undefined;
+  if (options.thread) {
+    if (options.followup) {
+      throw new Error(
+        "--thread cannot be combined with --followup; a thread resumes its own latest session.",
+      );
+    }
+    const thread = await threadStore.ensureThread(options.thread);
+    if (thread.status === "archived") {
+      throw new Error(
+        `Thread "${thread.id}" is archived. Run "vellumpix thread activate ${thread.id}" before resuming it.`,
+      );
+    }
+    activeThreadId = thread.id;
+    const resumeSessionId = await resolveThreadResumeSessionId(thread, sessionStore);
+    if (resumeSessionId) {
+      options.followup = resumeSessionId;
+    } else if (engine !== "browser") {
+      throw new Error(
+        `Thread "${thread.id}" is empty. Start it with --engine browser so it can capture a ChatGPT conversation.`,
+      );
+    }
+  }
+
   let browserFollowup: Awaited<ReturnType<typeof resolveBrowserFollowupReference>> = null;
   if (options.followup) {
     if (normalizedMultiModels.length > 0) {
@@ -2481,6 +2515,7 @@ async function runRootCommand(options: CliOptions): Promise<void> {
       browserConfig,
       followupSessionId: resolvedOptions.followupSessionId,
       followupModel: resolvedOptions.followupModel,
+      threadId: activeThreadId,
       browserResumeConversationUrl: resolvedOptions.browserResumeConversationUrl,
       waitPreference,
     },

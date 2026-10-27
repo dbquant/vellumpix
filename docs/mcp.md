@@ -12,7 +12,7 @@ Claude Code can call `vellumpix-mcp` and ask a subscription-backed ChatGPT brows
 
 ### `chatgpt_image`
 
-- Inputs: `prompt` (required), `files?: string[]` for reference images/assets, `outputPath?: string`, `aspectRatio?: string`, `model?: string`, plus browser controls such as `browserThinkingTime`, `browserModelLabel`, `browserModelStrategy`, `browserArchive`, `browserKeepBrowser`, and `dryRun`.
+- Inputs: `prompt` (required), `files?: string[]` for reference images/assets, `outputPath?: string`, `aspectRatio?: string`, `model?: string`, `threadId?: string`, `resumeSessionId?: string`, plus browser controls such as `browserThinkingTime`, `browserModelLabel`, `browserModelStrategy`, `browserArchive`, `browserKeepBrowser`, and `dryRun`.
 - Behavior: convenience wrapper for ChatGPT browser image generation. It forces `engine:"browser"`, sets `generateImage` for the existing image-aware wait/download path, and defaults `browserAttachments:"always"` when files are provided so reference images are uploaded instead of pasted.
 - Output: returns the normal session metadata plus `requestedOutputPath` and `structuredContent.images[]` with saved local paths, MIME type, size, dimensions, and ChatGPT file id when available. Signed source/download URLs are not returned. If `outputPath` is omitted, VellumPix picks a unique file under `VELLUMPIX_HOME_DIR/generated/`.
 - Output path safety: agent-supplied `outputPath` must resolve under `VELLUMPIX_HOME_DIR/generated` by default; traversal and symlink escapes are rejected. This keeps MCP writes away from VellumPix config, session metadata, and browser profile state. Set `VELLUMPIX_MCP_ALLOW_EXTERNAL_OUTPUT=1` to allow writing elsewhere as an explicit operator decision. Omit `outputPath` to use the safe default.
@@ -28,7 +28,7 @@ Claude Code can call `vellumpix-mcp` and ask a subscription-backed ChatGPT brows
 
 ### `consult`
 
-- Inputs: `prompt` (required), `files?: string[]` (globs), `model?: string` (defaults to CLI), `engine?: "api" | "browser"` (optional; VellumPix follows CLI defaults: `VELLUMPIX_ENGINE` and the effective config first, then API when `OPENAI_API_KEY` is set, otherwise browser), `waitForCompletion?: boolean`, `slug?: string`.
+- Inputs: `prompt` (required), `files?: string[]` (globs), `model?: string` (defaults to CLI), `engine?: "api" | "browser"` (optional; VellumPix follows CLI defaults: `VELLUMPIX_ENGINE` and the effective config first, then API when `OPENAI_API_KEY` is set, otherwise browser), `waitForCompletion?: boolean`, `slug?: string`, `threadId?: string`, `resumeSessionId?: string`.
 - Presets: `preset?: "chatgpt-pro-heavy"` applies browser mode + current Pro model alias + extended thinking, unless the request overrides those fields.
 - Browser-only extras: `browserAttachments?: "auto"|"never"|"always"`, `browserBundleFiles?: boolean`, `browserBundleFormat?: "auto"|"text"|"zip"`, `browserThinkingTime?: "light"|"standard"|"extended"|"extra-high"|"pro"|"heavy"`, `browserResearchMode?: "deep"`, `browserFollowUps?: string[]`, `browserArchive?: "auto"|"always"|"never"`, `browserKeepBrowser?: boolean`, `browserModelLabel?: string`, `browserModelStrategy?: "select"|"current"|"ignore"`, `generateImage?: string`, `outputPath?: string`.
 - Browser file uploads: one text/source file stays native, while multiple text/source files default to one bundle. `browserBundleFormat:"auto"` keeps flattened text for text-only uploads and uses ZIP when raw files are present. Set `browserBundleFormat:"zip"` for a filesystem tree, or `browserBundleFiles:true` to force one all-file bundle.
@@ -38,6 +38,7 @@ Claude Code can call `vellumpix-mcp` and ask a subscription-backed ChatGPT brows
 - Logging: emits MCP logs (`info` per line, `debug` for streamed chunks with byte sizes). If browser prerequisites are missing, returns an error payload instead of running.
 - Research mode: set `browserResearchMode:"deep"` for broad public-web research and cited reports. Use normal browser runs with `gpt-5.5-pro` + `browserThinkingTime:"extended"` for legacy Pro Extended code review, `gpt-5.6-sol` + `browserThinkingTime:"extra-high"` for Extra High, or `gpt-5.6-sol` + `browserThinkingTime:"pro"` when you explicitly want the current Pro effort tier.
 - Multi-turn consults: set `browserFollowUps:["Challenge your recommendation", "Give the final decision"]` to keep one ChatGPT browser conversation open and ask sequential follow-up prompts. Use one-shot calls for narrow bugs and exact file-set reviews; use multi-turn for ambiguous architecture/product decisions where a challenge pass and final recommendation are useful; use Deep Research for broad public-web work with citations. VellumPix never invents follow-ups automatically.
+- Cross-call continuation: pass `threadId` to start or resume a durable task line, or `resumeSessionId` to continue one saved ChatGPT session directly. A thread must first be created with the `threads` tool. The resulting `structuredContent` returns both `threadId` and `sessionId`.
 - Archiving: set `browserArchive:"auto"|"always"|"never"` to control ChatGPT conversation cleanup. `auto` archives only successful browser one-shots after local artifacts are saved, and skips project, Deep Research, multi-turn, failed, and incomplete sessions.
 - Web Search: set `engine:"browser", browserResearchMode:"search"` to explicitly select the English ChatGPT Web Search control. Selection and the staged prompt must be verified before submission. This pilot uses locally controlled Chrome, including attach-running/direct remote Chrome; remote browser-service execution is refused until capability negotiation is available.
 - ChatGPT image generation: set `engine:"browser"` and `generateImage` to a path under `VELLUMPIX_HOME_DIR/generated` to use the same image-aware wait/download path as CLI `--generate-image`. Saved files are returned in `structuredContent.images` and recorded as session artifacts; multiple images save as numbered siblings. Agent-supplied `generateImage` / `outputPath` are constrained to that generated-output directory by default (set `VELLUMPIX_MCP_ALLOW_EXTERNAL_OUTPUT=1` to allow external paths).
@@ -80,6 +81,13 @@ The MCP response includes `structuredContent.images[]` with the saved file path,
 
 - Inputs: `{id?, hours?, limit?, includeAll?, detail?}` mirroring `vellumpix status` / `vellumpix session`.
 - Behavior: without `id`, returns a bounded list of recent sessions. With `id`/slug, returns a summary row; set `detail: true` to fetch full metadata, log, and stored request body.
+
+### `threads`
+
+- Inputs: `action: "list"|"get"|"create"|"attach"|"archive"|"activate"`, plus `id?`, `title?`, `tags?`, `sessionId?`, `query?`, and `includeArchived?`.
+- Behavior: manages durable task lines shared by CLI and MCP. Returned records include the root/head sessions, ordered session ids, latest recoverable ChatGPT conversation id/URL, accumulated generated-image count, and last prompt preview.
+- Typical flow: call `threads` with `action:"create"`, then pass the returned id to `consult.threadId` or `chatgpt_image.threadId` on every revision.
+- Historical import: call `threads` with `action:"attach"`, the thread `id`, and a `sessionId`; the tool adopts that session and its complete stored parent lineage.
 
 ### `wait`
 

@@ -10,6 +10,7 @@ import { registerConsultTool } from "./tools/consult.js";
 import { registerProjectSourcesTool } from "./tools/projectSources.js";
 import { registerSessionsTool } from "./tools/sessions.js";
 import { registerWaitTool } from "./tools/wait.js";
+import { registerThreadsTool } from "./tools/threads.js";
 import { registerSessionResources } from "./tools/sessionResources.js";
 import { MCP_SERVER_NAME } from "../brand.js";
 
@@ -30,6 +31,7 @@ export function createMcpServer(): McpServer {
   registerChatGptImageTool(server);
   registerProjectSourcesTool(server);
   registerSessionsTool(server);
+  registerThreadsTool(server);
   registerWaitTool(server);
   registerSessionResources(server);
   return server;

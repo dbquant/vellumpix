@@ -36,6 +36,7 @@ const sessionsOutputShape = {
         status: z.string(),
         model: z.string().optional(),
         mode: z.string().optional(),
+        threadId: z.string().optional(),
       }),
     )
     .optional(),
@@ -88,6 +89,7 @@ export function registerSessionsTool(server: McpServer): void {
                   status: metadata.status,
                   model: metadata.model,
                   mode: metadata.mode,
+                  threadId: metadata.options.threadId,
                 },
               ],
               total: 1,
@@ -132,6 +134,7 @@ export function registerSessionsTool(server: McpServer): void {
             status: entry.status,
             model: entry.model,
             mode: entry.mode,
+            threadId: entry.options.threadId,
           })),
           total,
           truncated,

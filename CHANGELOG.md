@@ -8,3 +8,4 @@
 - 环境变量统一使用 `VELLUMPIX_*` 前缀。
 - Windows 默认使用隔离的 Edge 自动化 Profile，并在不可用时回退到 Chrome；macOS 与 Linux 优先使用 Chrome。
 - 适配 ChatGPT 新版生图 DOM，支持图片回复识别、下载，以及文稿会话续聊。
+- 新增持久化 Thread 任务线：CLI 与 MCP 均可把多轮生图/文稿 Session 映射到同一 ChatGPT 会话，支持历史查询、跨调用恢复、标签检索及归档。

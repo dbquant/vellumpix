@@ -115,6 +115,28 @@ vellumpix --followup <id> -p "Re-evaluate with these files" \
 
 Browser followup reopens the exact saved conversation and inherits its browser configuration and model. For multi-model API parents, pick the lineage with `--followup-model`. See [Followup](followup.md) for the full flow and the formats `--followup` accepts (session ids, slugs, or `resp_…` response ids).
 
+## Durable task threads
+
+Sessions are individual runs; threads are stable task lines that survive browser restarts and long gaps between revisions. A thread stores its root session, latest session, and ordered session history under `~/.vellumpix/threads/<id>/thread.json`. The linked sessions remain the source of truth for the ChatGPT conversation id/URL, transcripts, and generated artifacts.
+
+```bash
+vellumpix thread create brand-winter-canal --title "Brand winter canal" --tag image campaign
+vellumpix --thread brand-winter-canal --engine browser -p "Create the first key visual"
+vellumpix --thread brand-winter-canal -p "Keep the layout and make it a rainy night"
+vellumpix thread list
+vellumpix thread show brand-winter-canal
+```
+
+`--thread` starts a new conversation when the thread is empty. Otherwise it scans newest-to-oldest for a recoverable saved ChatGPT conversation and creates a child session from it. This fallback keeps a transient failed run from hiding an earlier usable conversation. Archived threads reject new runs until reactivated.
+
+Use separate threads for parallel creative directions. Resuming an older session inside one ChatGPT conversation is not a true branch because the web conversation still contains its later turns.
+
+To bring an existing history under thread management, attach its latest session. VellumPix imports the saved parent chain in root-to-head order and records the thread id back into every adopted session:
+
+```bash
+vellumpix thread attach brand-winter-canal existing-rainy-night-session
+```
+
 ## Background mode
 
 Force a Responses API run into background mode (create + retrieve) regardless of model defaults:

@@ -45,6 +45,8 @@ export const consultInputSchema = z
     dryRun: z.boolean().optional(),
     search: z.boolean().optional(),
     slug: z.string().optional(),
+    threadId: z.string().optional(),
+    resumeSessionId: z.string().optional(),
   })
   .strict();
 
