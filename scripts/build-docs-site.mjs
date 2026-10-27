@@ -12,7 +12,7 @@ const outDir = path.join(root, "dist", "docs-site");
 const repoBase = "https://github.com/dbquant/vellumpix";
 const repoEditBase = `${repoBase}/edit/main/docs`;
 const cname = readCname();
-const siteBase = cname ? `https://${cname}` : "";
+const siteBase = cname ? `https://${cname}` : "https://dbquant.github.io/vellumpix";
 
 const productName = "vellumpix";
 const productTagline = "Whisper your prompt to a mythical pro agent";

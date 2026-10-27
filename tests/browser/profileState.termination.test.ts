@@ -44,9 +44,18 @@ test.each(["failed", "empty"])(
     await expect(terminateRecordedChromeForProfile(profile)).resolves.toBe(true);
     const commandQueries = query.mock.calls.filter(([executable]) => executable !== "taskkill.exe");
     expect(commandQueries).toHaveLength(2);
-    expect(String(commandQueries[0]?.[1])).toContain(
-      "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()",
-    );
+    if (process.platform === "win32") {
+      expect(commandQueries[0]?.[0]).toBe("powershell.exe");
+      expect(String(commandQueries[0]?.[1])).toContain(
+        "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()",
+      );
+    } else {
+      expect(commandQueries[0]).toEqual([
+        "ps",
+        ["-p", String(pid), "-o", "command="],
+        expect.any(Object),
+      ]);
+    }
   },
 );
 
