@@ -16,6 +16,43 @@ and run the live API suite before shipping major transport changes.
 
 ## Test Cases
 
+### Same-conversation image revisions (Windows PowerShell)
+
+Use `scripts/test-chatgpt-image-thread.ps1` to exercise several image revisions
+against one durable VellumPix Thread. The script creates a fresh Thread by
+default, sends one initial image prompt followed by three revision prompts, and
+checks that every completed Session has the same ChatGPT `conversationId`, a
+continuous `followupSessionId` chain, `promptSubmitted=true`, and a valid saved
+PNG/JPEG/WebP artifact. It writes the images plus `summary.json` under
+`test-output/`.
+
+Preview the complete plan without opening a browser or submitting anything:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-chatgpt-image-thread.ps1 -PlanOnly
+```
+
+Run the live browser test after signing into the isolated VellumPix browser
+profile:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-chatgpt-image-thread.ps1
+```
+
+Custom revision prompts can be supplied as a PowerShell array. A previous
+Thread is modified only when both its exact ID and `-ResumeExisting` are given:
+
+```powershell
+.\scripts\test-chatgpt-image-thread.ps1 `
+  -ThreadId "product-poster-a" `
+  -ResumeExisting `
+  -RevisionPrompt @("Keep the composition; change the background to blue.", "Keep everything else; make the lighting softer.")
+```
+
+This bypasses Codex and therefore consumes no Codex quota. The normal (non
+`-PlanOnly`) run is not network-offline: it controls ChatGPT in the browser and
+consumes the signed-in account's web image-generation allowance.
+
 ### Assistant response recovery (no login)
 
 Run `pnpm build && node scripts/assistant-runtime-proof.mjs` with Chrome installed (`CHROME_PATH` can select Chromium on Linux). The built CLI exercises stale-answer replacement, delayed recheck recovery, and expired-session errors through both local and remote Chrome runners. Each synthetic consultation submits exactly once and records the expected completed or error session. Use `--captures <directory>` to retain CLI output. These disposable profiles and local pages do not establish signed-in provider behavior.
