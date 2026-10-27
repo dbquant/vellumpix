@@ -25,7 +25,10 @@ checks that every completed Session has the same ChatGPT `conversationId`, a
 continuous `followupSessionId` chain, `promptSubmitted=true`, `noFocus=true`,
 and a valid saved PNG/JPEG/WebP artifact. After the first round, every Session
 must also retain the same Edge/Chrome target id; an unexpected extra tab makes
-the script fail. It writes the images plus `summary.json` under `test-output/`.
+the script fail. When a managed browser is already running, round one must also
+reuse one of its existing browser windows instead of opening a separate window;
+all later rounds must keep that same window id. The script writes the images plus
+`summary.json` under `test-output/`, including target/window reuse evidence.
 
 Preview the complete plan without opening a browser or submitting anything:
 

@@ -101,6 +101,66 @@ function Test-ImageFile {
     return $item.Length
 }
 
+function Get-BrowserWindowSnapshot {
+    param(
+        [Parameter(Mandatory = $true)][string]$BrowserHost,
+        [Parameter(Mandatory = $true)][int]$BrowserPort
+    )
+
+    $inspectorPath = Join-Path $PSScriptRoot "inspect-browser-windows.mjs"
+    if (-not (Test-Path -LiteralPath $inspectorPath -PathType Leaf)) {
+        throw "Browser window inspector was not found: $inspectorPath"
+    }
+
+    $json = & node $inspectorPath --host $BrowserHost --port $BrowserPort
+    if ($LASTEXITCODE -ne 0) {
+        throw "Browser window inspector exited with code $LASTEXITCODE."
+    }
+    return ($json -join "`n") | ConvertFrom-Json
+}
+
+function Find-LiveBrowserEndpoint {
+    param([Parameter(Mandatory = $true)][string]$VellumPixHome)
+
+    $sessionsRoot = Join-Path $VellumPixHome "sessions"
+    if (-not (Test-Path -LiteralPath $sessionsRoot -PathType Container)) {
+        return $null
+    }
+
+    $checkedEndpoints = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $metadataFiles = @(Get-ChildItem -LiteralPath $sessionsRoot -Filter "meta.json" -Recurse -File -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending)
+    foreach ($metadataFile in $metadataFiles) {
+        try {
+            $metadata = Read-JsonFile -Path $metadataFile.FullName
+            $runtime = $metadata.browser.runtime
+            $browserPortValue = Get-OptionalProperty -InputObject $runtime -Name "chromePort"
+            if ($null -eq $browserPortValue) {
+                continue
+            }
+            $browserHostValue = [string](Get-OptionalProperty -InputObject $runtime -Name "chromeHost")
+            if ([string]::IsNullOrWhiteSpace($browserHostValue)) {
+                $browserHostValue = "127.0.0.1"
+            }
+            $endpointKey = "${browserHostValue}:$browserPortValue"
+            if (-not $checkedEndpoints.Add($endpointKey)) {
+                continue
+            }
+            $snapshot = Get-BrowserWindowSnapshot -BrowserHost $browserHostValue -BrowserPort ([int]$browserPortValue)
+            if ($snapshot.available -eq $true) {
+                return [pscustomobject]@{
+                    Host = $browserHostValue
+                    Port = [int]$browserPortValue
+                    Snapshot = $snapshot
+                }
+            }
+        }
+        catch {
+            continue
+        }
+    }
+    return $null
+}
+
 Assert-ThreadId -Value $ThreadId
 if ([string]::IsNullOrWhiteSpace($InitialPrompt)) {
     throw "InitialPrompt cannot be empty."
@@ -121,7 +181,7 @@ $plannedRounds = for ($index = 0; $index -lt $allPrompts.Count; $index++) {
 
 if ($PlanOnly) {
     Write-Host "PLAN ONLY - no browser will open and no prompt will be submitted." -ForegroundColor Yellow
-    Write-Host "Browser mode: headful no-focus; reuse one target after the first round"
+    Write-Host "Browser mode: headful no-focus; reuse an existing browser window when one is live, then reuse one target after the first round"
     Write-Host "Thread: $ThreadId"
     Write-Host "Output: $outputRoot"
     foreach ($round in $plannedRounds) {
@@ -136,6 +196,12 @@ if (-not (Get-Command $VellumPixCommand -ErrorAction SilentlyContinue)) {
 }
 
 $vellumpixHome = Resolve-VellumPixHome
+$baselineEndpoint = Find-LiveBrowserEndpoint -VellumPixHome $vellumpixHome
+$baselineWindowIds = @()
+if ($null -ne $baselineEndpoint) {
+    $baselineWindowIds = @($baselineEndpoint.Snapshot.targets | ForEach-Object { [string]$_.windowId } | Sort-Object -Unique)
+    Write-Host ("Detected {0} existing browser window(s) on {1}:{2}; round 1 must reuse one of them." -f $baselineWindowIds.Count, $baselineEndpoint.Host, $baselineEndpoint.Port) -ForegroundColor DarkCyan
+}
 $threadJsonPath = Join-Path $vellumpixHome ("threads\{0}\thread.json" -f $ThreadId)
 $threadExists = Test-Path -LiteralPath $threadJsonPath -PathType Leaf
 if ($threadExists -and -not $ResumeExisting) {
@@ -160,6 +226,9 @@ if (-not $threadExists) {
 
 $expectedConversationId = $null
 $expectedTargetId = $null
+$expectedWindowId = $null
+$sharedWindowBaselineDetected = $baselineWindowIds.Count -gt 0
+$sharedWindowReuseVerified = $null
 $previousSessionId = $null
 $results = @()
 
@@ -238,6 +307,43 @@ foreach ($round in $plannedRounds) {
         throw "Browser target changed at round $($round.Number): expected '$expectedTargetId', got '$targetId'."
     }
 
+    $browserHost = [string](Get-OptionalProperty -InputObject $meta.browser.runtime -Name "chromeHost")
+    if ([string]::IsNullOrWhiteSpace($browserHost)) {
+        $browserHost = "127.0.0.1"
+    }
+    $browserPort = [int](Get-OptionalProperty -InputObject $meta.browser.runtime -Name "chromePort")
+    $windowSnapshot = Get-BrowserWindowSnapshot -BrowserHost $browserHost -BrowserPort $browserPort
+    if ($windowSnapshot.available -ne $true) {
+        throw "Cannot inspect browser windows after round $($round.Number): $($windowSnapshot.error)"
+    }
+    $targetWindow = @($windowSnapshot.targets | Where-Object { [string]$_.targetId -eq $targetId }) | Select-Object -First 1
+    if ($null -eq $targetWindow) {
+        throw "Browser target '$targetId' is not live after round $($round.Number)."
+    }
+    $windowId = [string]$targetWindow.windowId
+    if ([string]::IsNullOrWhiteSpace($windowId)) {
+        throw "Browser target '$targetId' did not resolve to a browser window after round $($round.Number)."
+    }
+    if ($null -eq $expectedWindowId) {
+        $expectedWindowId = $windowId
+        if ($sharedWindowBaselineDetected) {
+            $sameEndpoint = $browserHost -eq $baselineEndpoint.Host -and $browserPort -eq $baselineEndpoint.Port
+            if (-not $sameEndpoint) {
+                Write-Warning "The browser endpoint changed before round 1; existing-window reuse cannot be verified."
+                $sharedWindowReuseVerified = $null
+            }
+            elseif ($baselineWindowIds -notcontains $windowId) {
+                throw "Round 1 opened browser window '$windowId' instead of reusing an existing window ($($baselineWindowIds -join ', '))."
+            }
+            else {
+                $sharedWindowReuseVerified = $true
+            }
+        }
+    }
+    elseif ($windowId -ne $expectedWindowId) {
+        throw "Browser window changed at round $($round.Number): expected '$expectedWindowId', got '$windowId'."
+    }
+
     $parentSessionId = [string](Get-OptionalProperty -InputObject $meta.options -Name "followupSessionId")
     if ($null -ne $previousSessionId -and $parentSessionId -ne $previousSessionId) {
         throw "Session lineage broke at round $($round.Number): expected parent '$previousSessionId', got '$parentSessionId'."
@@ -255,7 +361,9 @@ foreach ($round in $plannedRounds) {
         parentSessionId = if ([string]::IsNullOrWhiteSpace($parentSessionId)) { $null } else { $parentSessionId }
         conversationId = $conversationId
         browserTargetId = $targetId
+        browserWindowId = $windowId
         targetReused = if ($round.Number -eq 1) { $null } else { $true }
+        windowReused = if ($round.Number -eq 1) { $sharedWindowReuseVerified } else { $true }
         noFocus = $true
         prompt = $round.Prompt
         imagePath = $round.ImagePath
@@ -272,14 +380,18 @@ $summary = [ordered]@{
     threadId = $ThreadId
     conversationId = $expectedConversationId
     browserTargetId = $expectedTargetId
+    browserWindowId = $expectedWindowId
     browserMode = "headful-no-focus"
+    sharedWindowBaselineDetected = $sharedWindowBaselineDetected
+    sharedWindowReuseVerified = $sharedWindowReuseVerified
     outputDirectory = $outputRoot
     rounds = $results
 }
 $summary | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $summaryPath -Encoding UTF8
 
-Write-Host "`nPASS: all rounds used the same ChatGPT conversation and browser target, stayed in no-focus mode, and produced valid image files." -ForegroundColor Green
+Write-Host "`nPASS: all rounds used the same ChatGPT conversation, browser target, and browser window; no-focus mode stayed enabled and every image file was valid." -ForegroundColor Green
 Write-Host "Thread: $ThreadId"
 Write-Host "Conversation: $expectedConversationId"
 Write-Host "Browser target: $expectedTargetId"
+Write-Host "Browser window: $expectedWindowId"
 Write-Host "Summary: $summaryPath"
