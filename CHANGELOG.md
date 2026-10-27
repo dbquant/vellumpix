@@ -13,3 +13,4 @@
 - 持久化 Thread 现在优先复用仍指向同一 ChatGPT 会话的 Edge/Chrome 标签页，失效时安全新建；新增跨进程 Thread 独占锁，并支持在续聊时正确应用 `noFocus` 等当前浏览器设置。
 - 同会话 PowerShell 测试脚本新增 target 复用及 `noFocus` 断言，可直接发现多轮任务意外新增标签页或抢占前台的回归。
 - 新增 Thread 浏览器标签 LRU 缓存：默认仅保留最近 3 个会话 target，空闲 20 分钟自动回收，并保护所有运行中或持锁任务；历史会话仍可通过持久化 URL 恢复。
+- `noFocus` 下的新 Thread 现在复用现有自动化浏览器窗口并创建后台标签页，不再为每条任务线请求独立 Edge/Chrome 窗口。

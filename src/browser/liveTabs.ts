@@ -16,7 +16,7 @@ import { delay } from "./utils.js";
 import {
   connectToRemoteChromeTarget,
   listRemoteChromeTargets,
-  openBackgroundChromeWindow,
+  openBackgroundChromeTab,
 } from "./chromeLifecycle.js";
 
 export const DEFAULT_REMOTE_CHROME_HOST = "127.0.0.1";
@@ -346,7 +346,7 @@ export async function openChatGptTarget(
         await connection.close();
       }
     }
-    if (options.background) return await openBackgroundChromeWindow(host, port, url);
+    if (options.background) return await openBackgroundChromeTab(host, port, url);
     const target = await CDP.New({ host, port, url });
     return target.id;
   } catch (error) {

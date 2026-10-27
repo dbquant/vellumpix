@@ -334,6 +334,8 @@ Use `--browser-max-concurrent-tabs <n>`, `browser.maxConcurrentTabs`, or `VELLUM
 
 Completed durable Threads use a separate warm target cache. VellumPix keeps at most three recent Thread conversation tabs by default, removes duplicate tabs for the same conversation, and expires tabs after 20 minutes of inactivity. Active tab leases, currently locked Threads, and the just-completed target are never evicted. The durable conversation id and URL remain in Session metadata, so an evicted Thread reopens safely on its next use. Tune this with `--browser-max-retained-thread-tabs <n>` / `browser.maxRetainedThreadTabs` / `VELLUMPIX_BROWSER_MAX_RETAINED_THREAD_TABS`, and `--browser-thread-tab-idle-timeout <duration>` / `browser.threadTabIdleTimeoutMs` / `VELLUMPIX_BROWSER_THREAD_TAB_IDLE_TIMEOUT`. Set the idle timeout to `0` to disable time-based expiry while retaining the LRU cap.
 
+With `--browser-no-focus`, a new Thread opens as a background tab in the existing shared automation window whenever that window is live. It does not request a separate Chrome/Edge window. The first target after a full browser restart still creates the one required window.
+
 For live concurrency smoke, the most stable path is one already-running signed-in Chrome with remote debugging enabled, plus `--remote-chrome <host:port>`. Direct parallel launch is supported defensively, but a persistent shared Chrome gives clearer ownership and avoids account/login churn across agents.
 
 ## Remote Chrome Sessions (headless/server workflows)

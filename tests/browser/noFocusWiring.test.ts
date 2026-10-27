@@ -177,7 +177,7 @@ describe("runBrowserMode no-focus wiring", () => {
       if (noFocus) {
         // Background run tab through the browser endpoint, never /json/new, and no activation at the
         // send because focus emulation was enabled.
-        expect(created).toEqual([{ url: "about:blank", background: true, newWindow: true }]);
+        expect(created).toEqual([{ url: "about:blank", background: true }]);
         expect(cdp.New).not.toHaveBeenCalled();
       } else {
         expect(created).toEqual([]);

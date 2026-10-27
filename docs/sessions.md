@@ -133,6 +133,8 @@ One browser run may control a thread at a time. A cross-process lock rejects a s
 
 Target ids are disposable cache hints, not durable history. Cleanup never evicts a target with an active browser lease, a live Thread lock, or the current completed run. It first removes duplicate targets for one conversation, then archived/idle targets, then the least-recently-used targets above the configured cap. Conversation URLs, transcripts, and generated files remain available after target eviction.
 
+Different Threads use separate tabs, not separate browser processes or windows. In no-focus mode, a new Thread target is added as a background tab to the existing VellumPix browser window when one exists; only the first target after browser startup needs to create a window.
+
 Use separate threads for parallel creative directions. Resuming an older session inside one ChatGPT conversation is not a true branch because the web conversation still contains its later turns.
 
 To bring an existing history under thread management, attach its latest session. VellumPix imports the saved parent chain in root-to-head order and records the thread id back into every adopted session:

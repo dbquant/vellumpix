@@ -207,7 +207,6 @@ describe("live tab transport", () => {
     expect(browser.Target.createTarget).toHaveBeenCalledWith({
       url: "https://chatgpt.com/c/saved",
       background: true,
-      newWindow: true,
     });
     expect(cdp.New).not.toHaveBeenCalled();
   });
@@ -234,7 +233,6 @@ describe("live tab transport", () => {
     expect(browser.Target.createTarget).toHaveBeenCalledWith({
       url: "https://chatgpt.com/c/saved",
       background: true,
-      newWindow: true,
     });
     expect(cdp.New).not.toHaveBeenCalled();
   });

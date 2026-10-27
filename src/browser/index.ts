@@ -2565,7 +2565,9 @@ async function runBrowserModeInternal(
         }
         await closeBlankChromeTabs(chrome.port, logger, chromeHost, {
           excludeTargetIds: [isolatedTargetId, lastTargetId],
-          preserveOneBlank: true,
+          // A completed retained Thread target is the browser's live page. Keeping the
+          // startup blank would preserve an otherwise unnecessary second window.
+          preserveOneBlank: false,
         });
       };
       if (tabLease) {

@@ -565,7 +565,6 @@ describe("connectWithNewTab", () => {
     expect(createTarget).toHaveBeenCalledWith({
       url: "about:blank",
       background: true,
-      newWindow: true,
     });
     expect(browserClose).not.toHaveBeenCalled();
     expect(cdpMock).toHaveBeenLastCalledWith({ host: "127.0.0.1", port: 9222, target: "bg-1" });
@@ -630,7 +629,6 @@ describe("connectWithNewTab", () => {
     expect(createTarget).toHaveBeenCalledWith({
       url: "about:blank",
       background: true,
-      newWindow: true,
     });
     expect(connection.targetId).toBe("remote-bg");
   });
@@ -935,7 +933,7 @@ describe("closeBlankChromeTabs", () => {
     });
   });
 
-  test("opens an attach-running tab in a background window in no-focus mode", async () => {
+  test("opens an attach-running background tab in the shared window in no-focus mode", async () => {
     const browserClient = {
       Target: {
         createTarget: vi.fn(async () => ({ targetId: "target-bg" })),
@@ -964,7 +962,6 @@ describe("closeBlankChromeTabs", () => {
     expect(browserClient.Target.createTarget).toHaveBeenCalledWith({
       url: "about:blank",
       background: true,
-      newWindow: true,
     });
     expect(connection.targetId).toBe("target-bg");
     await connection.close();

@@ -701,7 +701,7 @@ export async function connectToRemoteChromeTarget(
     if (!targetId) {
       const created = await browser.Target.createTarget({
         url: options.targetUrl ?? "about:blank",
-        ...(options.background ? BACKGROUND_WINDOW_TARGET : {}),
+        ...(options.background ? BACKGROUND_TAB_TARGET : {}),
       });
       targetId = created.targetId;
       createdTargetId = targetId;
@@ -818,16 +818,11 @@ function formatApprovalWait(waitMs: number): string {
 }
 
 // `/json/new` and a foreground `Target.createTarget` both activate Chrome, which on
-// macOS makes it the frontmost app and can switch Spaces. A background window keeps
-// the run tab selected in its own window, so it stays painted without activation.
-const BACKGROUND_WINDOW_TARGET = { background: true, newWindow: true } as const;
+// macOS makes it the frontmost app and can switch Spaces. A background target avoids
+// activation while keeping durable Thread targets as tabs in the shared window.
+const BACKGROUND_TAB_TARGET = { background: true } as const;
 
-async function openBackgroundPageTarget(
-  host: string,
-  port: number,
-  url: string,
-  placement: { newWindow?: boolean } = {},
-): Promise<string> {
+async function openBackgroundPageTarget(host: string, port: number, url: string): Promise<string> {
   const version = (await CDP.Version({ host, port })) as { webSocketDebuggerUrl?: string };
   if (!version.webSocketDebuggerUrl) {
     throw new Error("Chrome did not advertise a browser DevTools endpoint.");
@@ -843,7 +838,6 @@ async function openBackgroundPageTarget(
     const created = await browser.Target.createTarget({
       url,
       background: true,
-      ...(placement.newWindow ? { newWindow: true } : {}),
     });
     return created.targetId;
   } finally {
@@ -863,7 +857,7 @@ async function openBackgroundTargetOrForeground(
   logger: BrowserLogger,
 ): Promise<{ id: string }> {
   try {
-    return { id: await openBackgroundPageTarget(host, port, url, BACKGROUND_WINDOW_TARGET) };
+    return { id: await openBackgroundPageTarget(host, port, url) };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     logger(`[browser] no-focus fallback: opening the tab in the foreground (${message}).`);
@@ -871,13 +865,13 @@ async function openBackgroundTargetOrForeground(
   }
 }
 
-/** Open a page in a background window through an HTTP (host:port) DevTools endpoint. */
-export async function openBackgroundChromeWindow(
+/** Open a page as a background tab through an HTTP (host:port) DevTools endpoint. */
+export async function openBackgroundChromeTab(
   host: string,
   port: number,
   url: string,
 ): Promise<string> {
-  return await openBackgroundPageTarget(host, port, url, BACKGROUND_WINDOW_TARGET);
+  return await openBackgroundPageTarget(host, port, url);
 }
 
 async function connectToNewTarget(
