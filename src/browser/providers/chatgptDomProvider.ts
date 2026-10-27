@@ -59,10 +59,9 @@ async function submitPromptViaAdapter(ctx: ProviderDomFlowContext): Promise<void
   );
   state.committedTurns =
     typeof committedTurns === "number" && Number.isFinite(committedTurns) ? committedTurns : null;
-  if (
-    state.committedTurns != null &&
-    (state.baselineTurns == null || state.committedTurns > state.baselineTurns)
-  ) {
+  if (state.committedTurns != null) {
+    // ChatGPT may reuse the final exchange instead of appending a top-level
+    // turn. In either layout the new assistant response begins at count - 1.
     state.baselineTurns = Math.max(0, state.committedTurns - 1);
   }
 }

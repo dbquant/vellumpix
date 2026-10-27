@@ -349,6 +349,41 @@ describe("promptComposer", () => {
     ).resolves.toBe(1);
   });
 
+  test("accepts a committed prompt when ChatGPT reuses the final exchange", async () => {
+    const runtime = {
+      evaluate: vi.fn().mockResolvedValueOnce({
+        result: {
+          value: {
+            baseline: 5,
+            turnsCount: 5,
+            userMatched: true,
+            prefixMatched: true,
+            lastMatched: true,
+            hasNewTurn: false,
+            hasNewUserMessage: true,
+            stopVisible: false,
+            assistantVisible: true,
+            composerCleared: true,
+            inConversation: true,
+          },
+        },
+      }),
+    } as unknown as {
+      evaluate: (args: { expression: string; returnByValue?: boolean }) => Promise<unknown>;
+    };
+
+    await expect(
+      promptComposer.verifyPromptCommitted(
+        runtime as never,
+        "new prompt in reused exchange",
+        150,
+        undefined,
+        5,
+        ["old-user-message"],
+      ),
+    ).resolves.toBe(5);
+  });
+
   test("attachment sends time out instead of allowing Enter fallback", async () => {
     vi.useFakeTimers();
     try {

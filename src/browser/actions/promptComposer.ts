@@ -30,6 +30,7 @@ import { buildAttachmentProgressExpression } from "./attachmentProgress.js";
 import { buildActiveComposerRootExpression } from "./composerRoot.js";
 import { buildInstallCompletionAnnouncementExpression } from "./completionAnnouncement.js";
 import { activateWebSearch } from "./webSearch.js";
+import { readUserMessageIds } from "../promptFingerprint.js";
 
 const ENTER_KEY_EVENT = {
   key: "Enter",
@@ -350,6 +351,10 @@ export async function submitPrompt(
   if (deps.webSearch) await activateWebSearch(runtime, input, prompt, logger);
   await warnIfChatListRateLimited(runtime, logger);
 
+  // ChatGPT can append a new user/assistant pair inside the final data-turn-key
+  // exchange without increasing the top-level turn count.
+  const previousUserMessageIds = await readUserMessageIds(runtime).catch(() => undefined);
+
   // Install before the click: a short answer can complete while commit verification runs.
   await runtime
     .evaluate({
@@ -383,6 +388,7 @@ export async function submitPrompt(
     commitTimeoutMs,
     logger,
     deps.baselineTurns ?? undefined,
+    previousUserMessageIds,
   );
 }
 
@@ -1158,6 +1164,7 @@ async function verifyPromptCommitted(
   timeoutMs: number,
   logger?: BrowserLogger,
   baselineTurns?: number,
+  previousUserMessageIds?: readonly string[],
 ): Promise<number | null> {
   const deadline = Date.now() + timeoutMs;
   const encodedPrompt = JSON.stringify(prompt.trim());
@@ -1185,6 +1192,7 @@ async function verifyPromptCommitted(
     }
   }
   const baselineLiteral = baseline ?? -1;
+  const previousUserMessageIdsLiteral = JSON.stringify(previousUserMessageIds ?? null);
   // Learned: ChatGPT can echo/format text; normalize markdown and use prefix matches to detect the sent prompt.
   const script = `(() => {
 		    const editor = document.querySelector(${primarySelectorLiteral});
@@ -1202,6 +1210,20 @@ async function verifyPromptCommitted(
 	    const normalizedPromptPrefix = normalizedPrompt.slice(0, 120);
 	    const articles = ${buildConversationTurnListExpression()};
 	    const normalizedTurns = articles.map((node) => normalize(node?.innerText));
+	    const previousUserMessageIds = ${previousUserMessageIdsLiteral};
+	    const priorUserIds = new Set(Array.isArray(previousUserMessageIds) ? previousUserMessageIds : []);
+	    const userNodes = Array.from(document.querySelectorAll(':is([data-message-author-role="user"], [data-content-search-unit-key$=":user"], [data-chatgpt-search-unit-key$=":user"])'));
+	    const userMessageIds = userNodes.map((user) =>
+	      user.getAttribute('data-message-id') ||
+	      user.getAttribute('data-chatgpt-selection-message-id') ||
+	      user.getAttribute('data-chatgpt-search-message-ids')?.split(' ')[0] ||
+	      user.getAttribute('data-content-search-unit-key') ||
+	      user.getAttribute('data-chatgpt-search-unit-key') ||
+	      user.closest('[data-turn-key]')?.getAttribute('data-turn-key') ||
+	      ''
+	    ).filter(Boolean);
+	    const hasNewUserMessage = Array.isArray(previousUserMessageIds) &&
+	      userMessageIds.some((id) => !priorUserIds.has(id));
 	    const readValue = (node) => {
 	      if (!node) return '';
 	      if (node instanceof HTMLTextAreaElement) return node.value ?? '';
@@ -1246,6 +1268,7 @@ async function verifyPromptCommitted(
 	      prefixMatched,
 	      lastMatched,
 	      hasNewTurn,
+	      hasNewUserMessage,
 	      stopVisible,
       assistantVisible,
       composerCleared,
@@ -1269,12 +1292,12 @@ async function verifyPromptCommitted(
     const matchesPrompt = Boolean(info?.lastMatched || info?.userMatched || info?.prefixMatched);
     const baselineUnknown =
       typeof info?.baseline === "number" ? info.baseline < 0 : baselineLiteral < 0;
-    if (matchesPrompt && (baselineUnknown || info?.hasNewTurn)) {
+    if (matchesPrompt && (baselineUnknown || info?.hasNewTurn || info?.hasNewUserMessage)) {
       return typeof turnsCount === "number" && Number.isFinite(turnsCount) ? turnsCount : null;
     }
     const fallbackCommit =
       info?.composerCleared &&
-      Boolean(info?.hasNewTurn) &&
+      Boolean(info?.hasNewTurn || info?.hasNewUserMessage) &&
       ((info?.stopVisible ?? false) || info?.assistantVisible || info?.inConversation);
     if (fallbackCommit) {
       return typeof turnsCount === "number" && Number.isFinite(turnsCount) ? turnsCount : null;
@@ -1311,6 +1334,7 @@ interface CommitProbeState {
   prefixMatched?: boolean;
   lastMatched?: boolean;
   hasNewTurn?: boolean;
+  hasNewUserMessage?: boolean;
   stopVisible?: boolean;
   assistantVisible?: boolean;
   composerCleared?: boolean;
@@ -1331,6 +1355,7 @@ function summarizeCommitProbe(probe: CommitProbeState): Record<string, unknown> 
     prefixMatched: probe.prefixMatched,
     lastMatched: probe.lastMatched,
     hasNewTurn: probe.hasNewTurn,
+    hasNewUserMessage: probe.hasNewUserMessage,
     stopVisible: probe.stopVisible,
     assistantVisible: probe.assistantVisible,
     composerCleared: probe.composerCleared,

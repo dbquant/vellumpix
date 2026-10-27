@@ -600,6 +600,48 @@ describe("collectGeneratedImageArtifacts", () => {
     setVellumPixHomeDirOverrideForTest(null);
   });
 
+  test("does not auto-save an earlier image for a text-only follow-up", async () => {
+    const oldImage = {
+      url: "https://chatgpt.com/backend-api/estuary/content?id=file_previous_turn",
+      alt: "generated image",
+      width: 1448,
+      height: 1086,
+    };
+    const runtime = {
+      evaluate: vi.fn(async ({ expression }: { expression: string }) => {
+        if (expression.includes("extractAssistantTurn")) {
+          return {
+            result: {
+              value: {
+                text: "A new text-only answer about the prior image.",
+                html: "<p>A new text-only answer about the prior image.</p>",
+                turnIndex: 2,
+              },
+            },
+          };
+        }
+        if (expression.includes("const MIN_TURN_INDEX = -1")) {
+          return { result: { value: [oldImage] } };
+        }
+        return { result: { value: [] } };
+      }),
+    } as unknown as ChromeClient["Runtime"];
+    globalThis.fetch = vi.fn();
+
+    const result = await collectGeneratedImageArtifacts({
+      Runtime: runtime,
+      Network: {} as ChromeClient["Network"],
+      minTurnIndex: 2,
+      sessionId: "text-follow-up",
+      answerText: "A new text-only answer about the prior image.",
+    });
+
+    expect(result.imageCount).toBe(0);
+    expect(result.savedImages).toEqual([]);
+    expect(result.markdownSuffix).toBe("");
+    expect(globalThis.fetch).not.toHaveBeenCalled();
+  });
+
   test("saves current-turn ChatGPT behavior button image downloads", async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "vellumpix-chatgpt-image-button-"));
     const outputPath = path.join(tmpDir, "generated.png");

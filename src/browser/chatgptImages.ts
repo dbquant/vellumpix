@@ -248,7 +248,20 @@ async function readAssistantGeneratedImagesWithFallback(
     typeof fallbackSnapshot?.turnIndex === "number" ? fallbackSnapshot.turnIndex : null;
   const nearBoundary =
     fallbackTurnIndex !== null && fallbackTurnIndex + 1 >= Math.floor(minTurnIndex);
-  return fallbackImages.length > 0 && nearBoundary ? fallbackImages : [];
+  const fallbackText = String(fallbackSnapshot?.text ?? "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+  const snapshotRepresentsGeneratedImage =
+    fallbackText === "generated image" ||
+    fallbackText === "generated image." ||
+    /^generated \d+ images?\.?$/.test(fallbackText);
+  // The relaxed lookup can see images from earlier turns. Only accept it when
+  // the latest assistant snapshot itself is an image response; otherwise a
+  // text-only follow-up would re-save the previous turn's image.
+  return fallbackImages.length > 0 && nearBoundary && snapshotRepresentsGeneratedImage
+    ? fallbackImages
+    : [];
 }
 
 function resolveGeneratedImageWaitTimeoutMs(waitTimeoutMs?: number): number {
