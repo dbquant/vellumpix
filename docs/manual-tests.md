@@ -43,6 +43,16 @@ profile:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\test-chatgpt-image-thread.ps1
 ```
 
+For an interactive menu of active, recoverable VellumPix Threads, add
+`-ChooseThread`. The menu shows each saved title, Thread id, update time,
+Session count, and ChatGPT conversation id, then lets you continue one of them
+or start a new conversation. This reads VellumPix's durable local index; it does
+not scrape unrelated conversations from the ChatGPT sidebar.
+
+```powershell
+.\scripts\test-chatgpt-image-thread.ps1 -ChooseThread
+```
+
 Custom revision prompts can be supplied as a PowerShell array. A previous
 Thread is modified only when both its exact ID and `-ResumeExisting` are given:
 

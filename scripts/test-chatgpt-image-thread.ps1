@@ -12,6 +12,7 @@ param(
     [string]$VellumPixCommand = "vellumpix",
     [ValidateRange(1, 60)]
     [int]$BrowserTimeoutMinutes = 12,
+    [switch]$ChooseThread,
     [switch]$ResumeExisting,
     [switch]$PlanOnly
 )
@@ -57,6 +58,103 @@ function Get-OptionalProperty {
         return $null
     }
     return $property.Value
+}
+
+function Get-RecoverableConversation {
+    param(
+        [Parameter(Mandatory = $true)][object]$Thread,
+        [Parameter(Mandatory = $true)][string]$VellumPixHome
+    )
+
+    $sessionIds = @($Thread.sessionIds)
+    for ($index = $sessionIds.Count - 1; $index -ge 0; $index--) {
+        $candidateId = [string]$sessionIds[$index]
+        $candidatePath = Join-Path $VellumPixHome ("sessions\{0}\meta.json" -f $candidateId)
+        if (-not (Test-Path -LiteralPath $candidatePath -PathType Leaf)) {
+            continue
+        }
+        $candidate = Read-JsonFile -Path $candidatePath
+        $runtime = Get-OptionalProperty -InputObject $candidate.browser -Name "runtime"
+        if ($null -eq $runtime) {
+            continue
+        }
+        $candidateConversationId = [string](Get-OptionalProperty -InputObject $runtime -Name "conversationId")
+        if ([string]$candidate.status -eq "completed" -and -not [string]::IsNullOrWhiteSpace($candidateConversationId)) {
+            return [pscustomobject]@{
+                SessionId = $candidateId
+                ConversationId = $candidateConversationId
+            }
+        }
+    }
+    return $null
+}
+
+function Select-TestThread {
+    param(
+        [Parameter(Mandatory = $true)][string]$VellumPixHome,
+        [Parameter(Mandatory = $true)][string]$SuggestedId,
+        [Parameter(Mandatory = $true)][string]$SuggestedTitle
+    )
+
+    $choices = @()
+    $threadsRoot = Join-Path $VellumPixHome "threads"
+    if (Test-Path -LiteralPath $threadsRoot -PathType Container) {
+        $threadFiles = @(Get-ChildItem -LiteralPath $threadsRoot -Filter "thread.json" -Recurse -File -ErrorAction SilentlyContinue)
+        foreach ($threadFile in $threadFiles) {
+            try {
+                $thread = Read-JsonFile -Path $threadFile.FullName
+                if ([string]$thread.status -ne "active") {
+                    continue
+                }
+                $recoverable = Get-RecoverableConversation -Thread $thread -VellumPixHome $VellumPixHome
+                if ($null -eq $recoverable) {
+                    continue
+                }
+                $choices += [pscustomobject]@{
+                    Id = [string]$thread.id
+                    Title = [string]$thread.title
+                    UpdatedAt = [DateTimeOffset]$thread.updatedAt
+                    SessionCount = @($thread.sessionIds).Count
+                    ConversationId = [string]$recoverable.ConversationId
+                }
+            }
+            catch {
+                Write-Warning "Skipping unreadable Thread metadata: $($threadFile.FullName)"
+            }
+        }
+    }
+    $choices = @($choices | Sort-Object UpdatedAt -Descending)
+
+    Write-Host "`nChoose a VellumPix Thread:" -ForegroundColor Cyan
+    Write-Host "[N] Start a new ChatGPT conversation"
+    for ($index = 0; $index -lt $choices.Count; $index++) {
+        $choice = $choices[$index]
+        Write-Host ("[{0}] {1}  ({2})" -f ($index + 1), $choice.Title, $choice.Id)
+        Write-Host ("    updated={0}  sessions={1}  conversation={2}" -f $choice.UpdatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm"), $choice.SessionCount, $choice.ConversationId) -ForegroundColor DarkGray
+    }
+
+    while ($true) {
+        $answer = (Read-Host "Enter N or a number").Trim()
+        if ($answer -match "^(?i:n|new)$") {
+            $newId = (Read-Host "New Thread ID [$SuggestedId]").Trim()
+            if ([string]::IsNullOrWhiteSpace($newId)) {
+                $newId = $SuggestedId
+            }
+            Assert-ThreadId -Value $newId
+            $newTitle = (Read-Host "New Thread title [$SuggestedTitle]").Trim()
+            if ([string]::IsNullOrWhiteSpace($newTitle)) {
+                $newTitle = $SuggestedTitle
+            }
+            return [pscustomobject]@{ Id = $newId; Title = $newTitle; Resume = $false }
+        }
+
+        $selectedNumber = 0
+        if ([int]::TryParse($answer, [ref]$selectedNumber) -and $selectedNumber -ge 1 -and $selectedNumber -le $choices.Count) {
+            $selected = $choices[$selectedNumber - 1]
+            return [pscustomobject]@{ Id = $selected.Id; Title = $selected.Title; Resume = $true }
+        }
+        Write-Warning "Invalid selection. Enter N or a number from 1 to $($choices.Count)."
+    }
 }
 
 function Invoke-VellumPix {
@@ -161,6 +259,17 @@ function Find-LiveBrowserEndpoint {
     return $null
 }
 
+$vellumpixHome = Resolve-VellumPixHome
+if ($ChooseThread) {
+    if ($PSBoundParameters.ContainsKey("ThreadId") -or $ResumeExisting) {
+        throw "-ChooseThread cannot be combined with -ThreadId or -ResumeExisting."
+    }
+    $selection = Select-TestThread -VellumPixHome $vellumpixHome -SuggestedId $ThreadId -SuggestedTitle $ThreadTitle
+    $ThreadId = $selection.Id
+    $ThreadTitle = $selection.Title
+    $ResumeExisting = $selection.Resume
+}
+
 Assert-ThreadId -Value $ThreadId
 if ([string]::IsNullOrWhiteSpace($InitialPrompt)) {
     throw "InitialPrompt cannot be empty."
@@ -195,7 +304,6 @@ if (-not (Get-Command $VellumPixCommand -ErrorAction SilentlyContinue)) {
     throw "Cannot find VellumPix command: $VellumPixCommand"
 }
 
-$vellumpixHome = Resolve-VellumPixHome
 $baselineEndpoint = Find-LiveBrowserEndpoint -VellumPixHome $vellumpixHome
 $baselineWindowIds = @()
 if ($null -ne $baselineEndpoint) {
@@ -234,24 +342,12 @@ $results = @()
 
 if ($ResumeExisting) {
     $existingThread = Read-JsonFile -Path $threadJsonPath
-    $existingSessionIds = @($existingThread.sessionIds)
-    for ($index = $existingSessionIds.Count - 1; $index -ge 0; $index--) {
-        $candidateId = [string]$existingSessionIds[$index]
-        $candidatePath = Join-Path $vellumpixHome ("sessions\{0}\meta.json" -f $candidateId)
-        if (-not (Test-Path -LiteralPath $candidatePath -PathType Leaf)) {
-            continue
-        }
-        $candidate = Read-JsonFile -Path $candidatePath
-        $candidateConversationId = [string](Get-OptionalProperty -InputObject $candidate.browser.runtime -Name "conversationId")
-        if ([string]$candidate.status -eq "completed" -and -not [string]::IsNullOrWhiteSpace($candidateConversationId)) {
-            $expectedConversationId = $candidateConversationId
-            $previousSessionId = $candidateId
-            break
-        }
-    }
-    if ($null -eq $expectedConversationId) {
+    $recoverable = Get-RecoverableConversation -Thread $existingThread -VellumPixHome $vellumpixHome
+    if ($null -eq $recoverable) {
         throw "Thread '$ThreadId' has no completed session with a recoverable ChatGPT conversation."
     }
+    $expectedConversationId = $recoverable.ConversationId
+    $previousSessionId = $recoverable.SessionId
 }
 
 foreach ($round in $plannedRounds) {
