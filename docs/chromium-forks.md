@@ -16,7 +16,7 @@ Either pass the CLI flag or set it once in `~/.oracle/config.json`:
   }
   ```
 
-`--browser-chrome-path` (also exposed in `oracle --debug-help`) controls which binary `chrome-launcher` starts. You can still keep `chromeProfile: "Default"` if you want to copy cookies from Chrome proper while launching Edge/Chromium.
+Prefer `--browser-provider edge|chrome` (also available as `browser.provider`) for supported browser selection. `auto` chooses Edge then Chrome on Windows and Chrome then Edge elsewhere. `--browser-fallback-provider` controls the second choice, and each provider uses its own manual-login profile. `--browser-chrome-path` remains the explicit executable override for other Chromium builds.
 
 To launch the selected binary headlessly, add `--browser-headless` or set `browser.headless: true`:
 

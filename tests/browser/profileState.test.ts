@@ -203,6 +203,12 @@ describe("profileState", () => {
       ).toBe(true);
       expect(
         profileState.isChromeCommandForUserDataDirForTest(
+          '"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe" --user-data-dir="C:\\Oracle\\edge profile"',
+          "c:\\oracle\\edge profile",
+        ),
+      ).toBe(true);
+      expect(
+        profileState.isChromeCommandForUserDataDirForTest(
           '"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --user-data-dir="C:\\Oracle\\manual-profile-backup"',
           "C:\\Oracle\\manual-profile",
         ),

@@ -2,6 +2,11 @@
 
 Read this file whenever you're working from Windows and add new findings so the next agent can stay unblocked.
 
+- Browser-provider selection treats Windows `auto` as Edge first with Chrome fallback. Manual-login data is isolated under `~/.oracle/browser-profiles/edge` or `.../chrome`; never point these defaults at a daily browser's `User Data` directory.
+- Both installed binaries were smoke-tested through CDP on this host (Edge 156 and Chrome 155), using separate task-local profiles and closing their debug ports afterward.
+- Detached Edge can keep serving CDP briefly after `taskkill /T /F` reports success. Shared-profile cleanup now waits for the tree to settle and retries the exact recorded PID once before declaring termination.
+- PowerShell process-command probes must force UTF-8 output. Otherwise a non-ASCII `--user-data-dir` is decoded incorrectly, fails the exact profile identity check, and leaves the detached Edge process alive.
+
 - Browser engine now allowed on Windows; expect more flakiness. If automation fails, rerun with `--engine api --wait` or point `--remote-chrome` to a running Chrome with remote debugging.
 - Chrome DevTools via mcporter: `chrome-devtools` server needs `CHROME_DEVTOOLS_URL` from a live session; without it `mcporter call chrome-devtools.*` fails. Expect this to be unset on Windows unless you bring your own Chrome session/URL.
 - The agent-scripts `runner` helper can fail under PowerShell/CMD because of CRLF and bash expectations. If it explodes, run commands directly (`pnpm ...`, `git add/commit`) instead.

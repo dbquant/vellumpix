@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import os from "node:os";
 import path from "node:path";
 import { mkdtemp, rm } from "node:fs/promises";
+import { defaultBrowserProvider } from "../../src/browser/browserProvider.js";
 
 const {
   launchChrome,
@@ -203,7 +204,7 @@ describe("openGeminiBrowserSession", () => {
     process.env.ORACLE_BROWSER_PROFILE_DIR = "   ";
     const homedir = path.join(tempRoot, "home");
     const homedirSpy = vi.spyOn(os, "homedir").mockReturnValue(homedir);
-    const defaultDir = path.join(homedir, ".oracle", "browser-profile");
+    const defaultDir = path.join(homedir, ".oracle", "browser-profiles", defaultBrowserProvider());
 
     const { openGeminiBrowserSession } =
       await import("../../src/gemini-web/browserSessionManager.js");

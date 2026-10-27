@@ -16,6 +16,7 @@ import type {
 } from "../browser/types.js";
 import type { CookieParam } from "../browser/types.js";
 import { getOracleHomeDir } from "../oracleHome.js";
+import type { BrowserProvider, ConcreteBrowserProvider } from "../browser/browserProvider.js";
 
 const DEFAULT_BROWSER_TIMEOUT_MS = 1_200_000;
 const DEFAULT_BROWSER_INPUT_TIMEOUT_MS = 60_000;
@@ -61,6 +62,8 @@ const BROWSER_MODEL_LABELS: [ModelName, string][] = [
 ];
 
 export interface BrowserFlagOptions {
+  browserProvider?: BrowserProvider;
+  browserFallbackProvider?: ConcreteBrowserProvider | "none";
   browserChromeProfile?: string;
   browserChromePath?: string;
   browserCookiePath?: string;
@@ -268,6 +271,11 @@ export async function buildBrowserConfig(
       : mapModelToBrowserLabel(options.model);
 
   return {
+    browserProvider: options.browserProvider ?? null,
+    browserFallbackProvider:
+      options.browserFallbackProvider === "none"
+        ? null
+        : (options.browserFallbackProvider ?? undefined),
     chromeProfile: options.copyProfile
       ? (options.browserChromeProfile ?? null)
       : (options.browserChromeProfile ?? DEFAULT_CHROME_PROFILE),

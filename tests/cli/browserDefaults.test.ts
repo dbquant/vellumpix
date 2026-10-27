@@ -10,6 +10,16 @@ import { buildBrowserConfig } from "../../src/cli/browserConfig.js";
 const source = (_key: keyof BrowserDefaultsOptions) => undefined;
 
 describe("applyBrowserDefaultsFromConfig", () => {
+  test("applies browser provider and disabled fallback defaults", () => {
+    const options: BrowserDefaultsOptions = {};
+    applyBrowserDefaultsFromConfig(
+      options,
+      { browser: { provider: "edge", fallbackProvider: null } },
+      source,
+    );
+    expect(options.browserProvider).toBe("edge");
+    expect(options.browserFallbackProvider).toBe("none");
+  });
   test("applies provider evidence preference while respecting explicit opt-out", async () => {
     const options: BrowserDefaultsOptions = {};
     const config: UserConfig = { browser: { captureProviderNative: true } };

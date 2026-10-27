@@ -27,7 +27,7 @@ export async function readSessionLogTail(
 import { performSessionRun } from "../../cli/sessionRunner.js";
 import { runDryRunSummary } from "../../cli/dryRun.js";
 import { CHATGPT_URL } from "../../browser/constants.js";
-import { resolveBrowserNoFocus } from "../../browser/config.js";
+import { resolveBrowserConfig, resolveBrowserNoFocus } from "../../browser/config.js";
 import { CONSULT_PRESETS, browserThinkingTimeRawSchema, consultInputSchema } from "../types.js";
 import { applyConsultPreset } from "../consultPresets.js";
 import { loadUserConfig, type UserConfig } from "../../config.js";
@@ -81,6 +81,14 @@ const consultInputShape = {
     .describe(
       "Browser-only: ChatGPT UI label for custom model IDs. Recognized GPT models use their verified model mapping.",
     ),
+  browserProvider: z
+    .enum(["auto", "chrome", "edge"])
+    .optional()
+    .describe("Browser-only: browser family. auto prefers Edge on Windows and Chrome elsewhere."),
+  browserFallbackProvider: z
+    .enum(["chrome", "edge", "none"])
+    .optional()
+    .describe("Browser-only: fallback browser when the preferred executable is unavailable."),
   browserAttachments: z
     .enum(["auto", "never", "always"])
     .optional()
@@ -217,6 +225,8 @@ const consultDryRunResolvedShape = z.object({
   browser: z
     .object({
       desiredModel: z.string().nullable().optional(),
+      provider: z.string().nullable().optional(),
+      resolvedProvider: z.string().nullable().optional(),
       thinkingTime: z.string().nullable().optional(),
       modelStrategy: z.string().nullable().optional(),
       researchMode: z.string().nullable().optional(),
@@ -339,6 +349,8 @@ export function buildConsultBrowserConfig({
   browserResearchMode,
   browserArchive,
   browserKeepBrowser,
+  browserProvider,
+  browserFallbackProvider,
 }: {
   userConfig: UserConfig;
   env: Record<string, string | undefined>;
@@ -350,6 +362,8 @@ export function buildConsultBrowserConfig({
   browserResearchMode?: "search" | "deep";
   browserArchive?: "auto" | "always" | "never";
   browserKeepBrowser?: boolean;
+  browserProvider?: "auto" | "chrome" | "edge";
+  browserFallbackProvider?: "chrome" | "edge" | "none";
 }): BrowserSessionConfig {
   const configuredBrowser = userConfig.browser ?? {};
   const envProfileDir = (env.ORACLE_BROWSER_PROFILE_DIR ?? "").trim();
@@ -373,6 +387,11 @@ export function buildConsultBrowserConfig({
 
   return {
     ...configuredBrowser,
+    browserProvider: browserProvider ?? configuredBrowser.provider ?? null,
+    browserFallbackProvider:
+      browserFallbackProvider === "none"
+        ? null
+        : (browserFallbackProvider ?? configuredBrowser.fallbackProvider),
     url: configuredUrl,
     chatgptUrl: configuredUrl,
     cookieSync: manualLogin
@@ -410,6 +429,7 @@ export function buildConsultDryRunResolved({
   browserConfig?: BrowserSessionConfig;
 }): ConsultDryRunResolved {
   const guidance: string[] = [];
+  const resolvedBrowserConfig = browserConfig ? resolveBrowserConfig(browserConfig) : undefined;
   const followUpCount = runOptions.browserFollowUps?.filter((entry) => entry.trim()).length ?? 0;
   if (resolvedEngine === "api") {
     guidance.push(
@@ -420,8 +440,8 @@ export function buildConsultDryRunResolved({
     guidance.push(
       "Browser engine uses the signed-in ChatGPT profile; run dryRun:true before live use.",
     );
-    if (browserConfig?.manualLogin) {
-      const profile = browserConfig.manualLoginProfileDir ?? "~/.oracle/browser-profile";
+    if (resolvedBrowserConfig?.manualLogin) {
+      const profile = resolvedBrowserConfig.manualLoginProfileDir ?? "~/.oracle/browser-profile";
       guidance.push(
         `Manual-login browser mode uses Oracle's private Chrome profile at ${profile}, separate from your normal Chrome profile.`,
       );
@@ -433,14 +453,14 @@ export function buildConsultDryRunResolved({
       );
     }
   }
-  const desiredModel = browserConfig?.desiredModel ?? null;
-  const thinkingTime = browserConfig?.thinkingTime ?? null;
+  const desiredModel = resolvedBrowserConfig?.desiredModel ?? null;
+  const thinkingTime = resolvedBrowserConfig?.thinkingTime ?? null;
   if (runOptions.model === "gpt-5.5-pro" && thinkingTime === "heavy") {
     guidance.push(
       'gpt-5.5-pro should normally use Pro Extended. Use model:"gpt-5.5" with browserThinkingTime:"heavy" only when you explicitly want Thinking Heavy.',
     );
   }
-  const chatgptUrl = browserConfig?.chatgptUrl ?? browserConfig?.url ?? null;
+  const chatgptUrl = resolvedBrowserConfig?.chatgptUrl ?? resolvedBrowserConfig?.url ?? null;
   if (chatgptUrl?.includes("/project")) {
     guidance.push(
       "This ChatGPT project URL is persistent. Project Sources should be mutated only by the project_sources tool with confirmMutation:true.",
@@ -467,15 +487,17 @@ export function buildConsultDryRunResolved({
       resolvedEngine === "browser"
         ? {
             desiredModel,
+            provider: resolvedBrowserConfig?.browserProvider ?? null,
+            resolvedProvider: resolvedBrowserConfig?.resolvedBrowserProvider ?? null,
             thinkingTime,
-            modelStrategy: browserConfig?.modelStrategy ?? null,
-            researchMode: browserConfig?.researchMode ?? null,
+            modelStrategy: resolvedBrowserConfig?.modelStrategy ?? null,
+            researchMode: resolvedBrowserConfig?.researchMode ?? null,
             attachments: runOptions.browserAttachments,
             bundleFiles: runOptions.browserBundleFiles,
             bundleFormat: runOptions.browserBundleFormat,
-            keepBrowser: browserConfig?.keepBrowser,
-            manualLogin: browserConfig?.manualLogin,
-            profileDir: browserConfig?.manualLoginProfileDir ?? null,
+            keepBrowser: resolvedBrowserConfig?.keepBrowser,
+            manualLogin: resolvedBrowserConfig?.manualLogin,
+            profileDir: resolvedBrowserConfig?.manualLoginProfileDir ?? null,
             chatgptUrl,
             imageOutputPath,
           }
@@ -558,6 +580,8 @@ export async function runConsultTool(
     browserArchive,
     browserFollowUps,
     browserKeepBrowser,
+    browserProvider,
+    browserFallbackProvider,
     generateImage,
     outputPath,
     waitForCompletion = true,
@@ -608,6 +632,8 @@ export async function runConsultTool(
       browserResearchMode,
       browserArchive,
       browserKeepBrowser,
+      browserProvider,
+      browserFallbackProvider,
     });
   }
 

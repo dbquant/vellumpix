@@ -110,7 +110,8 @@ function findChromeDebugTargetForProfileFromProcessList(
     const command = match[2] ?? "";
     const lower = command.toLowerCase();
     if (!Number.isFinite(pid) || pid <= 0) continue;
-    if (!lower.includes("chrome") && !lower.includes("chromium")) continue;
+    if (!lower.includes("chrome") && !lower.includes("chromium") && !lower.includes("edge"))
+      continue;
     if (!isChromeCommandForUserDataDir(command, userDataDir)) continue;
     const portMatch = command.match(/--remote-debugging-port(?:=|\s+)(\d+)/);
     const port = Number.parseInt(portMatch?.[1] ?? "", 10);
@@ -156,6 +157,17 @@ export async function terminateRecordedChromeForProfile(
         windowsHide: true,
         timeout: 5000,
       });
+      // taskkill may report success before a detached Chromium process tree has
+      // actually settled. A short stabilization window catches the Windows case
+      // where the same browser root is still serving CDP immediately afterward.
+      await delay(250);
+      if (isProcessAlive(pid)) {
+        await execFileAsync("taskkill.exe", ["/PID", String(pid), "/T", "/F"], {
+          maxBuffer: 1024 * 1024,
+          windowsHide: true,
+          timeout: 5000,
+        });
+      }
     } else {
       process.kill(pid, "SIGTERM");
     }
@@ -200,7 +212,7 @@ function isChromeCommandForUserDataDir(command: string | null, userDataDir: stri
 
 function startsWithChromeExecutable(command: string): boolean {
   const names =
-    /^(?:google chrome(?: canary| beta| dev| for testing)?|google-chrome(?:-stable|-beta|-dev|-unstable)?|chrome|chromium|chromium-browser|chrome-headless-shell)(?:\.exe)?$/iu;
+    /^(?:google chrome(?: canary| beta| dev| for testing)?|google-chrome(?:-stable|-beta|-dev|-unstable)?|microsoft edge|msedge|chrome|chromium|chromium-browser|chrome-headless-shell)(?:\.exe)?$/iu;
   const trimmed = command.trimStart();
   const quoted = trimmed.match(/^(?:"([^"]+)"|'([^']+)')(?=\s|$)/u);
   let executable: string;
@@ -215,7 +227,7 @@ function startsWithChromeExecutable(command: string): boolean {
     if (
       /\s/u.test(
         executable.replace(
-          /google chrome(?: canary| beta| dev| for testing)?(?:\.app)?/giu,
+          /(?:google chrome(?: canary| beta| dev| for testing)?|microsoft edge)(?:\.app)?/giu,
           "chrome",
         ),
       )
@@ -546,7 +558,8 @@ async function isChromeUsingUserDataDir(userDataDir: string): Promise<boolean> {
     for (const line of lines) {
       if (!line) continue;
       const lower = line.toLowerCase();
-      if (!lower.includes("chrome") && !lower.includes("chromium")) continue;
+      if (!lower.includes("chrome") && !lower.includes("chromium") && !lower.includes("edge"))
+        continue;
       if (line.includes(needle) && lower.includes("user-data-dir")) {
         return true;
       }
@@ -566,7 +579,7 @@ async function readProcessCommand(pid: number): Promise<string | null> {
             "-NoProfile",
             "-NonInteractive",
             "-Command",
-            `(Get-CimInstance Win32_Process -Filter 'ProcessId = ${Math.trunc(pid)}').CommandLine`,
+            `[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); (Get-CimInstance Win32_Process -Filter 'ProcessId = ${Math.trunc(pid)}').CommandLine`,
           ]
         : ["-p", String(Math.trunc(pid)), "-o", "command="];
     const { stdout } = await execFileAsync(executable, args, {

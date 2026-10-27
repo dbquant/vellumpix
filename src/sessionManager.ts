@@ -29,10 +29,14 @@ import { DEFAULT_MODEL } from "./oracle/config.js";
 import { formatElapsed } from "./oracle/format.js";
 import { safeModelSlug } from "./oracle/modelResolver.js";
 import { getOracleHomeDir } from "./oracleHome.js";
+import type { BrowserProvider, ConcreteBrowserProvider } from "./browser/browserProvider.js";
 
 export type SessionMode = "api" | "browser";
 
 export interface BrowserSessionConfig {
+  browserProvider?: BrowserProvider | null;
+  browserFallbackProvider?: ConcreteBrowserProvider | null;
+  resolvedBrowserProvider?: ConcreteBrowserProvider | null;
   chromeProfile?: string | null;
   chromePath?: string | null;
   chromeCookiePath?: string | null;

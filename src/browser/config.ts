@@ -14,6 +14,12 @@ import { normalizeChatgptUrl } from "./utils.js";
 import { parseDuration } from "../duration.js";
 import os from "node:os";
 import path from "node:path";
+import {
+  defaultBrowserProfileDir,
+  normalizeBrowserFallbackProvider,
+  normalizeBrowserProvider,
+  resolveBrowserProvider,
+} from "./browserProvider.js";
 
 export const DEFAULT_CHATGPT_COOKIE_NAMES = [
   "__Secure-next-auth.session-token",
@@ -28,6 +34,9 @@ export const DEFAULT_CHATGPT_COOKIE_NAMES = [
 ];
 
 export const DEFAULT_BROWSER_CONFIG: ResolvedBrowserConfig = {
+  browserProvider: "auto",
+  browserFallbackProvider: process.platform === "win32" ? "chrome" : "edge",
+  resolvedBrowserProvider: process.platform === "win32" ? "edge" : "chrome",
   chromeProfile: null,
   chromePath: null,
   chromeCookiePath: null,
@@ -99,9 +108,31 @@ export function resolveBrowserConfig(
   const isWindows = process.platform === "win32";
   const manualLogin =
     config?.manualLogin ?? (isWindows ? true : DEFAULT_BROWSER_CONFIG.manualLogin);
+  const requestedProvider =
+    normalizeBrowserProvider(config?.browserProvider ?? process.env.ORACLE_BROWSER_PROVIDER) ??
+    DEFAULT_BROWSER_CONFIG.browserProvider;
+  const configuredFallbackProvider = normalizeBrowserFallbackProvider(
+    config?.browserFallbackProvider !== undefined
+      ? config.browserFallbackProvider
+      : process.env.ORACLE_BROWSER_FALLBACK_PROVIDER,
+  );
+  const fallbackProvider =
+    configuredFallbackProvider === undefined
+      ? requestedProvider === "auto"
+        ? DEFAULT_BROWSER_CONFIG.browserFallbackProvider
+        : requestedProvider === "edge"
+          ? "chrome"
+          : "edge"
+      : configuredFallbackProvider;
+  const provider = resolveBrowserProvider({
+    provider: requestedProvider,
+    fallbackProvider,
+    explicitPath: config?.chromePath,
+  });
   const resolvedProfileDir = resolveManualLoginProfileDir(
     config?.manualLoginProfileDir,
     process.env.ORACLE_BROWSER_PROFILE_DIR,
+    defaultBrowserProfileDir(provider.selected),
   );
   const researchMode = normalizeResearchMode(config?.researchMode);
   const archiveConversations = normalizeArchiveMode(config?.archiveConversations);
@@ -110,6 +141,9 @@ export function resolveBrowserConfig(
   return {
     ...DEFAULT_BROWSER_CONFIG,
     ...config,
+    browserProvider: requestedProvider,
+    browserFallbackProvider: fallbackProvider,
+    resolvedBrowserProvider: provider.selected,
     url: normalizedUrl,
     chatgptUrl: normalizedUrl,
     timeoutMs: config?.timeoutMs ?? defaultTimeoutMs,
@@ -144,7 +178,7 @@ export function resolveBrowserConfig(
     desiredModel,
     modelStrategy,
     chromeProfile: config?.chromeProfile ?? DEFAULT_BROWSER_CONFIG.chromeProfile,
-    chromePath: config?.chromePath ?? DEFAULT_BROWSER_CONFIG.chromePath,
+    chromePath: provider.executablePath ?? DEFAULT_BROWSER_CONFIG.chromePath,
     chromeCookiePath: config?.chromeCookiePath ?? DEFAULT_BROWSER_CONFIG.chromeCookiePath,
     attachRunning: config?.attachRunning ?? DEFAULT_BROWSER_CONFIG.attachRunning,
     browserTabRef: config?.browserTabRef ?? DEFAULT_BROWSER_CONFIG.browserTabRef,

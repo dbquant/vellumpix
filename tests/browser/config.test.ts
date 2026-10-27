@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { DEFAULT_CHATGPT_COOKIE_NAMES, resolveBrowserConfig } from "../../src/browser/config.js";
 import { CHATGPT_URL, DEEP_RESEARCH_DEFAULT_TIMEOUT_MS } from "../../src/browser/constants.js";
+import { defaultBrowserProvider } from "../../src/browser/browserProvider.js";
 
 describe("resolveBrowserConfig", () => {
   const originalProfileDir = process.env.ORACLE_BROWSER_PROFILE_DIR;
@@ -87,6 +88,21 @@ describe("resolveBrowserConfig", () => {
     expect(resolved.modelStrategy).toBe("select");
   });
 
+  test("keeps an explicit disabled fallback above the environment", () => {
+    const previous = process.env.ORACLE_BROWSER_FALLBACK_PROVIDER;
+    process.env.ORACLE_BROWSER_FALLBACK_PROVIDER = "chrome";
+    try {
+      const resolved = resolveBrowserConfig({
+        browserProvider: "edge",
+        browserFallbackProvider: null,
+      });
+      expect(resolved.browserFallbackProvider).toBeNull();
+    } finally {
+      if (previous === undefined) delete process.env.ORACLE_BROWSER_FALLBACK_PROVIDER;
+      else process.env.ORACLE_BROWSER_FALLBACK_PROVIDER = previous;
+    }
+  });
+
   test("resolves manual-login profile dirs from config, env, and default", () => {
     process.env.ORACLE_BROWSER_PROFILE_DIR = "/tmp/env-profile";
 
@@ -103,7 +119,7 @@ describe("resolveBrowserConfig", () => {
 
     process.env.ORACLE_BROWSER_PROFILE_DIR = "   ";
     expect(resolveBrowserConfig({ manualLogin: true }).manualLoginProfileDir).toBe(
-      path.join(os.homedir(), ".oracle", "browser-profile"),
+      path.join(os.homedir(), ".oracle", "browser-profiles", defaultBrowserProvider()),
     );
 
     expect(resolveBrowserConfig({ manualLogin: false }).manualLoginProfileDir).toBeNull();

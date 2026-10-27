@@ -3,6 +3,7 @@ import { normalizeChatgptUrl } from "../browser/utils.js";
 import type { UserConfig } from "../config.js";
 import { normalizeThinkingTimeLevel } from "../oracle/thinkingTime.js";
 import type { ThinkingTimeLevel } from "../oracle/types.js";
+import type { BrowserProvider, ConcreteBrowserProvider } from "../browser/browserProvider.js";
 import type {
   BrowserArchiveMode,
   BrowserModelStrategy,
@@ -11,6 +12,8 @@ import type {
 import { isGpt6ProAlias } from "./browserConfig.js";
 
 export interface BrowserDefaultsOptions {
+  browserProvider?: BrowserProvider;
+  browserFallbackProvider?: ConcreteBrowserProvider | "none";
   model?: string;
   remoteChrome?: string;
   copyProfile?: string;
@@ -66,6 +69,12 @@ export function applyBrowserDefaultsFromConfig(
   const attachRunningRequested =
     options.browserAttachRunning === true ||
     (isUnset("browserAttachRunning") && browser.attachRunning === true);
+  if (isUnset("browserProvider") && browser.provider !== undefined) {
+    options.browserProvider = browser.provider ?? undefined;
+  }
+  if (isUnset("browserFallbackProvider") && browser.fallbackProvider !== undefined) {
+    options.browserFallbackProvider = browser.fallbackProvider ?? "none";
+  }
   const currentModelRequestedByCli =
     options.browserModelStrategy === "current" && getSource("browserModelStrategy") === "cli";
   const gpt6ProRequestedByCli = getSource("model") === "cli" && isGpt6ProAlias(options.model);

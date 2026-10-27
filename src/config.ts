@@ -9,6 +9,7 @@ import type {
   BrowserResearchMode,
 } from "./browser/types.js";
 import type { ThinkingTimeLevel, ModelOverridesConfig } from "./oracle/types.js";
+import type { BrowserProvider, ConcreteBrowserProvider } from "./browser/browserProvider.js";
 
 export type EnginePreference = "api" | "browser";
 
@@ -19,6 +20,10 @@ export interface NotifyConfig {
 }
 
 export interface BrowserConfigDefaults {
+  /** Browser family. auto prefers Edge on Windows and Chrome elsewhere. */
+  provider?: BrowserProvider | null;
+  /** Browser family used when the preferred executable is unavailable. */
+  fallbackProvider?: ConcreteBrowserProvider | null;
   remoteChrome?: { host: string; port: number } | null;
   chromeProfile?: string | null;
   chromePath?: string | null;

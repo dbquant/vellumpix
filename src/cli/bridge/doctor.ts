@@ -4,8 +4,9 @@ import { getCliVersion } from "../../version.js";
 import { loadUserConfig } from "../../config.js";
 import { resolveRemoteServiceConfig } from "../../remote/remoteServiceConfig.js";
 import { checkTcpConnection, checkRemoteHealth } from "../../remote/health.js";
-import { detectChromeBinary, detectChromeCookieDb } from "../../browser/detect.js";
+import { detectChromeCookieDb } from "../../browser/detect.js";
 import { formatCodexMcpSnippet } from "./codexConfig.js";
+import { resolveBrowserProvider } from "../../browser/browserProvider.js";
 
 export interface BridgeDoctorCliOptions {
   verbose?: boolean;
@@ -104,14 +105,23 @@ export async function runBridgeDoctor(_options: BridgeDoctorCliOptions): Promise
     }
   } else {
     lines.push(`Remote service: ${chalk.yellow("not configured")}`);
-    const chrome = await detectChromeBinary();
-    if (chrome.path) {
-      lines.push(chalk.dim(`Chrome: ${chalk.green(chrome.path)}`));
-    } else {
-      fail.push(
-        "No Chrome installation detected. Install Chrome/Chromium or set --browser-chrome-path.",
+    const browser = resolveBrowserProvider({
+      provider: userConfig.browser?.provider ?? undefined,
+      fallbackProvider: userConfig.browser?.fallbackProvider ?? undefined,
+      explicitPath: userConfig.browser?.chromePath,
+    });
+    if (browser.executablePath) {
+      lines.push(
+        chalk.dim(`Browser: ${chalk.green(browser.selected)} (${browser.executablePath})`),
       );
-      lines.push(chalk.dim(`Chrome: ${chalk.red("not found")}`));
+      if (browser.selected !== browser.requested && browser.requested !== "auto") {
+        warn.push(
+          `Configured ${browser.requested} was unavailable; using ${browser.selected} fallback.`,
+        );
+      }
+    } else {
+      fail.push("No supported browser detected. Install Edge/Chrome or set --browser-chrome-path.");
+      lines.push(chalk.dim(`Browser: ${chalk.red("not found")}`));
     }
 
     if (process.platform === "win32") {

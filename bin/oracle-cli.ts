@@ -135,6 +135,8 @@ interface CliOptions extends OptionValues {
   zombieTimeout?: number;
   zombieLastActivity?: boolean;
   browserChromeProfile?: string;
+  browserProvider?: "auto" | "chrome" | "edge";
+  browserFallbackProvider?: "chrome" | "edge" | "none";
   browserChromePath?: string;
   browserCookiePath?: string;
   browserAttachRunning?: boolean;
@@ -643,6 +645,18 @@ program
   )
   .addOption(
     new Option(
+      "--browser-provider <provider>",
+      "Browser family: auto (Edge on Windows, Chrome elsewhere), edge, or chrome.",
+    ).choices(["auto", "edge", "chrome"]),
+  )
+  .addOption(
+    new Option(
+      "--browser-fallback-provider <provider>",
+      "Fallback browser when the preferred executable is unavailable: edge, chrome, or none.",
+    ).choices(["edge", "chrome", "none"]),
+  )
+  .addOption(
+    new Option(
       "--browser-chrome-profile <name>",
       "Chrome profile name/path for cookie reuse.",
     ).hideHelp(),
@@ -650,7 +664,7 @@ program
   .addOption(
     new Option(
       "--browser-chrome-path <path>",
-      "Explicit Chrome or Chromium executable path.",
+      "Explicit Chrome, Edge, or Chromium executable path (overrides browser provider detection).",
     ).hideHelp(),
   )
   .addOption(

@@ -9,6 +9,7 @@ import type {
 } from "../sessionStore.js";
 import type { SessionArtifact } from "../sessionStore.js";
 import type { ThinkingTimeLevel } from "../oracle/types.js";
+import type { BrowserProvider, ConcreteBrowserProvider } from "./browserProvider.js";
 
 export type ChromeClient = Awaited<ReturnType<typeof CDP>>;
 export type CookieParam = Protocol.Network.CookieParam;
@@ -76,6 +77,9 @@ export interface SavedBrowserFile extends SessionArtifact {
 }
 
 export interface BrowserAutomationConfig {
+  browserProvider?: BrowserProvider | null;
+  browserFallbackProvider?: ConcreteBrowserProvider | null;
+  resolvedBrowserProvider?: ConcreteBrowserProvider | null;
   chromeProfile?: string | null;
   chromePath?: string | null;
   chromeCookiePath?: string | null;
@@ -253,6 +257,9 @@ export type ResolvedBrowserConfig = Required<
   Omit<
     BrowserAutomationConfig,
     | "chromeProfile"
+    | "browserProvider"
+    | "browserFallbackProvider"
+    | "resolvedBrowserProvider"
     | "chromePath"
     | "chromeCookiePath"
     | "desiredModel"
@@ -268,6 +275,9 @@ export type ResolvedBrowserConfig = Required<
   >
 > & {
   chromeProfile?: string | null;
+  browserProvider: BrowserProvider;
+  browserFallbackProvider: ConcreteBrowserProvider | null;
+  resolvedBrowserProvider: ConcreteBrowserProvider;
   chromePath?: string | null;
   chromeCookiePath?: string | null;
   attachRunning?: boolean;

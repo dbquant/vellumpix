@@ -1,5 +1,6 @@
 import { resolveBrowserNoFocus } from "./config.js";
 import type { BrowserAutomationConfig } from "./types.js";
+import { defaultBrowserProvider } from "./browserProvider.js";
 
 type BrowserControlConfig = Pick<
   BrowserAutomationConfig,
@@ -11,6 +12,8 @@ type BrowserControlConfig = Pick<
   | "keepBrowser"
   | "manualLogin"
   | "noFocus"
+  | "browserProvider"
+  | "resolvedBrowserProvider"
 >;
 
 export interface BrowserControlPlan {
@@ -25,6 +28,12 @@ export interface BrowserControlPlan {
 
 export function describeBrowserControlPlan(config: BrowserControlConfig = {}): BrowserControlPlan {
   const guidance: string[] = [];
+  const browserName =
+    config.resolvedBrowserProvider === "edge" ||
+    config.browserProvider === "edge" ||
+    (config.browserProvider === "auto" && defaultBrowserProvider() === "edge")
+      ? "Edge"
+      : "Chrome";
   const tabRef = String(config.browserTabRef ?? "").trim();
   const reusesExistingTab = tabRef.length > 0;
   const noFocus = resolveBrowserNoFocus(config);
@@ -85,7 +94,7 @@ export function describeBrowserControlPlan(config: BrowserControlConfig = {}): B
       mode: "headless",
       launchesChrome: true,
       mayFocusWindow: false,
-      summary: "launch headless Chrome",
+      summary: `launch headless ${browserName}`,
       guidance,
     };
   }
@@ -102,18 +111,18 @@ export function describeBrowserControlPlan(config: BrowserControlConfig = {}): B
       launchesChrome: true,
       mayFocusWindow: !noFocus,
       ...(noFocus ? { noFocus } : {}),
-      summary: "launch Chrome in hidden-window mode",
+      summary: `launch ${browserName} in hidden-window mode`,
       guidance,
     };
   }
 
   if (config.manualLogin) {
     guidance.push(
-      "Manual-login mode may show the persistent Oracle Chrome profile for sign-in or automation.",
+      `Manual-login mode may show the persistent Oracle ${browserName} profile for sign-in or automation.`,
     );
   } else if (!noFocus) {
     guidance.push(
-      "A visible automation Chrome window may take focus while Oracle controls ChatGPT.",
+      `A visible automation ${browserName} window may take focus while Oracle controls ChatGPT.`,
     );
   }
   guidance.push(
@@ -123,7 +132,7 @@ export function describeBrowserControlPlan(config: BrowserControlConfig = {}): B
   );
   if (config.keepBrowser) {
     guidance.push(
-      "Chrome will remain open after the run because --browser-keep-browser is enabled.",
+      `${browserName} will remain open after the run because --browser-keep-browser is enabled.`,
     );
   }
 
@@ -132,7 +141,7 @@ export function describeBrowserControlPlan(config: BrowserControlConfig = {}): B
     launchesChrome: true,
     mayFocusWindow: !noFocus,
     ...(noFocus ? { noFocus } : {}),
-    summary: "launch visible Chrome",
+    summary: `launch visible ${browserName}`,
     guidance,
   };
 }
