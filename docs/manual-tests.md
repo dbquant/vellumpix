@@ -22,9 +22,10 @@ Use `scripts/test-chatgpt-image-thread.ps1` to exercise several image revisions
 against one durable VellumPix Thread. The script creates a fresh Thread by
 default, sends one initial image prompt followed by three revision prompts, and
 checks that every completed Session has the same ChatGPT `conversationId`, a
-continuous `followupSessionId` chain, `promptSubmitted=true`, and a valid saved
-PNG/JPEG/WebP artifact. It writes the images plus `summary.json` under
-`test-output/`.
+continuous `followupSessionId` chain, `promptSubmitted=true`, `noFocus=true`,
+and a valid saved PNG/JPEG/WebP artifact. After the first round, every Session
+must also retain the same Edge/Chrome target id; an unexpected extra tab makes
+the script fail. It writes the images plus `summary.json` under `test-output/`.
 
 Preview the complete plan without opening a browser or submitting anything:
 

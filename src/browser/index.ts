@@ -1384,10 +1384,15 @@ async function runBrowserModeInternal(
     }
 
     if (attachedExistingTab) {
-      if (isResumingConversation) {
+      if (
+        isResumingConversation &&
+        !preferredTabMatchesConversation(lastUrl, config.resumeConversationUrl)
+      ) {
         await raceWithDisconnect(
           navigateToChatGPT(Page, Runtime, config.resumeConversationUrl as string, logger),
         );
+      } else if (isResumingConversation) {
+        logger("[browser] Reusing the already-open Thread conversation without reloading it.");
       }
       await raceWithDisconnect(ensureNotBlocked(Runtime, config.headless, logger));
       await raceWithDisconnect(ensureLoggedIn(Runtime, logger));
@@ -3078,8 +3083,14 @@ async function runRemoteBrowserMode(
       ],
     });
 
-    if (config.resumeConversationUrl) {
+    if (
+      config.resumeConversationUrl &&
+      (!attachedExistingTab ||
+        !preferredTabMatchesConversation(lastUrl, config.resumeConversationUrl))
+    ) {
       await navigateToChatGPT(Page, Runtime, config.resumeConversationUrl, logger);
+    } else if (config.resumeConversationUrl) {
+      logger("[browser] Reusing the already-open Thread conversation without reloading it.");
     } else if (!attachedExistingTab) {
       await navigateToChatGPT(Page, Runtime, config.url, logger);
     }

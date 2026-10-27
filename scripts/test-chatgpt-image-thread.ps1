@@ -121,6 +121,7 @@ $plannedRounds = for ($index = 0; $index -lt $allPrompts.Count; $index++) {
 
 if ($PlanOnly) {
     Write-Host "PLAN ONLY - no browser will open and no prompt will be submitted." -ForegroundColor Yellow
+    Write-Host "Browser mode: headful no-focus; reuse one target after the first round"
     Write-Host "Thread: $ThreadId"
     Write-Host "Output: $outputRoot"
     foreach ($round in $plannedRounds) {
@@ -158,8 +159,31 @@ if (-not $threadExists) {
 }
 
 $expectedConversationId = $null
+$expectedTargetId = $null
 $previousSessionId = $null
 $results = @()
+
+if ($ResumeExisting) {
+    $existingThread = Read-JsonFile -Path $threadJsonPath
+    $existingSessionIds = @($existingThread.sessionIds)
+    for ($index = $existingSessionIds.Count - 1; $index -ge 0; $index--) {
+        $candidateId = [string]$existingSessionIds[$index]
+        $candidatePath = Join-Path $vellumpixHome ("sessions\{0}\meta.json" -f $candidateId)
+        if (-not (Test-Path -LiteralPath $candidatePath -PathType Leaf)) {
+            continue
+        }
+        $candidate = Read-JsonFile -Path $candidatePath
+        $candidateConversationId = [string](Get-OptionalProperty -InputObject $candidate.browser.runtime -Name "conversationId")
+        if ([string]$candidate.status -eq "completed" -and -not [string]::IsNullOrWhiteSpace($candidateConversationId)) {
+            $expectedConversationId = $candidateConversationId
+            $previousSessionId = $candidateId
+            break
+        }
+    }
+    if ($null -eq $expectedConversationId) {
+        throw "Thread '$ThreadId' has no completed session with a recoverable ChatGPT conversation."
+    }
+}
 
 foreach ($round in $plannedRounds) {
     Write-Host ("`n=== Round {0}/{1} ===" -f $round.Number, $plannedRounds.Count) -ForegroundColor Green
@@ -167,6 +191,7 @@ foreach ($round in $plannedRounds) {
         "--thread", $ThreadId,
         "--engine", "browser",
         "--browser-keep-browser",
+        "--browser-no-focus",
         "--browser-archive", "never",
         "--browser-timeout", ("{0}m" -f $BrowserTimeoutMinutes),
         "--generate-image", $round.ImagePath,
@@ -187,6 +212,9 @@ foreach ($round in $plannedRounds) {
     if ($meta.browser.runtime.promptSubmitted -ne $true) {
         throw "Session '$sessionId' did not record promptSubmitted=true."
     }
+    if ($meta.browser.config.noFocus -ne $true) {
+        throw "Session '$sessionId' did not run with noFocus=true."
+    }
 
     $conversationId = [string]$meta.browser.runtime.conversationId
     if ([string]::IsNullOrWhiteSpace($conversationId)) {
@@ -197,6 +225,17 @@ foreach ($round in $plannedRounds) {
     }
     elseif ($conversationId -ne $expectedConversationId) {
         throw "Conversation changed at round $($round.Number): expected '$expectedConversationId', got '$conversationId'."
+    }
+
+    $targetId = [string]$meta.browser.runtime.chromeTargetId
+    if ([string]::IsNullOrWhiteSpace($targetId)) {
+        throw "Session '$sessionId' did not record a Chrome/Edge target id."
+    }
+    if ($null -eq $expectedTargetId) {
+        $expectedTargetId = $targetId
+    }
+    elseif ($targetId -ne $expectedTargetId) {
+        throw "Browser target changed at round $($round.Number): expected '$expectedTargetId', got '$targetId'."
     }
 
     $parentSessionId = [string](Get-OptionalProperty -InputObject $meta.options -Name "followupSessionId")
@@ -215,6 +254,9 @@ foreach ($round in $plannedRounds) {
         sessionId = $sessionId
         parentSessionId = if ([string]::IsNullOrWhiteSpace($parentSessionId)) { $null } else { $parentSessionId }
         conversationId = $conversationId
+        browserTargetId = $targetId
+        targetReused = if ($round.Number -eq 1) { $null } else { $true }
+        noFocus = $true
         prompt = $round.Prompt
         imagePath = $round.ImagePath
         imageBytes = $imageBytes
@@ -229,12 +271,15 @@ $summary = [ordered]@{
     testedAt = (Get-Date).ToUniversalTime().ToString("o")
     threadId = $ThreadId
     conversationId = $expectedConversationId
+    browserTargetId = $expectedTargetId
+    browserMode = "headful-no-focus"
     outputDirectory = $outputRoot
     rounds = $results
 }
 $summary | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $summaryPath -Encoding UTF8
 
-Write-Host "`nPASS: all rounds used the same ChatGPT conversation and produced valid image files." -ForegroundColor Green
+Write-Host "`nPASS: all rounds used the same ChatGPT conversation and browser target, stayed in no-focus mode, and produced valid image files." -ForegroundColor Green
 Write-Host "Thread: $ThreadId"
 Write-Host "Conversation: $expectedConversationId"
+Write-Host "Browser target: $expectedTargetId"
 Write-Host "Summary: $summaryPath"
