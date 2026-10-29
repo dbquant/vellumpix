@@ -142,11 +142,29 @@ const server = http.createServer(async (req, res) => {
   res.end(page(mode));
 });
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+const reservePort = async () => {
+  const reservation = net.createServer();
+  await new Promise((resolve, reject) => {
+    reservation.once("error", reject);
+    reservation.listen(0, "127.0.0.1", resolve);
+  });
+  const address = reservation.address();
+  assert.ok(address && typeof address !== "string", "Failed to reserve a Chrome port");
+  const port = address.port;
+  await new Promise((resolve, reject) =>
+    reservation.close((error) => (error ? reject(error) : resolve())),
+  );
+  return port;
+};
 const launch = async (profile) => {
   await fs.mkdir(profile, { recursive: true });
+  // Avoid chrome-launcher's dynamic-port log parser. It can time out on loaded Linux CI
+  // runners even though Chrome started, because discovery waits for chrome-err.log.
+  const port = await reservePort();
   const chrome = new Launcher({
     chromePath,
     userDataDir: profile,
+    port,
     handleSIGINT: false,
     chromeFlags: [
       "--headless=new",
@@ -158,6 +176,7 @@ const launch = async (profile) => {
     ],
   });
   await chrome.launch();
+  assert.equal(chrome.port, port, "Chrome did not bind the reserved DevTools port");
   return chrome;
 };
 async function interceptHomepage(port, profile) {

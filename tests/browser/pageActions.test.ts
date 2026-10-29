@@ -1531,6 +1531,48 @@ describe("ensureLoggedIn", () => {
     expect(logger).toHaveBeenCalledWith(expect.stringContaining("Login check passed"));
   });
 
+  test("retries an inconclusive aborted login probe before requesting manual sign-in", async () => {
+    vi.useFakeTimers();
+    try {
+      const runtime = {
+        evaluate: vi
+          .fn()
+          .mockResolvedValueOnce({
+            result: {
+              value: {
+                ok: false,
+                status: 0,
+                pageUrl: "https://chatgpt.com/",
+                readyState: "interactive",
+                error: "AbortError: signal is aborted without reason",
+              },
+            },
+          })
+          .mockResolvedValueOnce({
+            result: {
+              value: {
+                ok: true,
+                status: 200,
+                pageUrl: "https://chatgpt.com/",
+                sessionAuthenticated: true,
+                sessionResolved: true,
+                appAuthenticated: true,
+              },
+            },
+          }),
+      } as unknown as ChromeClient["Runtime"];
+
+      const outcome = ensureLoggedIn(runtime, logger, { appliedCookies: 0 });
+      await vi.advanceTimersByTimeAsync(750);
+      await expect(outcome).resolves.toBeUndefined();
+      expect(runtime.evaluate).toHaveBeenCalledTimes(2);
+      expect(logger).toHaveBeenCalledWith(expect.stringContaining("Login probe was inconclusive"));
+      expect(logger).not.toHaveBeenCalledWith(expect.stringContaining("Login probe failed"));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test("does not treat history items starting with login as login CTAs", async () => {
     await expect(runLoginProbeForLabels(["Login setup instruction"])).resolves.toMatchObject({
       ok: true,

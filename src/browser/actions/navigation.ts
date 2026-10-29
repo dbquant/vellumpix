@@ -467,6 +467,8 @@ export async function ensureNotBlocked(
 }
 
 const LOGIN_CHECK_TIMEOUT_MS = 5_000;
+const TRANSIENT_LOGIN_PROBE_RETRIES = 3;
+const TRANSIENT_LOGIN_PROBE_RETRY_DELAY_MS = 750;
 const CHATGPT_ACCOUNT_EMAIL_ENV = "VELLUMPIX_CHATGPT_ACCOUNT_EMAIL";
 
 function preferredChatGptAccountEmail(): string | null {
@@ -481,12 +483,17 @@ export async function ensureLoggedIn(
 ) {
   // Learned: ChatGPT can render the UI (project view) while auth silently failed.
   // Session state plus DOM login signals catch both valid and stale app shells.
-  const outcome = await Runtime.evaluate({
-    expression: buildLoginProbeExpression(LOGIN_CHECK_TIMEOUT_MS),
-    awaitPromise: true,
-    returnByValue: true,
-  });
-  const probe = normalizeLoginProbe(outcome.result?.value);
+  let probe = await evaluateLoginProbe(Runtime);
+  if (isTransientLoginProbeFailure(probe)) {
+    logger(
+      `[browser] Login probe was inconclusive (${probe.error ?? `status ${probe.status}`}); retrying before requesting sign-in.`,
+    );
+    for (let attempt = 1; attempt <= TRANSIENT_LOGIN_PROBE_RETRIES; attempt++) {
+      await delay(TRANSIENT_LOGIN_PROBE_RETRY_DELAY_MS * attempt);
+      probe = await evaluateLoginProbe(Runtime);
+      if (probe.ok || !isTransientLoginProbeFailure(probe)) break;
+    }
+  }
   if (probe.ok) {
     logger(
       `Login check passed (sessionStatus=${probe.status}, sessionAuthenticated=${Boolean(probe.sessionAuthenticated)}, backendStatus=${probe.backendStatus ?? "n/a"}, domLoginCta=${Boolean(probe.domLoginCta)}, appAuthenticated=${Boolean(probe.appAuthenticated)})`,
@@ -534,6 +541,15 @@ export async function ensureLoggedIn(
 
   const accountHint = welcomeBack.hint ? ` ${welcomeBack.hint}` : "";
   throw new Error(`ChatGPT session not detected.${domLabel}${accountHint} ${cookieHint}`);
+}
+
+async function evaluateLoginProbe(Runtime: ChromeClient["Runtime"]): Promise<LoginProbeResult> {
+  const outcome = await Runtime.evaluate({
+    expression: buildLoginProbeExpression(LOGIN_CHECK_TIMEOUT_MS),
+    awaitPromise: true,
+    returnByValue: true,
+  });
+  return normalizeLoginProbe(outcome.result?.value);
 }
 
 interface WelcomeBackLoginAttempt {
@@ -1327,6 +1343,25 @@ function formatLoginProbeDetail(probe: LoginProbeResult): string {
 // a sign-in redirect in progress, so readyState is only reported.
 function isPageNotLoadedProbe(probe: LoginProbeResult): boolean {
   return typeof probe.pageUrl === "string" && !isWebUrl(probe.pageUrl);
+}
+
+function isTransientLoginProbeFailure(probe: LoginProbeResult): boolean {
+  if (
+    probe.ok ||
+    probe.domLoginCta ||
+    probe.onAuthPage ||
+    probe.sessionResolved ||
+    probe.sessionAuthenticated ||
+    typeof probe.pageUrl !== "string" ||
+    !isWebUrl(probe.pageUrl)
+  ) {
+    return false;
+  }
+  return (
+    probe.status === 0 &&
+    typeof probe.error === "string" &&
+    /abort|failed to fetch|network|tim(?:e|ed)\s*out|load failed/i.test(probe.error)
+  );
 }
 
 function throwPageNotLoaded(probe: LoginProbeResult, logger: BrowserLogger, when = ""): never {

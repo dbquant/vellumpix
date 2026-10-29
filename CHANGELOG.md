@@ -1,5 +1,7 @@
 # Changelog
 
+- ChatGPT 登录探测遇到短暂的网络或 `AbortError` 时会先自动重试，避免并发生图误报需要重新登录；明确的登录页、登录按钮和已解析登出状态仍会立即提示登录。
+- Linux 附件上下文 CI proof 改用预留的显式 DevTools 端口启动 Chrome，避免繁忙 runner 上动态端口日志发现超时。
 - 强化本地同一 Thread 多轮生图脚本的 CDP 窗口身份检查，另开 Edge/Chrome 窗口不再被误判为成功复用标签页。
 - 本地多轮生图脚本新增 `-ChooseThread` 交互菜单，可按标题选择并续接已有会话，或创建新的会话任务线。
 
