@@ -265,7 +265,15 @@ try {
   // Initialize an empty real Chrome profile, then stop it. The owner CLI must
   // launch the shared process itself; priming does not supply provider login.
   await fs.mkdir(profile, { recursive: true });
+  const portReservation = net.createServer();
+  await new Promise((resolve, reject) => {
+    portReservation.once("error", reject);
+    portReservation.listen(0, "127.0.0.1", resolve);
+  });
+  chromePort = portReservation.address().port;
+  await new Promise((resolve) => portReservation.close(resolve));
   primer = new Launcher({
+    port: chromePort,
     chromePath,
     userDataDir: profile,
     handleSIGINT: false,
@@ -294,10 +302,6 @@ try {
     10000,
   );
   primer = undefined;
-  const portReservation = net.createServer();
-  await new Promise((resolve) => portReservation.listen(0, "127.0.0.1", resolve));
-  chromePort = portReservation.address().port;
-  await new Promise((resolve) => portReservation.close(resolve));
   const attaching = attachFixtureInterceptor();
   attaching.catch(() => {});
   const owner = await start("owner");
