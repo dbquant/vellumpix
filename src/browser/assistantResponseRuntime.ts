@@ -23,6 +23,7 @@ export const normalizeForComparison = (text: string): string =>
 
 export interface FreshAssistantResponseParams {
   baselineTurns?: number;
+  submittedUserMessageId?: string;
   expectedConversationId: () => string | undefined;
   baselineNormalized: string;
   timeoutMs: number;
@@ -42,6 +43,7 @@ export async function waitForFreshAssistantResponse(
       Runtime,
       params.baselineTurns,
       params.expectedConversationId(),
+      params.submittedUserMessageId,
     ).catch(() => null);
     throwIfAssistantUiError(snapshot);
     const text = typeof snapshot?.text === "string" ? snapshot.text.trim() : "";

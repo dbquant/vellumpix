@@ -2042,7 +2042,7 @@ async function runBrowserModeInternal(
       const baselineNormalized = baselineAssistantText
         ? normalizeForComparison(baselineAssistantText)
         : "";
-      if (baselineNormalized && !submittedUserMessageId) {
+      if (baselineNormalized) {
         const normalizedAnswer = normalizeForComparison(turnAnswer.text ?? "");
         const baselinePrefix =
           baselineNormalized.length >= 80
@@ -2055,6 +2055,7 @@ async function runBrowserModeInternal(
           logger("Detected stale assistant response; waiting for new response...");
           const refreshed = await waitForFreshAssistantResponse(Runtime, {
             baselineTurns: baselineTurns ?? undefined,
+            submittedUserMessageId,
             expectedConversationId,
             baselineNormalized,
             timeoutMs: 15_000,
@@ -3574,7 +3575,7 @@ async function runRemoteBrowserMode(
       const baselineNormalized = baselineAssistantText
         ? normalizeForComparison(baselineAssistantText)
         : "";
-      if (baselineNormalized && !submittedUserMessageId) {
+      if (baselineNormalized) {
         const normalizedAnswer = normalizeForComparison(turnAnswer.text ?? "");
         const baselinePrefix =
           baselineNormalized.length >= 80
@@ -3587,6 +3588,7 @@ async function runRemoteBrowserMode(
           logger("Detected stale assistant response; waiting for new response...");
           const refreshed = await waitForFreshAssistantResponse(Runtime, {
             baselineTurns: baselineTurns ?? undefined,
+            submittedUserMessageId,
             expectedConversationId,
             baselineNormalized,
             timeoutMs: 15_000,
