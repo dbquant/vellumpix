@@ -912,6 +912,13 @@ async function activateExactAttachmentSendButton(
       if (!(button instanceof HTMLElement)) return { status: 'absent' };
       const rect = button.getBoundingClientRect();
       const style = window.getComputedStyle(button);
+      if (${attachmentNames.length === 0}) {
+        const x = rect.left + rect.width / 2;
+        const y = rect.top + rect.height / 2;
+        if (x < 0 || y < 0 || x >= window.innerWidth || y >= window.innerHeight) {
+          return { status: 'unavailable' };
+        }
+      }
       const enabled = !button.hasAttribute('disabled') &&
         button.getAttribute('aria-disabled') !== 'true' &&
         button.getAttribute('data-disabled') !== 'true' &&
