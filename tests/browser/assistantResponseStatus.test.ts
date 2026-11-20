@@ -545,10 +545,14 @@ describe("current ChatGPT search-unit action bars", () => {
   });
 
   test("matches a UUID exchange by submitted user ID even after its DOM index drops to zero", () => {
-    const user = new FakeElement("div", {
-      "data-content-search-unit-key": "opaque-exchange:0:user",
-      "data-message-id": "submitted-user-id",
-    }, [new FakeElement("div", { "data-content-search-unit-key": "opaque-exchange:0:user" })]);
+    const user = new FakeElement(
+      "div",
+      {
+        "data-content-search-unit-key": "opaque-exchange:0:user",
+        "data-message-id": "submitted-user-id",
+      },
+      [new FakeElement("div", { "data-content-search-unit-key": "opaque-exchange:0:user" })],
+    );
     const assistant = new FakeElement(
       "div",
       {
