@@ -397,7 +397,8 @@ function buildModelSelectionExpression(
       return modelTokens.some((token) => hasToken(label, token));
     };
     const findModelButton = () => {
-      const explicit = document.querySelector(BUTTON_SELECTOR);
+      const explicit = Array.from(document.querySelectorAll(BUTTON_SELECTOR)).find(isVisibleElement) ??
+        document.querySelector(BUTTON_SELECTOR);
       if (explicit) return explicit;
       return Array.from(document.querySelectorAll('button.__composer-pill')).find(looksLikeModelPill) ?? null;
     };
@@ -437,7 +438,16 @@ function buildModelSelectionExpression(
     // "Thinking effortThinking effortPro" and obscure the actual selection.
     const getButtonLabel = () => {
       const button = findModelButton();
-      return (button?.innerText ?? button?.textContent ?? '').trim();
+      const clone = button?.cloneNode?.(true);
+      clone?.querySelectorAll?.('[aria-hidden="true"], [hidden]').forEach((node) => node.remove());
+      return (clone?.textContent ?? button?.innerText ?? button?.textContent ?? '').trim();
+    };
+    const getExplicitModelLabel = () => {
+      const node = findModelButton()?.querySelector?.('[data-model-selection-label]');
+      const key = node?.getAttribute?.('data-model-selection-label') ?? '';
+      if (key === 'gpt-5-6-thinking') return 'GPT-5.6 Sol';
+      if (/^gpt-6(?:-thinking)?$/.test(key)) return 'GPT-6';
+      return '';
     };
     // With the picker closed the only evidence for GPT-6 is the composer pill, so its
     // target must be decided on it: the blank composer signal would otherwise pass as
@@ -451,6 +461,8 @@ function buildModelSelectionExpression(
       (document.querySelector(COMPOSER_MODEL_SIGNAL_SELECTOR)?.textContent ?? '').trim();
     const readComposerModelSignal = () => normalizeText(getComposerModelLabel());
     const isEffortOnlyLabel = (label) =>
+      label === 'thinking effort' ||
+      label === '推理强度' ||
       label === 'medium' ||
       label === 'high' ||
       label === 'extra high' ||
@@ -670,6 +682,13 @@ function buildModelSelectionExpression(
       );
     };
     const getResolvedLabel = (observedOptionLabel = '') => {
+      const explicitLabel = getExplicitModelLabel();
+      if (explicitLabel) return explicitLabel;
+      if (MODEL_STRATEGY === 'current') {
+        const checked = findCheckedAdvancedModelRadio();
+        const checkedLabel = (checked?.textContent ?? '').trim();
+        if (checkedLabel) return checkedLabel;
+      }
       if (targetIsGpt6) {
         const checkedAdvancedRadio = findCheckedAdvancedModelRadio();
         if (checkedAdvancedRadio) return (checkedAdvancedRadio.textContent ?? '').trim();
@@ -738,6 +757,13 @@ function buildModelSelectionExpression(
       return { status: 'button-missing' };
     }
     const buttonMatchesTarget = () => {
+      const explicitLabel = getExplicitModelLabel();
+      if (explicitLabel) {
+        if (desiredVersion === '5-6' && desiredModelVariant === 'sol') {
+          return explicitLabel === 'GPT-5.6 Sol';
+        }
+        if (targetIsGpt6) return explicitLabel === 'GPT-6';
+      }
       if (configuredSelectionMatchesTarget()) return true;
       const normalizedLabel = normalizeText(getButtonLabel());
       if (!normalizedLabel) return false;

@@ -11,12 +11,23 @@ import {
 
 function evaluate(expression: string, responses: Map<string, unknown[]>): unknown {
   const document = {
+    createElement: () => ({ placeholder: true }),
     querySelectorAll: vi.fn((selector: string) => responses.get(selector) ?? []),
   };
   return Function("document", `return ${expression};`)(document);
 }
 
 describe("conversation turn expressions", () => {
+  test("preserves logical indices when earlier turns are virtualized away", () => {
+    const latest = {
+      querySelector: () => ({ getAttribute: () => "fallback-turn-3" }),
+    };
+    const responses = new Map([[CONVERSATION_TURN_CONTAINER_SELECTOR, [latest]]]);
+    const turns = evaluate(buildConversationTurnListExpression(), responses) as unknown[];
+    expect(turns).toHaveLength(4);
+    expect(turns[3]).toBe(latest);
+    expect(evaluate(buildConversationTurnCountExpression(), responses)).toBe(4);
+  });
   test("prefers top-level turn containers over nested broad-selector matches", () => {
     const containers = [{ id: "user" }, { id: "assistant" }];
     const nestedMatches = [...containers, { id: "nested-assistant" }];

@@ -471,7 +471,11 @@ function buildThinkingTimeExpression(
     const INTELLIGENCE_MENU_SELECTOR = '[data-testid="composer-intelligence-picker-content"]';
     const PRO_EFFORT_TRIGGER_SELECTOR = '[data-testid="composer-intelligence-pro-thinking-effort-trigger"]';
 
-    const findModelButton = () => document.querySelector(MODEL_BUTTON_SELECTOR);
+    const findModelButton = () => {
+      const first = document.querySelector(MODEL_BUTTON_SELECTOR);
+      if (!first || isVisible(first)) return first;
+      return Array.from(document.querySelectorAll(MODEL_BUTTON_SELECTOR)).find(node => isVisible(node)) ?? first;
+    };
     const findTrailingButtons = () => Array.from(document.querySelectorAll(TRAILING_SELECTOR));
     const KIND_NOT_FOUND = { kindNotFound: true };
 
@@ -1264,6 +1268,7 @@ function buildThinkingTimeExpression(
             (button.textContent ?? ''),
           );
           if (
+            button.hasAttribute?.('data-selected-reasoning-effort') ||
             (TARGET_MODEL_KIND === 'pro' && hasToken(label, 'pro') && !hasToken(label, 'thinking')) ||
             (TARGET_MODEL_KIND === 'thinking' && hasToken(label, 'thinking') && !hasToken(label, 'pro')) ||
             (!TARGET_MODEL_KIND && hasToken(label, 'thinking')) ||

@@ -22,6 +22,27 @@ import { createTempFile } from "./helpers.ts";
 
 const testNonWindows = process.platform === "win32" ? test.skip : test;
 
+test("explicit ignored attachments survive mixed file and glob expansion", async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "vellumpix-explicit-files-"));
+  try {
+    await mkdir(path.join(dir, "data"));
+    await writeFile(path.join(dir, ".gitignore"), "data/\n");
+    await writeFile(path.join(dir, "data", "requested.txt"), "requested attachment");
+    await writeFile(path.join(dir, "data", "other.txt"), "unrequested attachment");
+    await writeFile(path.join(dir, "notes.txt"), "notes");
+    const files = await readFiles(["data/requested.txt", "**/*.txt"], { cwd: dir });
+    expect(files.map((file) => path.relative(dir, file.path)).sort()).toEqual(
+      [path.join("data", "requested.txt"), "notes.txt"].sort(),
+    );
+    const excluded = await readFiles(["data/requested.txt", "**/*.txt", "!data/requested.txt"], {
+      cwd: dir,
+    });
+    expect(excluded.map((file) => path.relative(dir, file.path))).toEqual(["notes.txt"]);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 describe("buildPrompt", () => {
   test("includes attached file sections with relative paths", async () => {
     const { dir, filePath } = await createTempFile("hello from file");

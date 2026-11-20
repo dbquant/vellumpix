@@ -2,6 +2,7 @@ import { createContext, Script } from "node:vm";
 import { describe, expect, test, vi } from "vitest";
 import {
   advanceCompletionAnnouncementGate,
+  buildRevealLatestResponseExpression,
   buildActiveThinkingStatusPredicateJsForTest,
   buildAnswerNowPlaceholderPredicateJs,
   buildAssistantSnapshotExpressionForTest,
@@ -18,6 +19,31 @@ import {
   type TerminalGateConfig,
   type TerminalSample,
 } from "../../src/browser/actions/assistantResponse.js";
+
+test("reveals the latest virtualized response only in the expected conversation", () => {
+  const scroller = {
+    closest: () => null,
+    scrollHeight: 2400,
+    clientHeight: 600,
+    scrollTop: 0,
+    parentElement: null,
+  };
+  const latest = { parentElement: scroller };
+  const context = createContext({
+    location: { pathname: "/c/expected" },
+    document: { body: {}, querySelectorAll: () => [latest] },
+    window: { getComputedStyle: () => ({ overflowY: "auto" }) },
+  });
+  expect(new Script(buildRevealLatestResponseExpression("expected")).runInContext(context)).toBe(
+    true,
+  );
+  expect(scroller.scrollTop).toBe(2400);
+  scroller.scrollTop = 0;
+  expect(new Script(buildRevealLatestResponseExpression("other")).runInContext(context)).toBe(
+    false,
+  );
+  expect(scroller.scrollTop).toBe(0);
+});
 import {
   buildThinkingActivePredicateJsForTest,
   buildThinkingActivityDetailsPredicateJsForTest,
@@ -516,6 +542,38 @@ describe("current ChatGPT search-unit action bars", () => {
     expect(
       completion(page(exchange(0, "Old answer", true), exchange(1, "New answer", true)), 2),
     ).toBe(true);
+  });
+
+  test("matches a UUID exchange by submitted user ID even after its DOM index drops to zero", () => {
+    const user = new FakeElement("div", {
+      "data-content-search-unit-key": "opaque-exchange:0:user",
+      "data-message-id": "submitted-user-id",
+    }, [new FakeElement("div", { "data-content-search-unit-key": "opaque-exchange:0:user" })]);
+    const assistant = new FakeElement(
+      "div",
+      {
+        "data-content-search-unit-key": "opaque-exchange:2:assistant",
+        "data-message-id": "assistant-reply-id",
+      },
+      [new FakeElement("div", { class: "markdown" }, [], "Complete answer")],
+    );
+    const turn = new FakeElement("div", { "data-turn-key": "opaque-exchange" }, [user, assistant]);
+    const snapshot = (document: FakeDocument, userId: string) =>
+      new Script(buildAssistantSnapshotExpressionForTest(5, undefined, userId)).runInContext(
+        createContext({ document, HTMLElement: FakeElement }),
+      );
+    expect(snapshot(page(turn), "submitted-user-id")).toMatchObject({
+      text: "Complete answer",
+      messageId: "assistant-reply-id",
+      turnIndex: 0,
+    });
+    expect(snapshot(page(turn), "previous-user-id")).toBeNull();
+    const nextUser = new FakeElement("div", {
+      "data-message-author-role": "user",
+      "data-message-id": "next-user-id",
+    });
+    expect(snapshot(page(turn, nextUser), "submitted-user-id")).toBeNull();
+    expect(snapshot(page(turn, nextUser), "next-user-id")).toBeNull();
   });
 
   test("copies markdown from the current assistant action bar, not a code block", async () => {

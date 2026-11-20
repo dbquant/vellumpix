@@ -161,3 +161,13 @@ assertions finish. This does not exercise signed-in browser execution.
 For recognized GPT model IDs, VellumPix chooses the corresponding ChatGPT model label automatically; `browserModelLabel` supplies a label for custom model IDs and does not override a recognized GPT model. GPT-6 selection accepts both the GPT-6 radio and legacy Latest labels. Model selection and thinking effort are verified separately: `heavy` does not request the Pro tier.
 
 An explicit GPT-6 Pro model alias takes precedence over saved `browser.thinkingTime` defaults. A per-call `browserThinkingTime` still takes precedence over the alias. Older model aliases, an omitted model, and a `current`/`ignore` model strategy keep their existing saved-effort behavior.
+
+Both `consult` (with `engine: "browser"`) and `chatgpt_image` accept `model`,
+`browserModelStrategy: "select"`, and `browserThinkingTime` per call. Reuse the
+same `threadId` to request a model or effort change in the existing conversation.
+Available combinations depend on the ChatGPT account and model picker. Use
+`dryRun: true` to preview the configuration without opening the browser.
+
+The server advertises MCP initialization instructions that route text to
+`consult` and image generation or edits to `chatgpt_image`. Clients should
+report tool failures instead of falling back to computer use.

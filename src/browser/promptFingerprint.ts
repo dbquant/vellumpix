@@ -28,6 +28,14 @@ export async function readSubmittedPromptFingerprint(
   previousMessageIds: readonly string[] | undefined,
   timeoutMs = 0,
 ): Promise<string | undefined> {
+  return (await readSubmittedPromptIdentity(runtime, previousMessageIds, timeoutMs))?.fingerprint;
+}
+
+export async function readSubmittedPromptIdentity(
+  runtime: ChromeClient["Runtime"],
+  previousMessageIds: readonly string[] | undefined,
+  timeoutMs = 0,
+): Promise<{ messageId?: string; fingerprint: string } | undefined> {
   if (previousMessageIds === undefined) return undefined;
   const previous = new Set(previousMessageIds);
   return readDomUntil(
@@ -37,13 +45,17 @@ export async function readSubmittedPromptFingerprint(
         for (let index = turns.length - 1; index >= 0; index--) {
           const turn = turns[index];
           const user = turn.matches(':is([data-message-author-role="user"], [data-content-search-unit-key$=":user"], [data-chatgpt-search-unit-key$=":user"])') ? turn : turn.querySelector(':is([data-message-author-role="user"], [data-content-search-unit-key$=":user"], [data-chatgpt-search-unit-key$=":user"])');
-          if (user) return { text: (user.querySelector('[data-user-message-bubble="true"]') || user).textContent, messageId: user.getAttribute('data-message-id') || user.getAttribute('data-chatgpt-selection-message-id') || user.getAttribute('data-chatgpt-search-message-ids')?.split(' ')[0] || user.closest('[data-turn-key]')?.getAttribute('data-turn-key') || (user.getAttribute('data-content-search-unit-key') || user.getAttribute('data-chatgpt-search-unit-key')) };
+          if (user) {
+            const messageId = user.getAttribute('data-message-id') || user.getAttribute('data-chatgpt-selection-message-id') || user.getAttribute('data-chatgpt-search-message-ids')?.split(' ')[0];
+            const unitId = user.getAttribute('data-content-search-unit-key') || user.getAttribute('data-chatgpt-search-unit-key');
+            return { text: (user.querySelector('[data-user-message-bubble="true"]') || user).textContent, userMessageId: messageId || unitId, messageId: messageId || user.closest('[data-turn-key]')?.getAttribute('data-turn-key') || unitId };
+          }
         }
         return null;
       })()`,
     timeoutMs,
     (value) => {
-      const turn = value as { text?: unknown; messageId?: unknown } | null;
+      const turn = value as { text?: unknown; messageId?: unknown; userMessageId?: unknown } | null;
       if (
         typeof turn?.text === "string" &&
         turn.text.trim() &&
@@ -51,7 +63,10 @@ export async function readSubmittedPromptFingerprint(
         turn.messageId.trim() &&
         !previous.has(turn.messageId)
       )
-        return browserPromptFingerprint(turn.text, turn.messageId);
+        return {
+          messageId: typeof turn.userMessageId === "string" ? turn.userMessageId : undefined,
+          fingerprint: browserPromptFingerprint(turn.text, turn.messageId),
+        };
       return undefined;
     },
   );

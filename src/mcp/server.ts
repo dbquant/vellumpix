@@ -21,6 +21,8 @@ export function createMcpServer(): McpServer {
       version: getCliVersion(),
     },
     {
+      instructions:
+        'For VellumPix tasks, use consult for text and chatgpt_image for image generation or edits. Use engine:"browser" with consult when ChatGPT Web is requested. Pass model and browserThinkingTime for an explicit model or effort choice. Reuse the threadId when continuing a conversation. If a VellumPix tool is unavailable or fails, report the issue and do not fall back to computer use or direct browser automation.',
       capabilities: {
         logging: {},
       },

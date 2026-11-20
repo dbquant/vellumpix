@@ -54,6 +54,9 @@ describe.each(
       client.onerror = (error) => errors.push(error);
       try {
         await client.connect(transport);
+        expect(client.getInstructions()).toContain("use consult for text");
+        expect(client.getInstructions()).toContain("chatgpt_image for image generation or edits");
+        expect(client.getInstructions()).toContain("do not fall back to computer use");
         if (modern) {
           expect((client as ModernClient).getProtocolEra()).toBe("modern");
           expect((client as ModernClient).getNegotiatedProtocolVersion()).toBe("2026-07-28");

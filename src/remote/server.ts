@@ -1046,6 +1046,7 @@ const CLIENT_BROWSER_CONFIG_FIELDS = [
   "researchMode",
   "archiveConversations",
   "resumeConversationUrl",
+  "selectModelOnResume",
   "timeoutMs",
   "inputTimeoutMs",
   "attachmentTimeoutMs",

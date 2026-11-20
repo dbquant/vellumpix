@@ -141,6 +141,9 @@ describe("summarizeModelRunsForConsult", () => {
           engine: "browser",
           threadId: thread.id,
           dryRun: true,
+          model: "gpt-6-pro",
+          browserModelStrategy: "select",
+          browserThinkingTime: "extended",
         },
         { log: vi.fn(async () => undefined) },
       );
@@ -148,7 +151,11 @@ describe("summarizeModelRunsForConsult", () => {
       expect(result.isError).not.toBe(true);
       expect(result.structuredContent).toMatchObject({
         status: "dry-run",
-        resolved: { resolvedEngine: "browser" },
+        resolved: {
+          resolvedEngine: "browser",
+          model: "gpt-6-pro",
+          browser: { modelStrategy: "select", thinkingTime: "extended" },
+        },
       });
       expect(await sessionStore.listSessions()).toHaveLength(before.length);
     } finally {

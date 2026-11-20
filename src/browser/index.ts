@@ -1,4 +1,4 @@
-import { readSubmittedPromptFingerprint, readUserMessageIds } from "./promptFingerprint.js";
+import { readSubmittedPromptIdentity, readUserMessageIds } from "./promptFingerprint.js";
 import {
   createAttemptAssistantRecheck,
   createBlockingUiWarningCheck,
@@ -1536,7 +1536,11 @@ async function runBrowserModeInternal(
     const updateConversationHint = conversationUrlMonitor.update;
     await captureRuntimeSnapshot();
     const modelStrategy = config.modelStrategy ?? DEFAULT_MODEL_STRATEGY;
-    if (config.desiredModel && modelStrategy !== "ignore" && !isResumingConversation) {
+    if (
+      config.desiredModel &&
+      modelStrategy !== "ignore" &&
+      (!isResumingConversation || config.selectModelOnResume)
+    ) {
       modelSelectionEvidence = await raceWithDisconnect(
         withRetries(
           () =>
@@ -1561,6 +1565,14 @@ async function runBrowserModeInternal(
         throw normalizeAuthenticatedModelSelectionError(error);
       });
       await raceWithDisconnect(ensurePromptReady(Runtime, config.inputTimeoutMs, logger));
+      if (isResumingConversation) {
+        await raceWithDisconnect(
+          waitForResumedConversationHydration(Runtime, config.inputTimeoutMs, logger, {
+            requirePriorTurns: true,
+            expectedConversationUrl: config.resumeConversationUrl as string,
+          }),
+        );
+      }
       logger(
         `Prompt textarea ready (after model switch, ${promptText.length.toLocaleString()} chars queued)`,
       );
@@ -1722,13 +1734,14 @@ async function runBrowserModeInternal(
       });
       await markPromptSubmitted();
       const providerBaselineTurns = providerState.baselineTurns;
-      const renderedPromptHash = await readSubmittedPromptFingerprint(
+      const submittedPrompt = await readSubmittedPromptIdentity(
         Runtime,
         previousUserMessageIds,
         config.inputTimeoutMs,
       );
-      if (renderedPromptHash) {
-        submittedPromptHash = renderedPromptHash;
+      submittedUserMessageId = submittedPrompt?.messageId;
+      if (submittedPrompt) {
+        submittedPromptHash = submittedPrompt.fingerprint;
         await emitRuntimeHint();
       }
       if (typeof providerBaselineTurns === "number" && Number.isFinite(providerBaselineTurns)) {
@@ -1775,6 +1788,7 @@ async function runBrowserModeInternal(
 
     let baselineTurns: number | null = null;
     let baselineAssistantText: string | null = null;
+    let submittedUserMessageId: string | undefined;
     let deepResearchTargetKeys: string[] = [];
     let deepResearchTargetBaselineCaptured = false;
     await acquireProfileLockIfNeeded();
@@ -1939,6 +1953,7 @@ async function runBrowserModeInternal(
                 logger,
                 baselineTurns ?? undefined,
                 expectedConversationId(),
+                submittedUserMessageId,
               ),
             timeoutMs,
             logger,
@@ -1982,6 +1997,7 @@ async function runBrowserModeInternal(
                   logger,
                   baselineTurns ?? undefined,
                   expectedConversationId(),
+                  submittedUserMessageId,
                 ),
               timeoutMs: config.timeoutMs,
               logger,
@@ -2026,7 +2042,7 @@ async function runBrowserModeInternal(
       const baselineNormalized = baselineAssistantText
         ? normalizeForComparison(baselineAssistantText)
         : "";
-      if (baselineNormalized) {
+      if (baselineNormalized && !submittedUserMessageId) {
         const normalizedAnswer = normalizeForComparison(turnAnswer.text ?? "");
         const baselinePrefix =
           baselineNormalized.length >= 80
@@ -2079,6 +2095,7 @@ async function runBrowserModeInternal(
         await maybeRecoverLongAssistantResponse({
           runtime: Runtime,
           baselineTurns,
+          submittedUserMessageId,
           answerText: turnAnswerText,
           answerMarkdown: turnAnswerMarkdown,
           logger,
@@ -2090,6 +2107,7 @@ async function runBrowserModeInternal(
         Runtime,
         baselineTurns ?? undefined,
         expectedConversationId(),
+        submittedUserMessageId,
       ).catch(() => null);
       const finalText = typeof finalSnapshot?.text === "string" ? finalSnapshot.text.trim() : "";
       if (finalText && finalText !== turnPrompt.trim()) {
@@ -2132,6 +2150,7 @@ async function runBrowserModeInternal(
             Runtime,
             baselineTurns ?? undefined,
             expectedConversationId(),
+            submittedUserMessageId,
           ).catch(() => null);
           throwIfAssistantUiError(snapshot);
           const text = typeof snapshot?.text === "string" ? snapshot.text.trim() : "";
@@ -2745,6 +2764,7 @@ async function waitForLogin({
 async function maybeRecoverLongAssistantResponse({
   runtime,
   baselineTurns,
+  submittedUserMessageId,
   answerText,
   answerMarkdown,
   logger,
@@ -2752,6 +2772,7 @@ async function maybeRecoverLongAssistantResponse({
 }: {
   runtime: ChromeClient["Runtime"];
   baselineTurns: number | null;
+  submittedUserMessageId?: string;
   answerText: string;
   answerMarkdown: string;
   logger: BrowserLogger;
@@ -2760,7 +2781,7 @@ async function maybeRecoverLongAssistantResponse({
   // Learned: long streaming responses can still be rendering after initial capture.
   // Add a brief delay and re-poll to catch any additional content (#71).
   const capturedLength = answerText.trim().length;
-  if (capturedLength <= 500) {
+  if (capturedLength <= 500 || submittedUserMessageId) {
     return { answerText, answerMarkdown };
   }
 
@@ -3135,7 +3156,11 @@ async function runRemoteBrowserMode(
     }
 
     const modelStrategy = config.modelStrategy ?? DEFAULT_MODEL_STRATEGY;
-    if (config.desiredModel && modelStrategy !== "ignore" && !config.resumeConversationUrl) {
+    if (
+      config.desiredModel &&
+      modelStrategy !== "ignore" &&
+      (!config.resumeConversationUrl || config.selectModelOnResume)
+    ) {
       modelSelectionEvidence = await withRetries(
         () =>
           ensureModelSelection(Runtime, config.desiredModel as string, logger, modelStrategy, {
@@ -3154,6 +3179,12 @@ async function runRemoteBrowserMode(
         },
       );
       await ensurePromptReady(Runtime, config.inputTimeoutMs, logger);
+      if (config.resumeConversationUrl) {
+        await waitForResumedConversationHydration(Runtime, config.inputTimeoutMs, logger, {
+          requirePriorTurns: true,
+          expectedConversationUrl: config.resumeConversationUrl,
+        });
+      }
       logger(
         `Prompt textarea ready (after model switch, ${promptText.length.toLocaleString()} chars queued)`,
       );
@@ -3277,13 +3308,14 @@ async function runRemoteBrowserMode(
       });
       await markPromptSubmitted();
       const providerBaselineTurns = providerState.baselineTurns;
-      const renderedPromptHash = await readSubmittedPromptFingerprint(
+      const submittedPrompt = await readSubmittedPromptIdentity(
         Runtime,
         previousUserMessageIds,
         config.inputTimeoutMs,
       );
-      if (renderedPromptHash) {
-        submittedPromptHash = renderedPromptHash;
+      submittedUserMessageId = submittedPrompt?.messageId;
+      if (submittedPrompt) {
+        submittedPromptHash = submittedPrompt.fingerprint;
         await emitRuntimeHint();
       }
       if (typeof providerBaselineTurns === "number" && Number.isFinite(providerBaselineTurns)) {
@@ -3304,6 +3336,7 @@ async function runRemoteBrowserMode(
 
     let baselineTurns: number | null = null;
     let baselineAssistantText: string | null = null;
+    let submittedUserMessageId: string | undefined;
     let deepResearchTargetKeys: string[] = [];
     let deepResearchTargetBaselineCaptured = false;
     const submission = await runSubmissionWithRecovery({
@@ -3455,6 +3488,7 @@ async function runRemoteBrowserMode(
               logger,
               baselineTurns ?? undefined,
               expectedConversationId(),
+              submittedUserMessageId,
             ),
           timeoutMs,
           logger,
@@ -3496,6 +3530,7 @@ async function runRemoteBrowserMode(
                 logger,
                 baselineTurns ?? undefined,
                 expectedConversationId(),
+                submittedUserMessageId,
               ),
             timeoutMs: config.timeoutMs,
             logger,
@@ -3539,7 +3574,7 @@ async function runRemoteBrowserMode(
       const baselineNormalized = baselineAssistantText
         ? normalizeForComparison(baselineAssistantText)
         : "";
-      if (baselineNormalized) {
+      if (baselineNormalized && !submittedUserMessageId) {
         const normalizedAnswer = normalizeForComparison(turnAnswer.text ?? "");
         const baselinePrefix =
           baselineNormalized.length >= 80
@@ -3590,6 +3625,7 @@ async function runRemoteBrowserMode(
         await maybeRecoverLongAssistantResponse({
           runtime: Runtime,
           baselineTurns,
+          submittedUserMessageId,
           answerText: turnAnswerText,
           answerMarkdown: turnAnswerMarkdown,
           logger,
@@ -3601,6 +3637,7 @@ async function runRemoteBrowserMode(
         Runtime,
         baselineTurns ?? undefined,
         expectedConversationId(),
+        submittedUserMessageId,
       ).catch(() => null);
       const finalText = typeof finalSnapshot?.text === "string" ? finalSnapshot.text.trim() : "";
       if (
@@ -3639,6 +3676,7 @@ async function runRemoteBrowserMode(
             Runtime,
             baselineTurns ?? undefined,
             expectedConversationId(),
+            submittedUserMessageId,
           ).catch(() => null);
           throwIfAssistantUiError(snapshot);
           const text = typeof snapshot?.text === "string" ? snapshot.text.trim() : "";
@@ -4002,6 +4040,7 @@ async function waitForAssistantResponseWithReload(
   logger: BrowserLogger,
   minTurnIndex?: number,
   expectedConversationId?: string,
+  submittedUserMessageId?: string,
 ) {
   try {
     return await waitForAssistantResponse(
@@ -4010,6 +4049,7 @@ async function waitForAssistantResponseWithReload(
       logger,
       minTurnIndex,
       expectedConversationId,
+      submittedUserMessageId,
     );
   } catch (error) {
     if (!shouldReloadAfterAssistantError(error)) {
@@ -4032,6 +4072,7 @@ async function waitForAssistantResponseWithReload(
       logger,
       minTurnIndex,
       expectedConversationId,
+      submittedUserMessageId,
     );
   }
 }

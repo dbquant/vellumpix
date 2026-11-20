@@ -702,9 +702,9 @@ export async function runConsultTool(
     resolvedEngine = "browser";
     runOptions = {
       ...runOptions,
-      model: browserFollowup.model,
+      model: model ? runOptions.model : browserFollowup.model,
       models: undefined,
-      effectiveModelId: browserFollowup.model,
+      effectiveModelId: model ? runOptions.effectiveModelId : browserFollowup.model,
       browserResumeConversationUrl: browserFollowup.resumeConversationUrl,
     };
   }
@@ -732,6 +732,7 @@ export async function runConsultTool(
           browserTabRef: browserFollowup.browserConfig.browserTabRef,
           browserTabRefPolicy: browserFollowup.browserConfig.browserTabRefPolicy,
           resumeConversationUrl: browserFollowup.resumeConversationUrl,
+          selectModelOnResume: Boolean(model || browserModelLabel),
           researchMode: "off" as const,
           archiveConversations: "never" as const,
         }

@@ -19,6 +19,13 @@ Read this file whenever you're working from Windows and add new findings so the 
 
 Future Windows gotchas belong here. Update this doc when you learn something new.
 
+- Virtualized ChatGPT exchanges can have opaque UUID keys and a mounted DOM index of zero. Anchor standard reply capture to the submitted user message ID when available. Nested user wrappers can repeat the search-unit selector, so read the outer user node carrying the message ID.
+
+- Current ChatGPT can keep hidden and visible model triggers in the same page. Select the visible trigger for model and effort changes; the explicit gpt-5-6-thinking model attribute identifies GPT-5.6 Sol independently of its effort label.
+- Virtualized histories can mount only the latest exchange. Its fallback-turn-N key preserves the logical index even when the DOM list index is zero. Preserve those indices when applying the pre-send baseline and reveal the latest response while waiting for terminal controls.
+
+- Explicit file attachments combined with globs must bypass .gitignore filtering while still respecting explicit exclusion patterns. Verify this with an ignored data/ fixture on Windows.
+
 - Chinese ChatGPT can announce `回答已完成` and place localized copy controls outside the search unit inside a `data-talvt-turn-state` wrapper. Completion and Markdown capture must scope those controls to the current assistant exchange. Keep user-message and code-block exclusions in the shared selector too: Deep Research queries it directly without the ordinary turn-action locator's guards.
 
 - Run focused Vitest suites with `node node_modules/vitest/vitest.mjs run ...` if the package-manager command cannot resolve the Windows executable shim in an automation environment.

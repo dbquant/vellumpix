@@ -17,9 +17,12 @@ const evaluateImmediateModelSelectionExpression = (
   composerLabel = "",
   proPillLabel = "",
   modernCheckedModel?: string,
+  strategy: "select" | "current" = "select",
+  modelKey?: string,
 ): unknown => {
-  const expression = buildModelSelectionExpressionForTest(targetModel);
+  const expression = buildModelSelectionExpressionForTest(targetModel, strategy);
   const modelButton = {
+    querySelector: () => (modelKey ? { getAttribute: () => modelKey } : null),
     textContent: modernCheckedModel ? `Thinking effortThinking effort${buttonLabel}` : buttonLabel,
     innerText: buttonLabel,
     id: modernCheckedModel ? "current-model-trigger" : "",
@@ -2124,6 +2127,45 @@ describe("browser model selection matchers", () => {
 });
 
 describe("ensureModelSelection composer-pill wait", () => {
+  it("identifies GPT-5.6 from the explicit model key on the 5.6 Extra High trigger", async () => {
+    expect(
+      await evaluateImmediateModelSelectionExpression(
+        "GPT-5.6 Sol",
+        "5.6 Extra High",
+        "",
+        "",
+        undefined,
+        "select",
+        "gpt-5-6-thinking",
+      ),
+    ).toMatchObject({ status: "already-selected", label: "GPT-5.6 Sol" });
+  });
+  it("does not identify the effort heading as the current model", async () => {
+    expect(
+      await evaluateImmediateModelSelectionExpression(
+        "GPT-5.6 Sol",
+        "Thinking effort",
+        "",
+        "",
+        undefined,
+        "current",
+      ),
+    ).toMatchObject({ status: "already-selected", label: null });
+  });
+
+  it("reports the checked model independently of the requested model in current mode", async () => {
+    expect(
+      await evaluateImmediateModelSelectionExpression(
+        "GPT-5.6 Sol",
+        "Thinking effort",
+        "",
+        "",
+        "GPT-6",
+        "current",
+      ),
+    ).toMatchObject({ status: "already-selected", label: "GPT-6" });
+  });
+
   const noopLogger = (() => {}) as unknown as Parameters<typeof ensureModelSelection>[2];
 
   const makeRuntime = (statuses: Array<Record<string, unknown>>) => {

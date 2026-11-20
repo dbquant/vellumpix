@@ -295,6 +295,7 @@ export async function waitForAssistantResponse(
   logger: BrowserLogger,
   minTurnIndex?: number,
   expectedConversationId?: string,
+  submittedUserMessageId?: string,
 ): Promise<{
   text: string;
   html?: string;
@@ -302,6 +303,21 @@ export async function waitForAssistantResponse(
 }> {
   const start = Date.now();
   logger("Waiting for ChatGPT response");
+  if (submittedUserMessageId) {
+    const answer = await pollAssistantCompletion(
+      Runtime,
+      timeoutMs,
+      undefined,
+      expectedConversationId,
+      undefined,
+      submittedUserMessageId,
+    );
+    if (answer) {
+      logger("Captured completed assistant response matched to the submitted user message");
+      return answer;
+    }
+    throw new Error(ASSISTANT_POLL_TIMEOUT_ERROR);
+  }
   // Learned: two paths are needed:
   // 1) DOM observer (fast when mutations fire),
   // 2) snapshot poller (fallback when observers miss or JS stalls).
@@ -482,15 +498,24 @@ export async function readAssistantSnapshot(
   Runtime: ChromeClient["Runtime"],
   minTurnIndex?: number,
   expectedConversationId?: string,
+  submittedUserMessageId?: string,
 ): Promise<AssistantSnapshot | null> {
   const { result } = await Runtime.evaluate({
-    expression: buildAssistantSnapshotExpression(minTurnIndex, expectedConversationId),
+    expression: buildAssistantSnapshotExpression(
+      minTurnIndex,
+      expectedConversationId,
+      submittedUserMessageId,
+    ),
     returnByValue: true,
   });
   const value = result?.value;
   if (value && typeof value === "object") {
     const snapshot = value as AssistantSnapshot;
-    if (typeof minTurnIndex === "number" && Number.isFinite(minTurnIndex)) {
+    if (
+      !submittedUserMessageId &&
+      typeof minTurnIndex === "number" &&
+      Number.isFinite(minTurnIndex)
+    ) {
       const turnIndex = typeof snapshot.turnIndex === "number" ? snapshot.turnIndex : null;
       if (turnIndex === null) {
         return snapshot;
@@ -537,8 +562,13 @@ export function buildAssistantExtractorForTest(name: string): string {
 export function buildAssistantSnapshotExpressionForTest(
   minTurnIndex?: number,
   expectedConversationId?: string,
+  submittedUserMessageId?: string,
 ): string {
-  return buildAssistantSnapshotExpression(minTurnIndex, expectedConversationId);
+  return buildAssistantSnapshotExpression(
+    minTurnIndex,
+    expectedConversationId,
+    submittedUserMessageId,
+  );
 }
 export function buildResponseObserverExpressionForTest(
   timeoutMs: number,
@@ -743,6 +773,7 @@ async function pollAssistantCompletion(
   minTurnIndex?: number,
   expectedConversationId?: string,
   abortSignal?: AbortSignal,
+  submittedUserMessageId?: string,
 ): Promise<{
   text: string;
   html?: string;
@@ -754,12 +785,25 @@ async function pollAssistantCompletion(
     turnKey: null,
     sawIncomplete: false,
   };
+  let nextScrollAt = 0;
   while (Date.now() < watchdogDeadline) {
     // Check abort signal to stop polling when another path won the race
     if (abortSignal?.aborted) {
       return null;
     }
-    const snapshot = await readAssistantSnapshot(Runtime, minTurnIndex, expectedConversationId);
+    if (Date.now() >= nextScrollAt) {
+      nextScrollAt = Date.now() + 5000;
+      await Runtime.evaluate({
+        expression: buildRevealLatestResponseExpression(expectedConversationId),
+        returnByValue: true,
+      }).catch(() => undefined);
+    }
+    const snapshot = await readAssistantSnapshot(
+      Runtime,
+      minTurnIndex,
+      expectedConversationId,
+      submittedUserMessageId,
+    );
     const normalized = normalizeAssistantSnapshot(snapshot);
     if (normalized) {
       // Generated-image answers stream no text and mount no action bar; accept immediately.
@@ -817,6 +861,29 @@ async function pollAssistantCompletion(
     await delay(400);
   }
   return null;
+}
+
+export function buildRevealLatestResponseExpression(expectedConversationId?: string): string {
+  return `(() => {
+    const expected = ${JSON.stringify(expectedConversationId ?? null)};
+    if (expected && !location.pathname.endsWith('/c/' + expected)) return false;
+    const turns = ${buildConversationTurnListExpression()};
+    const last = turns.at(-1);
+    if (!last) return false;
+    // Long conversations virtualize offscreen turns and their terminal controls.
+    // Reveal the latest exchange before sampling completion evidence.
+    let node = last.parentElement;
+    while (node && node !== document.body) {
+      const style = window.getComputedStyle(node);
+      if (/(auto|scroll)/.test(style.overflowY) && node.scrollHeight > node.clientHeight) {
+        node.scrollTop = node.scrollHeight;
+        return true;
+      }
+      node = node.parentElement;
+    }
+    last.scrollIntoView?.({ block: 'end', behavior: 'instant' });
+    return true;
+  })()`;
 }
 
 async function isStopButtonVisible(Runtime: ChromeClient["Runtime"]): Promise<boolean> {
@@ -1088,6 +1155,7 @@ async function waitForCondition<T>(
 function buildAssistantSnapshotExpression(
   minTurnIndex?: number,
   expectedConversationId?: string,
+  submittedUserMessageId?: string,
 ): string {
   const minTurnLiteral =
     typeof minTurnIndex === "number" && Number.isFinite(minTurnIndex) && minTurnIndex >= 0
@@ -1111,7 +1179,22 @@ function buildAssistantSnapshotExpression(
     }
     // Learned: the default turn DOM misses project view; keep a fallback extractor.
     ${buildAssistantExtractor("extractAssistantTurn")}
-    const extracted = extractAssistantTurn();
+    const expectedUserId = ${JSON.stringify(submittedUserMessageId ?? null)};
+    let anchor = null;
+    if (expectedUserId) {
+      const userSelector = '[data-message-author-role="user"], [data-content-search-unit-key$=":user"], [data-chatgpt-search-unit-key$=":user"]';
+      const users = Array.from(document.querySelectorAll(userSelector))
+        .filter(user => !user.parentElement?.closest(userSelector));
+      const userId = user => user.getAttribute('data-message-id') ||
+        user.getAttribute('data-chatgpt-selection-message-id') ||
+        user.getAttribute('data-chatgpt-search-message-ids')?.split(' ')[0] ||
+        user.getAttribute('data-content-search-unit-key') ||
+        user.getAttribute('data-chatgpt-search-unit-key');
+      const lastUser = users.at(-1);
+      if (!lastUser || userId(lastUser) !== expectedUserId) return null;
+      anchor = lastUser;
+    }
+    const extracted = extractAssistantTurn(anchor);
     ${buildAnswerNowPlaceholderPredicateJs("isPlaceholder")}
     ${buildActiveThinkingStatusPredicateJs("isActiveThinkingStatus")}
     if (
@@ -1122,6 +1205,7 @@ function buildAssistantSnapshotExpression(
     ) {
       return extracted;
     }
+    if (anchor) return null;
     // Fallback for ChatGPT project view: answers can live outside conversation turns.
     const extractFallback = ${buildMarkdownFallbackExtractor("MIN_TURN_INDEX")};
     const fallback = extractFallback();
@@ -1388,7 +1472,7 @@ function buildResponseObserverExpression(
 
 function buildAssistantExtractor(functionName: string): string {
   const assistantLiteral = JSON.stringify(ASSISTANT_ROLE_SELECTOR);
-  return `const ${functionName} = () => {
+  return `const ${functionName} = (submittedUser = null) => {
     ${buildClickDispatcher()}
     ${buildThinkingActivityDetailsPredicateJs("readRetryThinkingActivity")}
     const isAssistantTurnUiError = ${isAssistantTurnUiErrorText.toString()};
@@ -1441,6 +1525,8 @@ function buildAssistantExtractor(functionName: string): string {
         continue;
       }
       const messageRoot = ${buildLastAssistantMessageExpression("turn")} ?? turn;
+      if (submittedUser && (!((submittedUser.compareDocumentPosition(messageRoot) & 4)) ||
+          submittedUser.contains(messageRoot))) continue;
       expandCollapsibles(messageRoot);
       const preferred =
         (messageRoot.matches?.('.markdown') || messageRoot.matches?.('[data-message-content]') ? messageRoot : null) ||
@@ -1501,7 +1587,9 @@ function buildAssistantExtractor(functionName: string): string {
         return { text: label, html: turn?.innerHTML ?? messageRoot?.innerHTML ?? html, messageId, turnId, turnIndex: index };
       }
       if (text.trim()) {
-        return { text, html, messageId, turnId, turnIndex: index };
+        const completionVisible = Boolean(submittedUser &&
+          messageRoot.closest?.('[data-talvt-turn-state="complete"]'));
+        return { text, html, messageId, turnId, turnIndex: index, ...(completionVisible ? { completionVisible } : {}) };
       }
     }
     return null;

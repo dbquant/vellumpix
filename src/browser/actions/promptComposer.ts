@@ -715,6 +715,16 @@ async function attemptSendButton(
   attachmentNavigationUrl?: string,
 ): Promise<boolean> {
   const needAttachment = Array.isArray(attachmentNames) && attachmentNames.length > 0;
+  if (!needAttachment) {
+    const location = await Runtime.evaluate({ expression: "location.href", returnByValue: true });
+    const url = location.result?.value;
+    if (
+      typeof url === "string" &&
+      (await activateExactAttachmentSendButton(Runtime, Input, logger, url, []))
+    ) {
+      return true;
+    }
+  }
   if (needAttachment && !attachmentNavigationUrl) {
     throw new BrowserAutomationError(
       "VellumPix cannot safely submit attachments without the pre-upload ChatGPT page identity.",
@@ -888,6 +898,7 @@ async function activateExactAttachmentSendButton(
   const exactSendSelectors = [
     'button[data-testid="send-button"]',
     'form button[type="submit"][aria-label="Send"]',
+    'button[type="submit"][aria-label="Send"]',
     'form button[type="submit"][aria-label="送信"]',
   ];
   const findButton = `() => {

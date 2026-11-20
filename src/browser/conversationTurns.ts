@@ -35,6 +35,21 @@ export function buildConversationTurnListExpression(rootExpression = "document")
     const containers = Array.from(root.querySelectorAll(${containerSelector})).filter(
       node => !node.parentElement?.closest(${containerSelector}),
     );
+    const indexed = containers.map(node => {
+      const exchange = node.querySelector?.('[data-content-search-turn-key]');
+      const key = exchange?.getAttribute?.('data-content-search-turn-key') ?? '';
+      const match = key.match(/^fallback-turn-(\\d+)$/);
+      return { node, index: match ? Number(match[1]) : null };
+    });
+    if (indexed.length > 0 && indexed.every(item =>
+      item.index !== null && item.index < 10000)) {
+      const lastIndex = Math.max(...indexed.map(item => item.index));
+      // Virtualized histories can leave only turn N mounted. Preserve its logical
+      // index so the pre-send baseline still excludes old answers correctly.
+      const logicalTurns = Array.from({ length: lastIndex + 1 }, () => document.createElement('div'));
+      for (const item of indexed) logicalTurns[item.index] = item.node;
+      return logicalTurns;
+    }
     return containers.length > 0
       ? containers
       : Array.from(root.querySelectorAll(${fallbackSelector}));

@@ -319,10 +319,15 @@ async function expandWithNativeGlob(partitioned: PartitionedFiles, cwd: string):
     suppressErrors: true,
   })) as string[];
   const resolved = matches.map((match) => path.resolve(cwd, match));
-  const filtered = resolved.filter((filePath) => !isGitignored(filePath, gitignoreSets));
+  const literalFiles = new Set(partitioned.literalFiles.map((filePath) => path.resolve(filePath)));
+  const filtered = resolved.filter(
+    (filePath) => literalFiles.has(filePath) || !isGitignored(filePath, gitignoreSets),
+  );
   const finalFiles = dotfileOptIn
     ? filtered
-    : filtered.filter((filePath) => !path.basename(filePath).startsWith("."));
+    : filtered.filter(
+        (filePath) => literalFiles.has(filePath) || !path.basename(filePath).startsWith("."),
+      );
   return Array.from(new Set(finalFiles));
 }
 
