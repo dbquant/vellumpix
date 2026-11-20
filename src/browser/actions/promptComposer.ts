@@ -715,7 +715,7 @@ async function attemptSendButton(
   attachmentNavigationUrl?: string,
 ): Promise<boolean> {
   const needAttachment = Array.isArray(attachmentNames) && attachmentNames.length > 0;
-  if (!needAttachment) {
+  if (!needAttachment && typeof Input?.dispatchKeyEvent === "function") {
     const location = await Runtime.evaluate({ expression: "location.href", returnByValue: true });
     const url = location.result?.value;
     if (
